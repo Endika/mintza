@@ -1,0 +1,20 @@
+{
+  "name": "MINTZA",
+  "short_name": "MINTZA",
+  "description": "From talk to insight",
+  "start_url": "/mintza/",
+  "scope": "/mintza/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#00B380",
+  "lang": "en",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/mintza/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
