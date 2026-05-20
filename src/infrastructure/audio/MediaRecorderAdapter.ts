@@ -66,22 +66,24 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     this.status = 'recording';
   }
 
-  async pause(): Promise<void> {
-    if (this.status !== 'recording' || !this.recorder) return;
+  pause(): Promise<void> {
+    if (this.status !== 'recording' || !this.recorder) return Promise.resolve();
     this.recorder.pause();
     this.elapsedAtPauseMs += performance.now() - this.startedAtMs;
     this.status = 'paused';
+    return Promise.resolve();
   }
 
-  async resume(): Promise<void> {
-    if (this.status !== 'paused' || !this.recorder) return;
+  resume(): Promise<void> {
+    if (this.status !== 'paused' || !this.recorder) return Promise.resolve();
     this.recorder.resume();
     this.startedAtMs = performance.now();
     this.status = 'recording';
+    return Promise.resolve();
   }
 
-  async stop(): Promise<void> {
-    if (this.status === 'idle' || this.status === 'stopped') return;
+  stop(): Promise<void> {
+    if (this.status === 'idle' || this.status === 'stopped') return Promise.resolve();
     if (this.recorder && this.recorder.state !== 'inactive') {
       this.recorder.stop();
     }
@@ -89,6 +91,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     this.stream = null;
     this.recorder = null;
     this.status = 'stopped';
+    return Promise.resolve();
   }
 
   private emit(event: BlobEvent, mimeType: string): void {

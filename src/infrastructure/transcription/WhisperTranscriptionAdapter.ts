@@ -5,8 +5,8 @@ import type {
 } from '../../domain/transcription/ports/TranscriptionPort';
 import { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import { TranscriptText } from '../../domain/transcription/value-objects/TranscriptText';
-import { AppError } from '../../shared/errors/AppError';
-import { err, ok, type Result } from '../../shared/result/Result';
+import type { AppError } from '../../shared/errors/AppError';
+import { ok, type Result } from '../../shared/result/Result';
 import type { WhisperClient } from './WhisperClient';
 
 export class WhisperTranscriptionAdapter implements TranscriptionPort {
@@ -27,6 +27,3 @@ const toSegment = (chunk: AudioChunk, text: string): TranscriptSegment =>
     text: TranscriptText.of(text),
     provider: 'whisper',
   });
-
-// re-export to keep the file usable without unused imports warning if extended later
-export { err };

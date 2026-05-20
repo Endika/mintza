@@ -11,32 +11,40 @@ const STORAGE_KEY = 'mintza:config:v1';
 export class LocalStorageConfigRepository implements ConfigRepository {
   constructor(private readonly storage: Storage = window.localStorage) {}
 
-  async load(): Promise<Result<AppConfig, AppError>> {
+  load(): Promise<Result<AppConfig, AppError>> {
     try {
       const raw = this.storage.getItem(STORAGE_KEY);
-      if (!raw) return ok(DEFAULT_CONFIG);
+      if (!raw) return Promise.resolve(ok(DEFAULT_CONFIG));
       const parsed = JSON.parse(raw) as Partial<AppConfig>;
-      return ok({ ...DEFAULT_CONFIG, ...parsed, apiKeys: { ...parsed.apiKeys } });
+      return Promise.resolve(
+        ok({ ...DEFAULT_CONFIG, ...parsed, apiKeys: { ...parsed.apiKeys } }),
+      );
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to load configuration', cause));
+      return Promise.resolve(
+        err(new AppError('STORAGE_FAILED', 'Failed to load configuration', cause)),
+      );
     }
   }
 
-  async save(config: AppConfig): Promise<Result<void, AppError>> {
+  save(config: AppConfig): Promise<Result<void, AppError>> {
     try {
       this.storage.setItem(STORAGE_KEY, JSON.stringify(config));
-      return ok(undefined);
+      return Promise.resolve(ok(undefined));
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to save configuration', cause));
+      return Promise.resolve(
+        err(new AppError('STORAGE_FAILED', 'Failed to save configuration', cause)),
+      );
     }
   }
 
-  async clear(): Promise<Result<void, AppError>> {
+  clear(): Promise<Result<void, AppError>> {
     try {
       this.storage.removeItem(STORAGE_KEY);
-      return ok(undefined);
+      return Promise.resolve(ok(undefined));
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to clear configuration', cause));
+      return Promise.resolve(
+        err(new AppError('STORAGE_FAILED', 'Failed to clear configuration', cause)),
+      );
     }
   }
 }
