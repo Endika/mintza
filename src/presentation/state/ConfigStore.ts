@@ -1,0 +1,42 @@
+import {
+  DEFAULT_CONFIG,
+  type AppConfig,
+  type ConfigRepository,
+} from '../../domain/meeting/ports/ConfigRepository';
+
+export type ConfigListener = (config: AppConfig) => void;
+
+export class ConfigStore {
+  private current: AppConfig = DEFAULT_CONFIG;
+  private readonly listeners: Set<ConfigListener> = new Set();
+
+  constructor(private readonly repository: ConfigRepository) {}
+
+  async hydrate(): Promise<void> {
+    const result = await this.repository.load();
+    if (result.ok) {
+      this.current = result.value;
+    }
+  }
+
+  get(): AppConfig {
+    return this.current;
+  }
+
+  openAIKey(): string | undefined {
+    return this.current.apiKeys.openai;
+  }
+
+  async update(config: AppConfig): Promise<void> {
+    const result = await this.repository.save(config);
+    if (result.ok) {
+      this.current = config;
+      this.listeners.forEach((l) => l(config));
+    }
+  }
+
+  subscribe(listener: ConfigListener): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+}
