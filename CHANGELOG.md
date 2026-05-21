@@ -1,3 +1,13 @@
+# [1.1.0](https://github.com/Endika/mintza/compare/v1.0.0...v1.1.0) (2026-05-21)
+
+
+### Features
+
+* **domain:** featured summary order per template ([1209463](https://github.com/Endika/mintza/commit/12094632e0090e36ff9631289f84d052aefba369))
+* **infrastructure:** Claude and Gemini clients with summarization chain ([1373e6e](https://github.com/Endika/mintza/commit/1373e6ec6e0a999e1b4271ac0d61a827c101639e))
+* **presentation:** template and language selectors with all 8 summary kinds ([eb1fbbc](https://github.com/Endika/mintza/commit/eb1fbbcde891d8bc762692aee26c54b0a491c7aa))
+* **presentation:** wire quality profile chains and surface them in settings ([349d2c0](https://github.com/Endika/mintza/commit/349d2c086a7463d717943ca3c31415670716f2e0))
+
 # 1.0.0 (2026-05-21)
 
 
