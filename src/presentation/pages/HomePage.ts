@@ -9,8 +9,10 @@ import { Language, type LanguageCode } from '../../domain/language/value-objects
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import { CostCounter } from '../components/CostCounter';
+import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { ConfigStore } from '../state/ConfigStore';
 import { Router, type Page } from '../router/Router';
 
@@ -29,6 +31,8 @@ export class HomePage implements Page {
   private meeting: Meeting | null = null;
   private unsubChunks: (() => void) | null = null;
   private readonly counter = new CostCounter();
+  private readonly gauge = new TemperatureGauge();
+  private readonly scoreParser = new SentimentScoreParser();
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -61,6 +65,11 @@ export class HomePage implements Page {
           </div>
           <p id="status" class="mt-3 text-sm text-ink-400">Ready to record.</p>
           <div id="counter" class="mt-3 text-sm text-ink-400"></div>
+        </section>
+
+        <section id="temperature-card" class="card mb-6 hidden">
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">Sentiment</h3>
+          <div id="temperature"></div>
         </section>
 
         <section class="card mb-6">
@@ -144,6 +153,7 @@ export class HomePage implements Page {
       kinds: SUMMARY_KINDS,
     });
     this.renderSummaries(summariesEl);
+    this.applyTemperature();
     this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
     await this.deps.saveMeeting.execute({ meeting: this.meeting });
     this.setStatus(`Done. Summaries: ${result.successCount} ok, ${result.failureCount} failed.`);
@@ -174,6 +184,18 @@ export class HomePage implements Page {
           </article>`;
       })
       .join('');
+  }
+
+  private applyTemperature(): void {
+    if (!this.meeting) return;
+    const sentiment = this.meeting.summaries.get('sentiment');
+    if (!sentiment) return;
+    const score = this.scoreParser.parse(sentiment.content);
+    if (!score) return;
+    this.meeting.setTemperature(score);
+    const card = this.qs<HTMLElement>('#temperature-card');
+    card.classList.remove('hidden');
+    this.gauge.render(this.qs<HTMLElement>('#temperature'), score);
   }
 
   private readTemplate(): TemplateKind {
