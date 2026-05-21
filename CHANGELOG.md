@@ -1,3 +1,14 @@
+# [1.5.0](https://github.com/Endika/mintza/compare/v1.4.0...v1.5.0) (2026-05-21)
+
+
+### Features
+
+* **export:** add PDF export with dynamically imported jsPDF ([71d8a58](https://github.com/Endika/mintza/commit/71d8a58221d50134ea06fcddfc01b439199453e2))
+* **i18n:** translator with English, Spanish and Basque dictionaries ([92234ec](https://github.com/Endika/mintza/commit/92234ec5f33f7c6b0d52c8d4223517ce02dc98bf))
+* **infrastructure:** Azure Speech client with region configuration ([354d396](https://github.com/Endika/mintza/commit/354d396a0d6a5c0c8a0c87a5fecc8d3de10256f6))
+* **mindmap:** domain model, LLM JSON adapter and use case ([c973082](https://github.com/Endika/mintza/commit/c9730820ca10351b964a97be4fefabd8228527cd))
+* **presentation:** mind map visualization with collapsible branches ([8c77776](https://github.com/Endika/mintza/commit/8c77776a946b5e83a45bd080d9250647c4fe2bf2))
+
 # [1.4.0](https://github.com/Endika/mintza/compare/v1.3.0...v1.4.0) (2026-05-21)
 
 
