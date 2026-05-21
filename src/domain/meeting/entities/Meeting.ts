@@ -56,6 +56,10 @@ export class Meeting {
     return new Meeting(state);
   }
 
+  withTemplate(template: Template): Meeting {
+    return new Meeting({ ...this.state, template, summaries: new Map(this.state.summaries) });
+  }
+
   get id(): MeetingId {
     return this.state.id;
   }

@@ -96,6 +96,16 @@ export class SettingsPage implements Page {
             </div>
           </section>
 
+          <section class="card">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold">${t('templates.title')}</h2>
+                <p class="text-sm text-ink-400 mt-1">${t('templates.manage')}</p>
+              </div>
+              <a href="#/templates" class="btn-ghost">${t('templates.manage')} →</a>
+            </div>
+          </section>
+
           <div class="flex justify-between">
             <button type="button" id="btn-clear" class="btn-ghost text-red-600">${t('settings.btn_clear')}</button>
             <span class="flex items-center gap-3">

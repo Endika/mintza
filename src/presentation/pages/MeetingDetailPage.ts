@@ -1,7 +1,13 @@
 import type { DeleteMeetingUseCase } from '../../application/use-cases/DeleteMeetingUseCase';
 import type { GetMeetingUseCase } from '../../application/use-cases/GetMeetingUseCase';
+import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
+import type { RegenerateSummariesUseCase } from '../../application/use-cases/RegenerateSummariesUseCase';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
+import type { Template } from '../../domain/meeting/value-objects/Template';
+import {
+  defaultLabelFor,
+} from '../../domain/summary/services/SummaryDefaults';
 import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
@@ -15,6 +21,8 @@ import { Router, type Page } from '../router/Router';
 export interface MeetingDetailPageDeps {
   readonly getMeeting: GetMeetingUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
+  readonly listTemplates: ListTemplatesUseCase;
+  readonly regenerateSummaries: RegenerateSummariesUseCase;
   readonly translator: Translator;
 }
 
@@ -25,10 +33,13 @@ export class MeetingDetailPage implements Page {
   private readonly mindMapView = new MindMapView();
   private readonly costCounter = new CostCounter();
   private meeting: Meeting | null = null;
+  private templates: Template[] = [];
+  private root: HTMLElement | null = null;
 
   constructor(private readonly deps: MeetingDetailPageDeps) {}
 
   async render(root: HTMLElement): Promise<void> {
+    this.root = root;
     const t = this.deps.translator;
     const id = parseIdFromHash();
     if (!id) {
@@ -54,18 +65,22 @@ export class MeetingDetailPage implements Page {
       </main>
     `;
 
-    const result = await this.deps.getMeeting.execute({ id: meetingId });
+    const [meetingResult, templatesResult] = await Promise.all([
+      this.deps.getMeeting.execute({ id: meetingId }),
+      this.deps.listTemplates.execute(),
+    ]);
+    this.templates = templatesResult.ok ? templatesResult.value : [];
     const body = root.querySelector<HTMLElement>('#detail-body');
     if (!body) return;
-    if (!result.ok) {
-      body.innerHTML = `<p class="text-red-600">Error: ${result.error.message}</p>`;
+    if (!meetingResult.ok) {
+      body.innerHTML = `<p class="text-red-600">Error: ${meetingResult.error.message}</p>`;
       return;
     }
-    if (!result.value) {
+    if (!meetingResult.value) {
       body.innerHTML = `<em class="text-ink-400">Meeting not found.</em>`;
       return;
     }
-    this.meeting = result.value;
+    this.meeting = meetingResult.value;
     this.renderMeeting(body, this.meeting);
 
     root
@@ -85,7 +100,7 @@ export class MeetingDetailPage implements Page {
       <section class="card mb-6">
         <h1 class="text-2xl font-bold tracking-tight">${escape(meeting.title)}</h1>
         <p class="mt-1 text-sm text-ink-400">
-          ${meeting.startedAt.toLocaleString()} · ${meeting.template.kind} · ${meeting.language.code}
+          ${meeting.startedAt.toLocaleString()} · ${escape(meeting.template.name)} · ${meeting.language.code}
         </p>
         <div id="detail-cost" class="mt-3"></div>
       </section>
@@ -97,7 +112,11 @@ export class MeetingDetailPage implements Page {
         </section>` : ''}
 
       <section class="card mb-6">
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.summary')}</h3>
+        <div class="mb-3 flex items-center justify-between gap-3 flex-wrap">
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.summary')}</h3>
+          ${this.regenerateControlsHtml()}
+        </div>
+        <p id="regen-status" class="text-xs text-ink-400 mb-2 hidden"></p>
         <div id="detail-summaries"></div>
       </section>
 
@@ -134,6 +153,54 @@ export class MeetingDetailPage implements Page {
     }
     this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting);
     this.exportMenu.render(target.querySelector<HTMLElement>('#detail-export')!, () => this.meeting, t);
+
+    target.querySelector<HTMLButtonElement>('#btn-regen')?.addEventListener('click', () => {
+      void this.handleRegenerate();
+    });
+  }
+
+  private regenerateControlsHtml(): string {
+    if (this.templates.length === 0 || !this.meeting) return '';
+    const t = this.deps.translator;
+    return `
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-ink-400">${t.t('meeting.regenerate')}</span>
+        <select id="regen-template" class="rounded-lg border border-ink-100 px-2 py-1 text-xs">
+          ${this.templates
+            .map(
+              (tpl) =>
+                `<option value="${tpl.id}" ${tpl.id === this.meeting?.template.id ? 'selected' : ''}>${escape(tpl.name)}</option>`,
+            )
+            .join('')}
+        </select>
+        <button type="button" id="btn-regen" class="btn-ghost text-xs">${t.t('templates.edit')}</button>
+      </div>
+    `;
+  }
+
+  private async handleRegenerate(): Promise<void> {
+    if (!this.meeting || !this.root) return;
+    const select = this.root.querySelector<HTMLSelectElement>('#regen-template');
+    if (!select) return;
+    const newTemplate = this.templates.find((tpl) => tpl.id === select.value);
+    if (!newTemplate) return;
+    const btn = this.root.querySelector<HTMLButtonElement>('#btn-regen');
+    const status = this.root.querySelector<HTMLElement>('#regen-status');
+    if (btn) btn.disabled = true;
+    if (status) {
+      status.classList.remove('hidden');
+      status.textContent = this.deps.translator.t('meeting.regenerating');
+    }
+    const transient = this.meeting.withTemplate(newTemplate);
+    const output = await this.deps.regenerateSummaries.execute({
+      meeting: transient,
+      template: newTemplate,
+    });
+    this.meeting = transient;
+    this.renderMeeting(this.root.querySelector<HTMLElement>('#detail-body')!, transient);
+    if (status) {
+      status.textContent = `${output.successCount} ok / ${output.failureCount} failed.`;
+    }
   }
 
   private renderSummaries(target: HTMLElement, meeting: Meeting): void {
@@ -146,14 +213,19 @@ export class MeetingDetailPage implements Page {
       .map((kind) => {
         const summary = meeting.summaries.get(kind);
         if (!summary) return '';
+        const label = meeting.template.labelFor(
+          kind,
+          this.deps.translator.t(SUMMARY_KEYS[kind]) || defaultLabelFor(kind),
+        );
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${this.deps.translator.t(SUMMARY_KEYS[kind])}</h4>
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escape(label)}</h4>
             <p class="mt-1 whitespace-pre-wrap">${escape(summary.content)}</p>
           </article>`;
       })
       .join('');
   }
 }
+
 
 const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
   bullet_points: 'summary.bullet_points',

@@ -88,6 +88,24 @@ export type TranslationKey =
   | 'history.sort_longest'
   | 'history.sort_title'
   | 'history.no_results'
+  | 'templates.title'
+  | 'templates.manage'
+  | 'templates.new'
+  | 'templates.duplicate'
+  | 'templates.edit'
+  | 'templates.delete'
+  | 'templates.builtin'
+  | 'templates.field_name'
+  | 'templates.field_system_role'
+  | 'templates.field_mindmap'
+  | 'templates.field_kinds'
+  | 'templates.field_label_overrides'
+  | 'templates.field_prompt_overrides'
+  | 'templates.cancel'
+  | 'templates.save'
+  | 'templates.confirm_delete'
+  | 'meeting.regenerate'
+  | 'meeting.regenerating'
   | 'export.label'
   | 'export.markdown'
   | 'export.json'
@@ -185,6 +203,24 @@ const EN: Translations = {
   'history.sort_longest': 'Longest first',
   'history.sort_title': 'Title (A–Z)',
   'history.no_results': 'No meetings match the search.',
+  'templates.title': 'Templates',
+  'templates.manage': 'Manage templates',
+  'templates.new': 'New template',
+  'templates.duplicate': 'Duplicate',
+  'templates.edit': 'Edit',
+  'templates.delete': 'Delete',
+  'templates.builtin': 'Built-in',
+  'templates.field_name': 'Name',
+  'templates.field_system_role': 'Meeting type (system role)',
+  'templates.field_mindmap': 'Mind map structure suggestion',
+  'templates.field_kinds': 'Summary sections (toggle to include)',
+  'templates.field_label_overrides': 'Custom labels (leave empty to keep default)',
+  'templates.field_prompt_overrides': 'Custom prompts (leave empty to keep default)',
+  'templates.cancel': 'Cancel',
+  'templates.save': 'Save template',
+  'templates.confirm_delete': 'Delete this template?',
+  'meeting.regenerate': 'Regenerate with',
+  'meeting.regenerating': 'Regenerating summaries…',
   'export.label': 'Export:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -281,6 +317,24 @@ const ES: Translations = {
   'history.sort_longest': 'Más largas primero',
   'history.sort_title': 'Título (A–Z)',
   'history.no_results': 'Ninguna reunión coincide con la búsqueda.',
+  'templates.title': 'Plantillas',
+  'templates.manage': 'Gestionar plantillas',
+  'templates.new': 'Nueva plantilla',
+  'templates.duplicate': 'Duplicar',
+  'templates.edit': 'Editar',
+  'templates.delete': 'Borrar',
+  'templates.builtin': 'Integrada',
+  'templates.field_name': 'Nombre',
+  'templates.field_system_role': 'Tipo de reunión (rol del sistema)',
+  'templates.field_mindmap': 'Estructura sugerida del mapa mental',
+  'templates.field_kinds': 'Secciones del resumen (activa/desactiva)',
+  'templates.field_label_overrides': 'Etiquetas personalizadas (vacío = por defecto)',
+  'templates.field_prompt_overrides': 'Prompts personalizados (vacío = por defecto)',
+  'templates.cancel': 'Cancelar',
+  'templates.save': 'Guardar plantilla',
+  'templates.confirm_delete': '¿Borrar esta plantilla?',
+  'meeting.regenerate': 'Regenerar con',
+  'meeting.regenerating': 'Regenerando resúmenes…',
   'export.label': 'Exportar:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -377,6 +431,24 @@ const EU: Translations = {
   'history.sort_longest': 'Luzeenak lehenengo',
   'history.sort_title': 'Izenburua (A–Z)',
   'history.no_results': 'Ez dago bat datorren bilerarik.',
+  'templates.title': 'Txantiloiak',
+  'templates.manage': 'Kudeatu txantiloiak',
+  'templates.new': 'Txantiloi berria',
+  'templates.duplicate': 'Bikoiztu',
+  'templates.edit': 'Editatu',
+  'templates.delete': 'Ezabatu',
+  'templates.builtin': 'Integratua',
+  'templates.field_name': 'Izena',
+  'templates.field_system_role': 'Bilera mota (sistema-rola)',
+  'templates.field_mindmap': 'Buru-maparen iradokizun-egitura',
+  'templates.field_kinds': 'Laburpenaren atalak (aktibatu/desaktibatu)',
+  'templates.field_label_overrides': 'Etiketa pertsonalizatuak (hutsa = lehenetsia)',
+  'templates.field_prompt_overrides': 'Prompt pertsonalizatuak (hutsa = lehenetsia)',
+  'templates.cancel': 'Utzi',
+  'templates.save': 'Gorde txantiloia',
+  'templates.confirm_delete': 'Txantiloi hau ezabatu?',
+  'meeting.regenerate': 'Birsortu honekin',
+  'meeting.regenerating': 'Laburpenak birsortzen…',
   'export.label': 'Esportatu:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',

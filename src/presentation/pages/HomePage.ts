@@ -4,10 +4,12 @@ import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeeting
 import type { StartRecordingUseCase } from '../../application/use-cases/StartRecordingUseCase';
 import type { StopRecordingUseCase } from '../../application/use-cases/StopRecordingUseCase';
 import type { TranscribeChunkUseCase } from '../../application/use-cases/TranscribeChunkUseCase';
+import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { AudioCapturePort } from '../../domain/audio/ports/AudioCapturePort';
 import type { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { Language, type LanguageCode } from '../../domain/language/value-objects/Language';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
+import type { TemplateRegistry } from '../../domain/meeting/services/TemplateRegistry';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
@@ -33,6 +35,8 @@ export interface HomePageDeps {
   readonly generateSummaries: GenerateSummariesUseCase;
   readonly generateMindMap: GenerateMindMapUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
+  readonly listTemplates: ListTemplatesUseCase;
+  readonly templateRegistry: TemplateRegistry;
 }
 
 type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
@@ -57,6 +61,7 @@ export class HomePage implements Page {
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
   private progress: ChunkProgress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+  private templates: Template[] = [];
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -64,10 +69,12 @@ export class HomePage implements Page {
     return this.deps.config.translator;
   }
 
-  render(root: HTMLElement): void {
+  async render(root: HTMLElement): Promise<void> {
     this.root = root;
     const cfg = this.deps.config.get();
     const t = (key: TranslationKey): string => this.t.t(key);
+    const templatesResult = await this.deps.listTemplates.execute();
+    this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
     root.innerHTML = `
       <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">${t('home.skip')}</a>
       <main id="main" class="mx-auto max-w-3xl px-6 py-12">
@@ -86,7 +93,7 @@ export class HomePage implements Page {
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between gap-4">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-                ${templateRadios(cfg.defaultTemplate, t)}
+                ${templateSelect(this.templates, cfg.defaultTemplate, t)}
                 ${languageSelect(cfg.language, t)}
               </div>
               <span id="rec-badge" class="rec-badge hidden" aria-live="polite">
@@ -185,8 +192,9 @@ export class HomePage implements Page {
       return;
     }
     this.setStatus(this.t.t('home.requesting_mic'));
+    const template = await this.deps.templateRegistry.resolveOrFallback(this.readTemplate());
     const result = await this.deps.startRecording.execute({
-      template: Template.of(this.readTemplate()),
+      template,
       language: Language.of(this.readLanguage()),
     });
     if (!result.ok) {
@@ -263,7 +271,7 @@ export class HomePage implements Page {
     this.meeting = null;
     this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
-    this.render(this.root);
+    void this.render(this.root);
   }
 
   private async handleSummarizeNow(): Promise<void> {
@@ -501,8 +509,8 @@ export class HomePage implements Page {
   }
 
   private readTemplate(): TemplateKind {
-    const input = this.qs<HTMLInputElement>('input[name="template"]:checked');
-    return input.value;
+    const select = this.qs<HTMLSelectElement>('#template-select');
+    return select.value;
   }
 
   private readLanguage(): LanguageCode {
@@ -540,26 +548,27 @@ const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
   next_steps: 'summary.next_steps',
 };
 
-const templateRadios = (
-  current: TemplateKind,
+const templateSelect = (
+  templates: readonly Template[],
+  currentId: TemplateKind,
   t: (key: TranslationKey) => string,
-): string => `
-  <fieldset>
-    <legend class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${t('home.field_template')}</legend>
-    <div class="flex gap-3 text-sm">
-      ${templateRadio('generic', t('template.generic'), current)}
-      ${templateRadio('work', t('template.work'), current)}
-      ${templateRadio('interview', t('template.interview'), current)}
-    </div>
-  </fieldset>
-`;
-
-const templateRadio = (value: TemplateKind, label: string, current: TemplateKind): string => `
-  <label class="inline-flex items-center gap-1.5 cursor-pointer">
-    <input type="radio" name="template" value="${value}" ${value === current ? 'checked' : ''} />
-    <span>${label}</span>
+): string => {
+  const hasCurrent = templates.some((tpl) => tpl.id === currentId);
+  const effective = hasCurrent ? currentId : 'generic';
+  return `
+  <label class="block">
+    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${t('home.field_template')}</span>
+    <select id="template-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
+      ${templates
+        .map(
+          (tpl) =>
+            `<option value="${tpl.id}" ${tpl.id === effective ? 'selected' : ''}>${tpl.name}${tpl.builtIn ? '' : ' ★'}</option>`,
+        )
+        .join('')}
+    </select>
   </label>
 `;
+};
 
 const languageSelect = (
   current: LanguageCode,

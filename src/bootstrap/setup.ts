@@ -1,16 +1,21 @@
 import { ClearMeetingsUseCase } from '../application/use-cases/ClearMeetingsUseCase';
 import { DeleteMeetingUseCase } from '../application/use-cases/DeleteMeetingUseCase';
+import { DeleteTemplateUseCase } from '../application/use-cases/DeleteTemplateUseCase';
 import { GenerateMindMapUseCase } from '../application/use-cases/GenerateMindMapUseCase';
 import { GenerateSummariesUseCase } from '../application/use-cases/GenerateSummariesUseCase';
 import { GetConfigUseCase } from '../application/use-cases/GetConfigUseCase';
 import { GetMeetingUseCase } from '../application/use-cases/GetMeetingUseCase';
 import { ListMeetingsUseCase } from '../application/use-cases/ListMeetingsUseCase';
+import { ListTemplatesUseCase } from '../application/use-cases/ListTemplatesUseCase';
+import { RegenerateSummariesUseCase } from '../application/use-cases/RegenerateSummariesUseCase';
 import { SaveMeetingUseCase } from '../application/use-cases/SaveMeetingUseCase';
+import { SaveTemplateUseCase } from '../application/use-cases/SaveTemplateUseCase';
 import { StartRecordingUseCase } from '../application/use-cases/StartRecordingUseCase';
 import { StopRecordingUseCase } from '../application/use-cases/StopRecordingUseCase';
 import { TranscribeChunkUseCase } from '../application/use-cases/TranscribeChunkUseCase';
 import { UpdateConfigUseCase } from '../application/use-cases/UpdateConfigUseCase';
 import { ValidateApiKeyUseCase } from '../application/use-cases/ValidateApiKeyUseCase';
+import { TemplateRegistry } from '../domain/meeting/services/TemplateRegistry';
 import { HttpApiKeyValidator } from '../infrastructure/api/HttpApiKeyValidator';
 import { MediaRecorderAdapter } from '../infrastructure/audio/MediaRecorderAdapter';
 import { HttpClient } from '../infrastructure/http/HttpClient';
@@ -27,6 +32,7 @@ import {
 } from '../infrastructure/llm/SummarizationChainAdapter';
 import { IndexedDBMeetingRepository } from '../infrastructure/persistence/IndexedDBMeetingRepository';
 import { LocalStorageConfigRepository } from '../infrastructure/persistence/LocalStorageConfigRepository';
+import { LocalStorageTemplateRepository } from '../infrastructure/persistence/LocalStorageTemplateRepository';
 import { AzureSpeechClient } from '../infrastructure/transcription/AzureSpeechClient';
 import { AzureSpeechTranscriptionAdapter } from '../infrastructure/transcription/AzureSpeechTranscriptionAdapter';
 import { GoogleSpeechClient } from '../infrastructure/transcription/GoogleSpeechClient';
@@ -55,6 +61,11 @@ export interface AppDeps {
   readonly getConfig: GetConfigUseCase;
   readonly updateConfig: UpdateConfigUseCase;
   readonly validateApiKey: ValidateApiKeyUseCase;
+  readonly listTemplates: ListTemplatesUseCase;
+  readonly saveTemplate: SaveTemplateUseCase;
+  readonly deleteTemplate: DeleteTemplateUseCase;
+  readonly regenerateSummaries: RegenerateSummariesUseCase;
+  readonly templateRegistry: TemplateRegistry;
 }
 
 export const buildAppDeps = (): AppDeps => {
@@ -62,6 +73,8 @@ export const buildAppDeps = (): AppDeps => {
   const configRepo = new LocalStorageConfigRepository();
   const configStore = new ConfigStore(configRepo);
   const meetingRepo = new IndexedDBMeetingRepository();
+  const templateRepo = new LocalStorageTemplateRepository();
+  const templateRegistry = new TemplateRegistry(templateRepo);
 
   const whisper = new WhisperClient(http, () => configStore.openAIKey());
   const whisperAdapter: NamedTranscriptionPort = {
@@ -139,6 +152,11 @@ export const buildAppDeps = (): AppDeps => {
     getConfig: new GetConfigUseCase(configRepo),
     updateConfig: new UpdateConfigUseCase(configRepo),
     validateApiKey: new ValidateApiKeyUseCase(new HttpApiKeyValidator(http)),
+    listTemplates: new ListTemplatesUseCase(templateRegistry),
+    saveTemplate: new SaveTemplateUseCase(templateRegistry),
+    deleteTemplate: new DeleteTemplateUseCase(templateRegistry),
+    regenerateSummaries: new RegenerateSummariesUseCase(summarization, meetingRepo),
+    templateRegistry,
   };
 };
 

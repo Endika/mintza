@@ -22,6 +22,7 @@ export class App {
       ['/settings', (): Promise<Page> => this.buildSettings()],
       ['/history', (): Promise<Page> => this.buildHistory()],
       ['/meeting', (): Promise<Page> => this.buildMeetingDetail()],
+      ['/templates', (): Promise<Page> => this.buildTemplates()],
     ]);
 
     const router = new Router(this.root, routes, (): Page => this.buildHome());
@@ -38,6 +39,8 @@ export class App {
       generateSummaries: this.deps.generateSummaries,
       generateMindMap: this.deps.generateMindMap,
       saveMeeting: this.deps.saveMeeting,
+      listTemplates: this.deps.listTemplates,
+      templateRegistry: this.deps.templateRegistry,
     });
   }
 
@@ -65,6 +68,18 @@ export class App {
     return new MeetingDetailPage({
       getMeeting: this.deps.getMeeting,
       deleteMeeting: this.deps.deleteMeeting,
+      listTemplates: this.deps.listTemplates,
+      regenerateSummaries: this.deps.regenerateSummaries,
+      translator: this.deps.configStore.translator,
+    });
+  }
+
+  private async buildTemplates(): Promise<Page> {
+    const { TemplatesPage } = await import('./presentation/pages/TemplatesPage');
+    return new TemplatesPage({
+      listTemplates: this.deps.listTemplates,
+      saveTemplate: this.deps.saveTemplate,
+      deleteTemplate: this.deps.deleteTemplate,
       translator: this.deps.configStore.translator,
     });
   }
