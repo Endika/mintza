@@ -94,15 +94,27 @@ export class HomePage implements Page {
                 <span id="rec-badge-label">${t('home.rec')}</span>
               </span>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button id="btn-record" class="btn-primary">
-                <span class="rec-dot" aria-hidden="true"></span>
-                ${t('home.btn_record')}
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-record" class="btn-primary" aria-label="${t('home.btn_record')}" title="${t('home.btn_record')}">
+                ${ICON_RECORD}
+                <span>${t('home.btn_record')}</span>
               </button>
-              <button id="btn-pause" class="btn-ghost" disabled>${t('home.btn_pause')}</button>
-              <button id="btn-stop" class="btn-danger" disabled>${t('home.btn_stop')}</button>
-              <button id="btn-summarize" class="btn-ghost hidden">${t('home.btn_summarize_now')}</button>
-              <button id="btn-new" class="btn-ghost hidden">${t('home.btn_new')}</button>
+              <button id="btn-pause" class="btn-ghost" disabled aria-label="${t('home.btn_pause')}" title="${t('home.btn_pause')}">
+                <span id="btn-pause-icon">${ICON_PAUSE}</span>
+                <span id="btn-pause-label">${t('home.btn_pause')}</span>
+              </button>
+              <button id="btn-stop" class="btn-danger" disabled aria-label="${t('home.btn_stop')}" title="${t('home.btn_stop')}">
+                ${ICON_STOP}
+                <span>${t('home.btn_stop')}</span>
+              </button>
+              <button id="btn-summarize" class="btn-ghost hidden" aria-label="${t('home.btn_summarize_now')}" title="${t('home.btn_summarize_now')}">
+                ${ICON_SPARKLE}
+                <span>${t('home.btn_summarize_now')}</span>
+              </button>
+              <button id="btn-new" class="btn-ghost hidden" aria-label="${t('home.btn_new')}" title="${t('home.btn_new')}">
+                ${ICON_PLUS}
+                <span>${t('home.btn_new')}</span>
+              </button>
             </div>
             <p id="status" role="status" aria-live="polite" class="text-sm text-ink-400">${t('home.ready')}</p>
             <div id="meter" class="hidden"></div>
@@ -344,6 +356,8 @@ export class HomePage implements Page {
     if (!this.root) return;
     const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
     const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
+    const pauseLabel = this.qs<HTMLElement>('#btn-pause-label');
+    const pauseIcon = this.qs<HTMLElement>('#btn-pause-icon');
     const stopBtn = this.qs<HTMLButtonElement>('#btn-stop');
     const summarizeBtn = this.qs<HTMLButtonElement>('#btn-summarize');
     const newBtn = this.qs<HTMLButtonElement>('#btn-new');
@@ -355,7 +369,9 @@ export class HomePage implements Page {
         recordBtn.disabled = false;
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
-        pauseBtn.textContent = this.t.t('home.btn_pause');
+        pauseLabel.textContent = this.t.t('home.btn_pause');
+        pauseIcon.innerHTML = ICON_PAUSE;
+        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_pause'));
         summarizeBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
         badge.classList.add('hidden');
@@ -364,7 +380,9 @@ export class HomePage implements Page {
         recordBtn.disabled = true;
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
-        pauseBtn.textContent = this.t.t('home.btn_pause');
+        pauseLabel.textContent = this.t.t('home.btn_pause');
+        pauseIcon.innerHTML = ICON_PAUSE;
+        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_pause'));
         summarizeBtn.classList.remove('hidden');
         summarizeBtn.disabled = false;
         newBtn.classList.add('hidden');
@@ -377,7 +395,9 @@ export class HomePage implements Page {
         recordBtn.disabled = true;
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
-        pauseBtn.textContent = this.t.t('home.btn_resume');
+        pauseLabel.textContent = this.t.t('home.btn_resume');
+        pauseIcon.innerHTML = ICON_PLAY;
+        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_resume'));
         summarizeBtn.classList.remove('hidden');
         summarizeBtn.disabled = false;
         newBtn.classList.add('hidden');
@@ -486,6 +506,13 @@ export class HomePage implements Page {
     return el;
   }
 }
+
+const ICON_RECORD = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><circle cx="7" cy="7" r="5"/></svg>`;
+const ICON_PAUSE = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="3" height="10" rx="1"/><rect x="8" y="2" width="3" height="10" rx="1"/></svg>`;
+const ICON_PLAY = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 2.5v9l8-4.5z"/></svg>`;
+const ICON_STOP = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/></svg>`;
+const ICON_SPARKLE = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M7 1l1.5 4L13 6.5 8.5 8 7 13 5.5 8 1 6.5 5.5 5 7 1z"/></svg>`;
+const ICON_PLUS = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>`;
 
 const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
   bullet_points: 'summary.bullet_points',
