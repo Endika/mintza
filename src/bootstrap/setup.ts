@@ -20,10 +20,14 @@ import { OpenAISummarizationAdapter } from '../infrastructure/llm/OpenAISummariz
 import { SummarizationChainAdapter } from '../infrastructure/llm/SummarizationChainAdapter';
 import { IndexedDBMeetingRepository } from '../infrastructure/persistence/IndexedDBMeetingRepository';
 import { LocalStorageConfigRepository } from '../infrastructure/persistence/LocalStorageConfigRepository';
+import { GoogleSpeechClient } from '../infrastructure/transcription/GoogleSpeechClient';
+import { GoogleSpeechTranscriptionAdapter } from '../infrastructure/transcription/GoogleSpeechTranscriptionAdapter';
+import { TranscriptionChainAdapter } from '../infrastructure/transcription/TranscriptionChainAdapter';
 import { WhisperClient } from '../infrastructure/transcription/WhisperClient';
 import { WhisperTranscriptionAdapter } from '../infrastructure/transcription/WhisperTranscriptionAdapter';
 import { ConfigStore } from '../presentation/state/ConfigStore';
 import type { SummarizationPort } from '../domain/summary/ports/SummarizationPort';
+import type { TranscriptionPort } from '../domain/transcription/ports/TranscriptionPort';
 
 export interface AppDeps {
   readonly configStore: ConfigStore;
@@ -47,7 +51,17 @@ export const buildAppDeps = (): AppDeps => {
   const meetingRepo = new IndexedDBMeetingRepository();
 
   const whisper = new WhisperClient(http, () => configStore.openAIKey());
-  const transcription = new WhisperTranscriptionAdapter(whisper);
+  const whisperAdapter = new WhisperTranscriptionAdapter(whisper);
+  const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleKey());
+  const googleSpeechAdapter = new GoogleSpeechTranscriptionAdapter(googleSpeech);
+
+  const transcription = new TranscriptionChainAdapter(() =>
+    pickTranscriptionChain(configStore.get().transcriptionQuality, {
+      cheap: [googleSpeechAdapter, whisperAdapter],
+      balanced: [whisperAdapter, googleSpeechAdapter],
+      premium: [whisperAdapter],
+    }),
+  );
 
   const openai = new OpenAIClient(http, () => configStore.openAIKey());
   const openaiAdapter = new OpenAISummarizationAdapter(openai);
@@ -89,3 +103,8 @@ const pickChain = (
   quality: 'cheap' | 'balanced' | 'premium',
   chains: Record<'cheap' | 'balanced' | 'premium', readonly SummarizationPort[]>,
 ): readonly SummarizationPort[] => chains[quality];
+
+const pickTranscriptionChain = (
+  quality: 'cheap' | 'balanced' | 'premium',
+  chains: Record<'cheap' | 'balanced' | 'premium', readonly TranscriptionPort[]>,
+): readonly TranscriptionPort[] => chains[quality];
