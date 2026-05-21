@@ -104,6 +104,8 @@ export type TranslationKey =
   | 'templates.cancel'
   | 'templates.save'
   | 'templates.confirm_delete'
+  | 'templates.in_use_block'
+  | 'templates.used_in'
   | 'meeting.regenerate'
   | 'meeting.regenerating'
   | 'export.label'
@@ -219,6 +221,8 @@ const EN: Translations = {
   'templates.cancel': 'Cancel',
   'templates.save': 'Save template',
   'templates.confirm_delete': 'Delete this template?',
+  'templates.in_use_block': 'In use by {count} meeting(s) — cannot delete',
+  'templates.used_in': 'Used in {count} meeting(s)',
   'meeting.regenerate': 'Regenerate with',
   'meeting.regenerating': 'Regenerating summaries…',
   'export.label': 'Export:',
@@ -333,6 +337,8 @@ const ES: Translations = {
   'templates.cancel': 'Cancelar',
   'templates.save': 'Guardar plantilla',
   'templates.confirm_delete': '¿Borrar esta plantilla?',
+  'templates.in_use_block': 'Usada por {count} reunión(es) — no se puede borrar',
+  'templates.used_in': 'Usada en {count} reunión(es)',
   'meeting.regenerate': 'Regenerar con',
   'meeting.regenerating': 'Regenerando resúmenes…',
   'export.label': 'Exportar:',
@@ -447,6 +453,8 @@ const EU: Translations = {
   'templates.cancel': 'Utzi',
   'templates.save': 'Gorde txantiloia',
   'templates.confirm_delete': 'Txantiloi hau ezabatu?',
+  'templates.in_use_block': '{count} bilerak erabilia — ezin da ezabatu',
+  'templates.used_in': '{count} bileratan erabilia',
   'meeting.regenerate': 'Birsortu honekin',
   'meeting.regenerating': 'Laburpenak birsortzen…',
   'export.label': 'Esportatu:',

@@ -1,4 +1,5 @@
 import type { DeleteTemplateUseCase } from '../../application/use-cases/DeleteTemplateUseCase';
+import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { SaveTemplateUseCase } from '../../application/use-cases/SaveTemplateUseCase';
 import {
@@ -19,6 +20,7 @@ import type { Page } from '../router/Router';
 
 export interface TemplatesPageDeps {
   readonly listTemplates: ListTemplatesUseCase;
+  readonly listMeetings: ListMeetingsUseCase;
   readonly saveTemplate: SaveTemplateUseCase;
   readonly deleteTemplate: DeleteTemplateUseCase;
   readonly translator: Translator;
@@ -27,6 +29,7 @@ export interface TemplatesPageDeps {
 export class TemplatesPage implements Page {
   private root: HTMLElement | null = null;
   private templates: Template[] = [];
+  private usageById: Map<string, number> = new Map();
   private editing: TemplateDefinition | null = null;
 
   constructor(private readonly deps: TemplatesPageDeps) {}
@@ -52,12 +55,21 @@ export class TemplatesPage implements Page {
   }
 
   private async refresh(): Promise<void> {
-    const result = await this.deps.listTemplates.execute();
-    if (!result.ok) {
-      this.qs<HTMLElement>('#list').innerHTML = `<p class="text-red-600">Error: ${result.error.message}</p>`;
+    const [templatesResult, meetingsResult] = await Promise.all([
+      this.deps.listTemplates.execute(),
+      this.deps.listMeetings.execute(),
+    ]);
+    if (!templatesResult.ok) {
+      this.qs<HTMLElement>('#list').innerHTML = `<p class="text-red-600">Error: ${templatesResult.error.message}</p>`;
       return;
     }
-    this.templates = result.value;
+    this.templates = templatesResult.value;
+    this.usageById = new Map();
+    if (meetingsResult.ok) {
+      for (const m of meetingsResult.value) {
+        this.usageById.set(m.templateKind, (this.usageById.get(m.templateKind) ?? 0) + 1);
+      }
+    }
     this.renderList();
   }
 
@@ -65,28 +77,40 @@ export class TemplatesPage implements Page {
     const list = this.qs<HTMLElement>('#list');
     const t = this.deps.translator;
     list.innerHTML = this.templates
-      .map(
-        (tpl) => `
-        <article class="card flex items-center justify-between gap-3">
-          <div>
-            <h3 class="font-semibold">${escape(tpl.name)}${
-              tpl.builtIn
-                ? ` <span class="ml-2 text-xs uppercase tracking-wide text-ink-400">${t.t('templates.builtin')}</span>`
-                : ''
-            }</h3>
-            <p class="text-sm text-ink-400">${escape(tpl.systemRole)} · ${tpl.summaryKinds.length} sections</p>
-          </div>
-          <div class="flex gap-2 shrink-0 text-sm">
-            <button type="button" data-duplicate="${tpl.id}" class="btn-ghost">${t.t('templates.duplicate')}</button>
-            ${
-              tpl.builtIn
-                ? ''
-                : `<button type="button" data-edit="${tpl.id}" class="btn-ghost">${t.t('templates.edit')}</button>
-                   <button type="button" data-delete="${tpl.id}" class="btn-ghost text-red-600">${t.t('templates.delete')}</button>`
-            }
-          </div>
-        </article>`,
-      )
+      .map((tpl) => {
+        const usage = this.usageById.get(tpl.id) ?? 0;
+        const usageLine =
+          usage > 0
+            ? `<p class="text-xs text-ink-400 mt-0.5">${t
+                .t('templates.used_in')
+                .replace('{count}', String(usage))}</p>`
+            : '';
+        const deleteDisabled = usage > 0;
+        const deleteTitle = deleteDisabled
+          ? t.t('templates.in_use_block').replace('{count}', String(usage))
+          : '';
+        return `
+          <article class="card flex items-center justify-between gap-3">
+            <div>
+              <h3 class="font-semibold">${escape(tpl.name)}${
+                tpl.builtIn
+                  ? ` <span class="ml-2 text-xs uppercase tracking-wide text-ink-400">${t.t('templates.builtin')}</span>`
+                  : ''
+              }</h3>
+              <p class="text-sm text-ink-400">${escape(tpl.systemRole)} · ${tpl.summaryKinds.length} sections</p>
+              ${usageLine}
+            </div>
+            <div class="flex gap-2 shrink-0 text-sm">
+              <button type="button" data-duplicate="${tpl.id}" class="btn-ghost">${t.t('templates.duplicate')}</button>
+              ${
+                tpl.builtIn
+                  ? ''
+                  : `<button type="button" data-edit="${tpl.id}" class="btn-ghost">${t.t('templates.edit')}</button>
+                     <button type="button" data-delete="${tpl.id}" class="btn-ghost text-red-600" ${deleteDisabled ? 'disabled' : ''} title="${escape(deleteTitle)}">${t.t('templates.delete')}</button>`
+              }
+            </div>
+          </article>`;
+      })
       .join('');
     list.querySelectorAll<HTMLButtonElement>('[data-duplicate]').forEach((btn) => {
       btn.addEventListener('click', () => this.duplicateFrom(btn.dataset['duplicate'] ?? ''));
@@ -121,7 +145,11 @@ export class TemplatesPage implements Page {
     if (id in BUILT_IN_TEMPLATES) return;
     if (!window.confirm(this.deps.translator.t('templates.confirm_delete'))) return;
     const result = await this.deps.deleteTemplate.execute({ id });
-    if (result.ok) await this.refresh();
+    if (result.ok) {
+      await this.refresh();
+    } else {
+      window.alert(result.error.message);
+    }
   }
 
   private openEditor(initial: TemplateDefinition | null): void {

@@ -78,6 +78,7 @@ export class App {
     const { TemplatesPage } = await import('./presentation/pages/TemplatesPage');
     return new TemplatesPage({
       listTemplates: this.deps.listTemplates,
+      listMeetings: this.deps.listMeetings,
       saveTemplate: this.deps.saveTemplate,
       deleteTemplate: this.deps.deleteTemplate,
       translator: this.deps.configStore.translator,

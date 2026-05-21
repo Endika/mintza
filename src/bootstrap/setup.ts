@@ -154,7 +154,7 @@ export const buildAppDeps = (): AppDeps => {
     validateApiKey: new ValidateApiKeyUseCase(new HttpApiKeyValidator(http)),
     listTemplates: new ListTemplatesUseCase(templateRegistry),
     saveTemplate: new SaveTemplateUseCase(templateRegistry),
-    deleteTemplate: new DeleteTemplateUseCase(templateRegistry),
+    deleteTemplate: new DeleteTemplateUseCase(templateRegistry, meetingRepo),
     regenerateSummaries: new RegenerateSummariesUseCase(summarization, meetingRepo),
     templateRegistry,
   };
