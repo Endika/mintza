@@ -1,10 +1,14 @@
-const CACHE_NAME = 'mintza-shell-v1';
-const PRECACHE = ['/mintza/', '/mintza/index.html', '/mintza/manifest.json', '/mintza/favicon.svg'];
+const VERSION = '__APP_VERSION__';
+const CACHE_NAME = `mintza-shell-${VERSION}`;
+const PRECACHE = [
+  '/mintza/',
+  '/mintza/index.html',
+  '/mintza/manifest.json',
+  '/mintza/favicon.svg',
+];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)));
 });
 
 self.addEventListener('activate', (event) => {
@@ -18,6 +22,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -29,9 +39,7 @@ self.addEventListener('fetch', (event) => {
     url.host.includes('anthropic.com') ||
     url.host.includes('cognitiveservices.azure.com');
 
-  if (isApiCall) {
-    return;
-  }
+  if (isApiCall) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
