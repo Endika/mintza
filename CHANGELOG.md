@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/Endika/mintza/compare/v1.15.1...v1.15.2) (2026-05-21)
+
+
+### Bug Fixes
+
+* **home:** reset state on new-meeting and disable Record when no API key ([eef7ac2](https://github.com/Endika/mintza/commit/eef7ac21dd5a24c6c324ef7ace8a92f926ae39d5))
+
 ## [1.15.1](https://github.com/Endika/mintza/compare/v1.15.0...v1.15.1) (2026-05-21)
 
 
