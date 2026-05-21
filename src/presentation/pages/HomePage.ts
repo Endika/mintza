@@ -27,6 +27,7 @@ import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
+import { renderMarkdown } from '../util/renderMarkdown';
 
 export interface HomePageDeps {
   readonly config: ConfigStore;
@@ -55,6 +56,7 @@ export class HomePage implements Page {
   private root: HTMLElement | null = null;
   private meeting: Meeting | null = null;
   private unsubChunks: (() => void) | null = null;
+  private readonly pendingChunks: Set<Promise<void>> = new Set();
   private screenState: ScreenState = 'idle';
   private readonly counter = new CostCounter();
   private readonly gauge = new TemperatureGauge();
@@ -210,7 +212,11 @@ export class HomePage implements Page {
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
-    this.unsubChunks = this.deps.audio.onChunk((chunk) => void this.handleChunk(chunk));
+    this.unsubChunks = this.deps.audio.onChunk((chunk) => {
+      const p = this.handleChunk(chunk);
+      this.pendingChunks.add(p);
+      void p.finally(() => this.pendingChunks.delete(p));
+    });
     this.setScreenState('recording');
   }
 
@@ -236,12 +242,15 @@ export class HomePage implements Page {
     if (!this.meeting) return;
     this.setScreenState('processing');
     this.setStatus(this.t.t('home.stopping'));
-    this.unsubChunks?.();
-    this.unsubChunks = null;
     this.meter.stop();
     this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
-    await this.deps.stopRecording.execute({ meeting: this.meeting });
+    await this.deps.stopRecording.execute({
+      meeting: this.meeting,
+      flushPending: () => Promise.allSettled([...this.pendingChunks]),
+    });
+    this.unsubChunks?.();
+    this.unsubChunks = null;
 
     if (this.meeting.segments.length === 0) {
       this.setStatus(this.t.t('home.no_audio'));
@@ -535,7 +544,7 @@ export class HomePage implements Page {
         if (!summary) return '';
         return `<article class="mb-4">
             <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${this.t.t(SUMMARY_KEYS[kind])}</h4>
-            <p class="mt-1 whitespace-pre-wrap">${escapeHtml(summary.content)}</p>
+            <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
       .join('');

@@ -17,6 +17,7 @@ import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
+import { renderMarkdown } from '../util/renderMarkdown';
 
 export interface MeetingDetailPageDeps {
   readonly getMeeting: GetMeetingUseCase;
@@ -219,7 +220,7 @@ export class MeetingDetailPage implements Page {
         );
         return `<article class="mb-4">
             <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escape(label)}</h4>
-            <p class="mt-1 whitespace-pre-wrap">${escape(summary.content)}</p>
+            <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
       .join('');

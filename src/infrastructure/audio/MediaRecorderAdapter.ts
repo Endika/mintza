@@ -88,19 +88,30 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     return Promise.resolve();
   }
 
-  stop(): Promise<void> {
-    if (this.status === 'idle' || this.status === 'stopped') return Promise.resolve();
+  async stop(): Promise<void> {
+    if (this.status === 'idle' || this.status === 'stopped') return;
     this.status = 'stopped';
     this.clearTimer();
     this.isRotating = false;
-    if (this.recorder && this.recorder.state !== 'inactive') {
-      this.recorder.stop();
-    }
-    this.stream?.getTracks().forEach((track) => track.stop());
-    this.stream = null;
+    const recorder = this.recorder;
+    const stream = this.stream;
     this.recorder = null;
+    if (recorder && recorder.state !== 'inactive') {
+      await new Promise<void>((resolve) => {
+        const previousOnStop = recorder.onstop;
+        recorder.onstop = (event) => {
+          try {
+            previousOnStop?.call(recorder, event);
+          } finally {
+            resolve();
+          }
+        };
+        recorder.stop();
+      });
+    }
+    stream?.getTracks().forEach((track) => track.stop());
+    this.stream = null;
     this.mimeType = null;
-    return Promise.resolve();
   }
 
   private startCycle(): void {

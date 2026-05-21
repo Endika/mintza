@@ -62,4 +62,46 @@
   .card {
     @apply rounded-xl border border-ink-100 bg-white p-6 shadow-sm;
   }
+  .meter-bar-track {
+    @apply h-2 overflow-hidden rounded-full bg-ink-100;
+  }
+  .meter-bar-fill {
+    @apply h-full rounded-full transition-[width] duration-150 ease-out;
+  }
+  .prose-summary > * + * {
+    @apply mt-2;
+  }
+  .prose-summary h1 {
+    @apply text-lg font-semibold;
+  }
+  .prose-summary h2 {
+    @apply text-base font-semibold;
+  }
+  .prose-summary h3 {
+    @apply text-sm font-semibold;
+  }
+  .prose-summary h4 {
+    @apply text-sm font-semibold text-ink-400;
+  }
+  .prose-summary p {
+    @apply leading-relaxed;
+  }
+  .prose-summary ul {
+    @apply list-disc pl-5;
+  }
+  .prose-summary ol {
+    @apply list-decimal pl-5;
+  }
+  .prose-summary li + li {
+    @apply mt-1;
+  }
+  .prose-summary code {
+    @apply rounded bg-ink-50 px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .prose-summary strong {
+    @apply font-semibold;
+  }
+  .prose-summary em {
+    @apply italic;
+  }
 }

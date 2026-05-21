@@ -5,6 +5,7 @@ import { err, ok, type Result } from '../../shared/result/Result';
 
 export interface StopRecordingInput {
   readonly meeting: Meeting;
+  readonly flushPending?: () => Promise<unknown>;
 }
 
 export class StopRecordingUseCase {
@@ -15,6 +16,9 @@ export class StopRecordingUseCase {
       await this.audio.stop();
     } catch (cause) {
       return err(new AppError('RECORDING_NOT_SUPPORTED', 'Failed to stop recording', cause));
+    }
+    if (input.flushPending) {
+      await input.flushPending();
     }
     input.meeting.finish();
     return ok(undefined);
