@@ -1,4 +1,5 @@
 import type { Language } from '../../language/value-objects/Language';
+import type { MindMap } from '../../mindmap/entities/MindMap';
 import type { Summary } from '../../summary/entities/Summary';
 import type { SummaryKind } from '../../summary/value-objects/SummaryKind';
 import type { TemperatureScore } from '../../temperature/value-objects/TemperatureScore';
@@ -18,6 +19,7 @@ export interface MeetingState {
   readonly segments: TranscriptSegment[];
   readonly summaries: Map<SummaryKind, Summary>;
   temperature?: TemperatureScore;
+  mindMap?: MindMap;
   cost: Money;
   starred: boolean;
   readonly tags: string[];
@@ -87,6 +89,10 @@ export class Meeting {
     return this.state.temperature;
   }
 
+  get mindMap(): MindMap | undefined {
+    return this.state.mindMap;
+  }
+
   get cost(): Money {
     return this.state.cost;
   }
@@ -137,6 +143,10 @@ export class Meeting {
 
   setTemperature(score: TemperatureScore): void {
     this.state.temperature = score;
+  }
+
+  setMindMap(mindMap: MindMap): void {
+    this.state.mindMap = mindMap;
   }
 
   addCost(amount: Money): void {
