@@ -75,9 +75,11 @@ export const buildAppDeps = (): AppDeps => {
   const http = new HttpClient();
   const configRepo = new LocalStorageConfigRepository();
   const configStore = new ConfigStore(configRepo);
-  const meetingRepo = new IndexedDBMeetingRepository();
   const templateRepo = new LocalStorageTemplateRepository();
   const templateRegistry = new TemplateRegistry(templateRepo);
+  const meetingRepo = new IndexedDBMeetingRepository(globalThis.indexedDB, (id) =>
+    templateRegistry.resolveOrFallback(id),
+  );
 
   const whisper = new WhisperClient(http, () => configStore.openAIKey());
   const whisperAdapter: NamedTranscriptionPort = {

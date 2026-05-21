@@ -63,10 +63,18 @@ interface PersistedMeeting {
   readonly tags: string[];
 }
 
+export type TemplateResolver = (id: string) => Promise<Template>;
+
 export class IndexedDBMeetingRepository implements MeetingRepository {
   private dbPromise: Promise<IDBDatabase> | null = null;
+  private readonly resolveTemplate: TemplateResolver;
 
-  constructor(private readonly indexedDB: IDBFactory = globalThis.indexedDB) {}
+  constructor(
+    private readonly indexedDB: IDBFactory = globalThis.indexedDB,
+    resolveTemplate: TemplateResolver = async (id) => Template.of(id),
+  ) {
+    this.resolveTemplate = resolveTemplate;
+  }
 
   private getDb(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
@@ -113,7 +121,8 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         request.onerror = () => reject(request.error);
       });
       if (!persisted) return ok(null);
-      return ok(fromPersisted(persisted));
+      const template = await this.resolveTemplate(persisted.template);
+      return ok(fromPersisted(persisted, template));
     } catch (cause) {
       return err(new AppError('STORAGE_FAILED', 'Failed to load meeting', cause));
     }
@@ -215,7 +224,7 @@ const nodeToPersisted = (node: MindMapNode): PersistedMindMapNode => ({
 const nodeFromPersisted = (node: PersistedMindMapNode): MindMapNode =>
   new MindMapNode(node.label, node.children.map(nodeFromPersisted));
 
-const fromPersisted = (p: PersistedMeeting): Meeting => {
+const fromPersisted = (p: PersistedMeeting, template: Template): Meeting => {
   const summaries = new Map<SummaryKind, Summary>();
   for (const s of p.summaries) {
     if (!isSummaryKind(s.kind)) continue;
@@ -234,7 +243,7 @@ const fromPersisted = (p: PersistedMeeting): Meeting => {
   return Meeting.restore({
     id: MeetingId.restore(p.id),
     title: p.title,
-    template: Template.of(p.template),
+    template,
     language: Language.of(p.language),
     startedAt: new Date(p.startedAt),
     ...(p.endedAt ? { endedAt: new Date(p.endedAt) } : {}),
