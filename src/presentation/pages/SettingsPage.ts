@@ -1,4 +1,6 @@
 import type { UpdateConfigUseCase } from '../../application/use-cases/UpdateConfigUseCase';
+import type { ValidateApiKeyUseCase } from '../../application/use-cases/ValidateApiKeyUseCase';
+import type { ApiKeyProviderName } from '../../domain/meeting/ports/ApiKeyValidator';
 import type {
   ApiKeys,
   AppConfig,
@@ -11,6 +13,7 @@ import type { Page } from '../router/Router';
 export interface SettingsPageDeps {
   readonly config: ConfigStore;
   readonly updateConfig: UpdateConfigUseCase;
+  readonly validateApiKey: ValidateApiKeyUseCase;
 }
 
 export class SettingsPage implements Page {
@@ -105,6 +108,32 @@ export class SettingsPage implements Page {
     this.qs<HTMLButtonElement>('#btn-clear').addEventListener('click', () => {
       void this.handleClear();
     });
+    if (!this.root) return;
+    this.root.querySelectorAll<HTMLButtonElement>('[data-test-key]').forEach((btn) => {
+      btn.addEventListener('click', () => void this.handleValidate(btn));
+    });
+  }
+
+  private async handleValidate(btn: HTMLButtonElement): Promise<void> {
+    const provider = btn.dataset['testKey'] as ApiKeyProviderName | undefined;
+    if (!provider) return;
+    if (!this.root) return;
+    const input = this.root.querySelector<HTMLInputElement>(`input[name="${provider}"]`);
+    if (!input) return;
+    const indicator = this.root.querySelector<HTMLElement>(`[data-status="${provider}"]`);
+    if (!indicator) return;
+    indicator.textContent = 'Testing…';
+    indicator.className = 'text-xs text-ink-400';
+    btn.disabled = true;
+    const result = await this.deps.validateApiKey.execute({ provider, key: input.value });
+    btn.disabled = false;
+    if (result.ok) {
+      indicator.textContent = '✓ Valid';
+      indicator.className = 'text-xs text-primary';
+    } else {
+      indicator.textContent = `✗ ${result.error.message}`;
+      indicator.className = 'text-xs text-red-600';
+    }
   }
 
   private async handleSave(form: HTMLFormElement): Promise<void> {
@@ -148,17 +177,23 @@ const apiKeyInput = (
   value: string | undefined,
   required: boolean,
 ): string => `
-  <label class="block">
-    <span class="text-sm font-medium">${label}${required ? ' *' : ''}</span>
-    <input
-      type="password"
-      name="${name}"
-      autocomplete="off"
-      value="${value ? escapeAttr(value) : ''}"
-      placeholder="${value ? '••••••••••' : 'sk-...'}"
-      class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
-    />
-  </label>
+  <div>
+    <label class="block">
+      <span class="text-sm font-medium">${label}${required ? ' *' : ''}</span>
+      <div class="mt-1 flex gap-2">
+        <input
+          type="password"
+          name="${name}"
+          autocomplete="off"
+          value="${value ? escapeAttr(value) : ''}"
+          placeholder="${value ? '••••••••••' : 'sk-...'}"
+          class="flex-1 rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
+        />
+        <button type="button" data-test-key="${name}" class="btn-ghost text-sm">Test</button>
+      </div>
+    </label>
+    <p data-status="${name}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>
+  </div>
 `;
 
 const qualityFieldset = (

@@ -40,6 +40,7 @@ export class App {
     return new SettingsPage({
       config: this.deps.configStore,
       updateConfig: this.deps.updateConfig,
+      validateApiKey: this.deps.validateApiKey,
     });
   }
 

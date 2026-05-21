@@ -7,6 +7,8 @@ import { StartRecordingUseCase } from '../application/use-cases/StartRecordingUs
 import { StopRecordingUseCase } from '../application/use-cases/StopRecordingUseCase';
 import { TranscribeChunkUseCase } from '../application/use-cases/TranscribeChunkUseCase';
 import { UpdateConfigUseCase } from '../application/use-cases/UpdateConfigUseCase';
+import { ValidateApiKeyUseCase } from '../application/use-cases/ValidateApiKeyUseCase';
+import { HttpApiKeyValidator } from '../infrastructure/api/HttpApiKeyValidator';
 import { MediaRecorderAdapter } from '../infrastructure/audio/MediaRecorderAdapter';
 import { HttpClient } from '../infrastructure/http/HttpClient';
 import { ClaudeClient } from '../infrastructure/llm/ClaudeClient';
@@ -35,6 +37,7 @@ export interface AppDeps {
   readonly deleteMeeting: DeleteMeetingUseCase;
   readonly getConfig: GetConfigUseCase;
   readonly updateConfig: UpdateConfigUseCase;
+  readonly validateApiKey: ValidateApiKeyUseCase;
 }
 
 export const buildAppDeps = (): AppDeps => {
@@ -78,6 +81,7 @@ export const buildAppDeps = (): AppDeps => {
     deleteMeeting: new DeleteMeetingUseCase(meetingRepo),
     getConfig: new GetConfigUseCase(configRepo),
     updateConfig: new UpdateConfigUseCase(configRepo),
+    validateApiKey: new ValidateApiKeyUseCase(new HttpApiKeyValidator(http)),
   };
 };
 
