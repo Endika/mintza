@@ -32,6 +32,7 @@ export class App {
       stopRecording: this.deps.stopRecording,
       transcribeChunk: this.deps.transcribeChunk,
       generateSummaries: this.deps.generateSummaries,
+      generateMindMap: this.deps.generateMindMap,
       saveMeeting: this.deps.saveMeeting,
     });
   }

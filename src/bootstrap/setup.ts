@@ -1,4 +1,5 @@
 import { DeleteMeetingUseCase } from '../application/use-cases/DeleteMeetingUseCase';
+import { GenerateMindMapUseCase } from '../application/use-cases/GenerateMindMapUseCase';
 import { GenerateSummariesUseCase } from '../application/use-cases/GenerateSummariesUseCase';
 import { GetConfigUseCase } from '../application/use-cases/GetConfigUseCase';
 import { ListMeetingsUseCase } from '../application/use-cases/ListMeetingsUseCase';
@@ -15,6 +16,7 @@ import { ClaudeClient } from '../infrastructure/llm/ClaudeClient';
 import { ClaudeSummarizationAdapter } from '../infrastructure/llm/ClaudeSummarizationAdapter';
 import { GeminiClient } from '../infrastructure/llm/GeminiClient';
 import { GeminiSummarizationAdapter } from '../infrastructure/llm/GeminiSummarizationAdapter';
+import { LLMMindMapAdapter } from '../infrastructure/llm/LLMMindMapAdapter';
 import { OpenAIClient } from '../infrastructure/llm/OpenAIClient';
 import { OpenAISummarizationAdapter } from '../infrastructure/llm/OpenAISummarizationAdapter';
 import { SummarizationChainAdapter } from '../infrastructure/llm/SummarizationChainAdapter';
@@ -36,6 +38,7 @@ export interface AppDeps {
   readonly stopRecording: StopRecordingUseCase;
   readonly transcribeChunk: TranscribeChunkUseCase;
   readonly generateSummaries: GenerateSummariesUseCase;
+  readonly generateMindMap: GenerateMindMapUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listMeetings: ListMeetingsUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
@@ -90,6 +93,7 @@ export const buildAppDeps = (): AppDeps => {
     stopRecording: new StopRecordingUseCase(audio),
     transcribeChunk: new TranscribeChunkUseCase(transcription),
     generateSummaries: new GenerateSummariesUseCase(summarization),
+    generateMindMap: new GenerateMindMapUseCase(new LLMMindMapAdapter(openai)),
     saveMeeting: new SaveMeetingUseCase(meetingRepo),
     listMeetings: new ListMeetingsUseCase(meetingRepo),
     deleteMeeting: new DeleteMeetingUseCase(meetingRepo),

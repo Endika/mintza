@@ -1,6 +1,7 @@
 import type { StartRecordingUseCase } from '../../application/use-cases/StartRecordingUseCase';
 import type { StopRecordingUseCase } from '../../application/use-cases/StopRecordingUseCase';
 import type { TranscribeChunkUseCase } from '../../application/use-cases/TranscribeChunkUseCase';
+import type { GenerateMindMapUseCase } from '../../application/use-cases/GenerateMindMapUseCase';
 import type { GenerateSummariesUseCase } from '../../application/use-cases/GenerateSummariesUseCase';
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
 import type { AudioCapturePort } from '../../domain/audio/ports/AudioCapturePort';
@@ -13,6 +14,7 @@ import { SentimentScoreParser } from '../../domain/temperature/services/Sentimen
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
+import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { ConfigStore } from '../state/ConfigStore';
@@ -25,6 +27,7 @@ export interface HomePageDeps {
   readonly stopRecording: StopRecordingUseCase;
   readonly transcribeChunk: TranscribeChunkUseCase;
   readonly generateSummaries: GenerateSummariesUseCase;
+  readonly generateMindMap: GenerateMindMapUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
 }
 
@@ -37,6 +40,7 @@ export class HomePage implements Page {
   private readonly scoreParser = new SentimentScoreParser();
   private readonly statsPanel = new StatisticsPanel();
   private readonly exportMenu = new ExportMenu();
+  private readonly mindMapView = new MindMapView();
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -88,6 +92,11 @@ export class HomePage implements Page {
           <div id="summaries" class="text-ink-600">
             <em class="text-ink-400">Summaries are generated when you stop recording.</em>
           </div>
+        </section>
+
+        <section id="mindmap-card" class="card mb-6 hidden">
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">Mind map</h3>
+          <div id="mindmap"></div>
         </section>
 
         <section id="stats-card" class="card mb-6 hidden">
@@ -169,6 +178,7 @@ export class HomePage implements Page {
     this.applyTemperature();
     this.renderStatistics();
     this.renderExportMenu();
+    void this.generateAndRenderMindMap();
     this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
     await this.deps.saveMeeting.execute({ meeting: this.meeting });
     this.setStatus(`Done. Summaries: ${result.successCount} ok, ${result.failureCount} failed.`);
@@ -199,6 +209,15 @@ export class HomePage implements Page {
           </article>`;
       })
       .join('');
+  }
+
+  private async generateAndRenderMindMap(): Promise<void> {
+    if (!this.meeting) return;
+    const result = await this.deps.generateMindMap.execute({ meeting: this.meeting });
+    if (!result.ok) return;
+    const card = this.qs<HTMLElement>('#mindmap-card');
+    card.classList.remove('hidden');
+    this.mindMapView.render(this.qs<HTMLElement>('#mindmap'), result.value);
   }
 
   private renderStatistics(): void {
