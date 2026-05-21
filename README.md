@@ -2,6 +2,12 @@
 
 **From talk to insight.** Client-only PWA that records meetings from the microphone, transcribes with cloud APIs, generates 8 kinds of summaries, computes sentiment, draws a mind map and keeps a local history.
 
+> 🔴 **Live demo:** https://endika.github.io/mintza/
+
+[![CI](https://github.com/Endika/mintza/actions/workflows/ci.yml/badge.svg)](https://github.com/Endika/mintza/actions/workflows/ci.yml)
+[![Release & Deploy](https://github.com/Endika/mintza/actions/workflows/release.yml/badge.svg)](https://github.com/Endika/mintza/actions/workflows/release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/Endika/mintza)](https://github.com/Endika/mintza/releases)
+
 ## Stack
 
 - TypeScript 5 strict
