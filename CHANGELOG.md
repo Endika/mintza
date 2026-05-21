@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/Endika/mintza/compare/v1.10.1...v1.11.0) (2026-05-21)
+
+
+### Features
+
+* **errors:** provider-named messages and full attempt list in chain failures ([c66ed3b](https://github.com/Endika/mintza/commit/c66ed3b9c27b1e8a7dbfe4cc4fd627056d7e6e78))
+
 ## [1.10.1](https://github.com/Endika/mintza/compare/v1.10.0...v1.10.1) (2026-05-21)
 
 
