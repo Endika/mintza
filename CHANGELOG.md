@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/Endika/mintza/compare/v1.15.2...v1.16.0) (2026-05-21)
+
+
+### Features
+
+* **history:** search box and sort by recent/oldest/longest/title ([071a7ca](https://github.com/Endika/mintza/commit/071a7ca9c01fbb232867957d8c63883d0de7e523))
+
 ## [1.15.2](https://github.com/Endika/mintza/compare/v1.15.1...v1.15.2) (2026-05-21)
 
 
