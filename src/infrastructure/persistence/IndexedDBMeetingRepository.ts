@@ -237,5 +237,6 @@ const fromPersisted = (p: PersistedMeeting): Meeting => {
     cost: Money.fromUsd(p.costMicroUsd / 1_000_000),
     starred: p.starred,
     tags: [...p.tags],
+    totalPausedMs: 0,
   });
 };

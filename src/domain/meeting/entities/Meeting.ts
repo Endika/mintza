@@ -23,6 +23,8 @@ export interface MeetingState {
   cost: Money;
   starred: boolean;
   readonly tags: string[];
+  pausedAt?: Date;
+  totalPausedMs: number;
 }
 
 export class Meeting {
@@ -46,6 +48,7 @@ export class Meeting {
       cost: Money.zero(),
       starred: false,
       tags: [],
+      totalPausedMs: 0,
     });
   }
 
@@ -109,9 +112,17 @@ export class Meeting {
     return this.state.endedAt !== undefined;
   }
 
+  get isPaused(): boolean {
+    return this.state.pausedAt !== undefined && !this.isFinished;
+  }
+
   get durationMs(): number {
     const end = this.state.endedAt ?? new Date();
-    return end.getTime() - this.state.startedAt.getTime();
+    const elapsed = end.getTime() - this.state.startedAt.getTime();
+    const pendingPaused = this.state.pausedAt
+      ? Math.max(0, end.getTime() - this.state.pausedAt.getTime())
+      : 0;
+    return Math.max(0, elapsed - this.state.totalPausedMs - pendingPaused);
   }
 
   rename(title: string): void {
@@ -134,7 +145,28 @@ export class Meeting {
     if (at.getTime() < this.state.startedAt.getTime()) {
       throw new Error('Meeting cannot end before it started');
     }
+    if (this.state.pausedAt) {
+      this.state.totalPausedMs += Math.max(
+        0,
+        at.getTime() - this.state.pausedAt.getTime(),
+      );
+      delete this.state.pausedAt;
+    }
     this.state.endedAt = at;
+  }
+
+  pause(at: Date = new Date()): void {
+    if (this.isFinished || this.state.pausedAt) return;
+    this.state.pausedAt = at;
+  }
+
+  resume(at: Date = new Date()): void {
+    if (this.isFinished || !this.state.pausedAt) return;
+    this.state.totalPausedMs += Math.max(
+      0,
+      at.getTime() - this.state.pausedAt.getTime(),
+    );
+    delete this.state.pausedAt;
   }
 
   setSummary(summary: Summary): void {

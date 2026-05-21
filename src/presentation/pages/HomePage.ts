@@ -206,10 +206,17 @@ export class HomePage implements Page {
   private async handlePauseResume(): Promise<void> {
     if (this.screenState === 'recording') {
       await this.deps.audio.pause();
+      this.meeting?.pause();
+      this.counter.stop();
+      this.meter.stop();
+      this.qs<HTMLElement>('#meter').classList.add('hidden');
       this.setScreenState('paused');
       this.setStatus(this.t.t('home.paused'));
     } else if (this.screenState === 'paused') {
+      this.meeting?.resume();
       await this.deps.audio.resume();
+      this.startMeter();
+      this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
       this.setScreenState('recording');
     }
   }
