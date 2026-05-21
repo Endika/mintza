@@ -502,7 +502,7 @@ export class HomePage implements Page {
 
   private readTemplate(): TemplateKind {
     const input = this.qs<HTMLInputElement>('input[name="template"]:checked');
-    return input.value as TemplateKind;
+    return input.value;
   }
 
   private readLanguage(): LanguageCode {

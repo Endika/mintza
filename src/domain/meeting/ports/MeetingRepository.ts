@@ -8,7 +8,7 @@ export interface MeetingListItem {
   readonly title: string;
   readonly startedAt: Date;
   readonly durationMs: number;
-  readonly templateKind: 'work' | 'interview' | 'generic';
+  readonly templateKind: string;
   readonly starred: boolean;
 }
 

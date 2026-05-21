@@ -13,12 +13,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
   eu: 'Basque',
 };
 
-const TEMPLATE_STRUCTURE: Record<string, string> = {
-  work: 'Meeting → Objectives, Decisions, Actions, Blockers, Next steps',
-  interview: 'Candidate → Strengths, Areas to improve, Experience, Cultural fit, Recommendation',
-  generic: 'Central topic → Subtopics, Ideas, Actions',
-};
-
 export class MindMapPromptBuilder {
   build(input: {
     template: Template;
@@ -26,13 +20,12 @@ export class MindMapPromptBuilder {
     transcript: TranscriptText;
   }): MindMapPrompt {
     const langName = LANGUAGE_NAMES[input.language.code] ?? 'English';
-    const structure = TEMPLATE_STRUCTURE[input.template.kind] ?? TEMPLATE_STRUCTURE['generic'];
     const system =
       `You are an expert at structuring meeting transcripts into hierarchical mind maps. ` +
       `Reply ONLY with valid JSON, no markdown fences, no commentary. ` +
       `Node labels must be in ${langName}.`;
     const user = [
-      `Suggested structure: ${structure ?? ''}.`,
+      `Suggested structure: ${input.template.mindMapStructure}.`,
       'Adapt the structure to the actual content of the transcript.',
       'Use 2-3 levels deep. Keep labels under 6 words.',
       '',
