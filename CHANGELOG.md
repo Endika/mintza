@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/Endika/mintza/compare/v1.11.1...v1.12.0) (2026-05-21)
+
+
+### Features
+
+* **settings:** per-service validation results with check/cross per provider ([17ad971](https://github.com/Endika/mintza/commit/17ad971e6111ef462781bf39b93893ed0ca91109))
+
 ## [1.11.1](https://github.com/Endika/mintza/compare/v1.11.0...v1.11.1) (2026-05-21)
 
 
