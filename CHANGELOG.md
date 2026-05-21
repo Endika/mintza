@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/Endika/mintza/compare/v1.1.0...v1.2.0) (2026-05-21)
+
+
+### Features
+
+* **domain:** cost calculator with provider pricing constants ([ddb04d7](https://github.com/Endika/mintza/commit/ddb04d711b9e85033635360640df0f0467368070))
+* **presentation:** live cost counter during recording and final breakdown ([15c7e4a](https://github.com/Endika/mintza/commit/15c7e4a0d2495ea922dcd9867e6810d21c60a244))
+* **settings:** per-provider API key validator with test buttons ([67970a3](https://github.com/Endika/mintza/commit/67970a383ec42bc1bbdafc71ec0bbc0ad8b0d2b3))
+
 # [1.1.0](https://github.com/Endika/mintza/compare/v1.0.0...v1.1.0) (2026-05-21)
 
 
