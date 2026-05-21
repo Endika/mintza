@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/Endika/mintza/compare/v1.16.0...v1.17.0) (2026-05-21)
+
+
+### Features
+
+* **templates:** CRUD page for custom prompts, dynamic selector and regenerate from history ([2e67660](https://github.com/Endika/mintza/commit/2e67660ef7b424f493556f1be866d9f4e006b9d0))
+
 # [1.16.0](https://github.com/Endika/mintza/compare/v1.15.2...v1.16.0) (2026-05-21)
 
 

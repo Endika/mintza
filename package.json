@@ -1,7 +1,7 @@
 {
   "name": "mintza",
   "private": true,
-  "version": "1.16.0",
+  "version": "1.17.0",
   "type": "module",
   "description": "From talk to insight — PWA de transcripción y resúmenes de reuniones",
   "scripts": {
