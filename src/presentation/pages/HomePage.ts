@@ -262,6 +262,7 @@ export class HomePage implements Page {
     if (!this.root) return;
     this.meeting = null;
     this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.screenState = 'idle';
     this.render(this.root);
   }
 
@@ -371,9 +372,13 @@ export class HomePage implements Page {
     const badge = this.qs<HTMLElement>('#rec-badge');
     const badgeLabel = this.qs<HTMLElement>('#rec-badge-label');
 
+    const hasKey = Boolean(this.deps.config.openAIKey());
     switch (this.screenState) {
       case 'idle':
-        recordBtn.disabled = false;
+        recordBtn.disabled = !hasKey;
+        recordBtn.title = hasKey
+          ? this.t.t('home.btn_record')
+          : this.t.t('home.configure_key');
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
         pauseLabel.textContent = this.t.t('home.btn_pause');
@@ -382,6 +387,9 @@ export class HomePage implements Page {
         summarizeBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
         badge.classList.add('hidden');
+        if (!hasKey) {
+          this.setStatus(this.t.t('home.configure_key'));
+        }
         break;
       case 'recording':
         recordBtn.disabled = true;
