@@ -136,13 +136,26 @@ export class SettingsPage implements Page {
     btn.disabled = true;
     const result = await this.deps.validateApiKey.execute({ provider, key: input.value });
     btn.disabled = false;
-    if (result.ok) {
-      indicator.textContent = tr.t('settings.valid');
-      indicator.className = 'text-xs text-primary';
-    } else {
+    if (!result.ok) {
       indicator.textContent = `✗ ${result.error.message}`;
       indicator.className = 'text-xs text-red-600';
+      return;
     }
+    const checks = result.value.checks;
+    const anyOk = checks.some((c) => c.ok);
+    const allOk = checks.every((c) => c.ok);
+    indicator.className = allOk
+      ? 'text-xs text-primary'
+      : anyOk
+        ? 'text-xs text-ink-600'
+        : 'text-xs text-red-600';
+    indicator.innerHTML = checks
+      .map((c) =>
+        c.ok
+          ? `<div>✓ ${escapeHtml(c.service)}</div>`
+          : `<div class="text-red-600">✗ ${escapeHtml(c.service)}${c.message ? ` — ${escapeHtml(c.message)}` : ''}</div>`,
+      )
+      .join('');
   }
 
   private async handleSave(form: HTMLFormElement): Promise<void> {
@@ -250,3 +263,8 @@ const buildApiKeys = (data: FormData): ApiKeys => {
 };
 
 const escapeAttr = (raw: string): string => raw.replace(/"/g, '&quot;');
+
+const escapeHtml = (raw: string): string =>
+  raw.replace(/[&<>"]/g, (ch) =>
+    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;',
+  );

@@ -1,6 +1,7 @@
 import type {
   ApiKeyProviderName,
   ApiKeyValidator,
+  ValidationOutcome,
 } from '../../domain/meeting/ports/ApiKeyValidator';
 import type { AppError } from '../../shared/errors/AppError';
 import type { Result } from '../../shared/result/Result';
@@ -13,7 +14,7 @@ export interface ValidateApiKeyInput {
 export class ValidateApiKeyUseCase {
   constructor(private readonly validator: ApiKeyValidator) {}
 
-  execute(input: ValidateApiKeyInput): Promise<Result<void, AppError>> {
+  execute(input: ValidateApiKeyInput): Promise<Result<ValidationOutcome, AppError>> {
     return this.validator.validate(input.provider, input.key);
   }
 }
