@@ -71,7 +71,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
 
   constructor(
     private readonly indexedDB: IDBFactory = globalThis.indexedDB,
-    resolveTemplate: TemplateResolver = async (id) => Template.of(id),
+    resolveTemplate: TemplateResolver = (id) => Promise.resolve(Template.of(id)),
   ) {
     this.resolveTemplate = resolveTemplate;
   }

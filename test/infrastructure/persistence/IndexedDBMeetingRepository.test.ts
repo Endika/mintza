@@ -86,9 +86,9 @@ describe('IndexedDBMeetingRepository', () => {
     };
     const templates: typeof customDef[] = [customDef];
     const templateRepo = {
-      load: async () => ({ ok: true as const, value: templates }),
-      save: async () => ({ ok: true as const, value: undefined }),
-      delete: async () => ({ ok: true as const, value: undefined }),
+      load: () => Promise.resolve({ ok: true as const, value: templates }),
+      save: () => Promise.resolve({ ok: true as const, value: undefined }),
+      delete: () => Promise.resolve({ ok: true as const, value: undefined }),
     };
     const registry = new TemplateRegistry(templateRepo);
     repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) =>
@@ -113,9 +113,9 @@ describe('IndexedDBMeetingRepository', () => {
 
   it('falls back to generic when the saved template no longer exists', async () => {
     const templateRepo = {
-      load: async () => ({ ok: true as const, value: [] }),
-      save: async () => ({ ok: true as const, value: undefined }),
-      delete: async () => ({ ok: true as const, value: undefined }),
+      load: () => Promise.resolve({ ok: true as const, value: [] }),
+      save: () => Promise.resolve({ ok: true as const, value: undefined }),
+      delete: () => Promise.resolve({ ok: true as const, value: undefined }),
     };
     const registry = new TemplateRegistry(templateRepo);
     repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) =>
