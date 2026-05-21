@@ -12,6 +12,7 @@ import { Template, type TemplateKind } from '../../domain/meeting/value-objects/
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
+import { AudioLevelMeter } from '../components/AudioLevelMeter';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
 import { MindMapView } from '../components/MindMapView';
@@ -33,6 +34,13 @@ export interface HomePageDeps {
   readonly saveMeeting: SaveMeetingUseCase;
 }
 
+interface ChunkProgress {
+  received: number;
+  transcribed: number;
+  failed: number;
+  lastError: string | null;
+}
+
 export class HomePage implements Page {
   private root: HTMLElement | null = null;
   private meeting: Meeting | null = null;
@@ -43,6 +51,8 @@ export class HomePage implements Page {
   private readonly statsPanel = new StatisticsPanel();
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
+  private readonly meter = new AudioLevelMeter();
+  private progress: ChunkProgress = { received: 0, transcribed: 0, failed: 0, lastError: null };
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -80,6 +90,9 @@ export class HomePage implements Page {
             </div>
           </div>
           <p id="status" role="status" aria-live="polite" class="mt-3 text-sm text-ink-400">${t('home.ready')}</p>
+          <div id="meter" class="mt-3 hidden"></div>
+          <div id="progress" class="mt-2 text-xs text-ink-400 hidden"></div>
+          <div id="last-error" class="mt-1 text-xs text-red-600 hidden"></div>
           <div id="counter" aria-live="polite" class="mt-3 text-sm text-ink-400"></div>
         </section>
 
@@ -125,6 +138,7 @@ export class HomePage implements Page {
     this.unsubChunks?.();
     this.unsubChunks = null;
     this.counter.stop();
+    this.meter.stop();
   }
 
   private bind(): void {
@@ -150,21 +164,64 @@ export class HomePage implements Page {
       return;
     }
     this.meeting = result.value.meeting;
+    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
     this.setStatus(this.t.t('home.recording'));
     this.toggleButtons(true);
     this.qs<HTMLElement>('#transcription').innerHTML = '';
+    this.qs<HTMLElement>('#last-error').classList.add('hidden');
+    this.showProgress();
+    this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => void this.handleChunk(chunk));
   }
 
+  private startMeter(): void {
+    const stream = this.deps.audio.getStream();
+    const meterEl = this.qs<HTMLElement>('#meter');
+    if (!stream) {
+      meterEl.classList.add('hidden');
+      return;
+    }
+    meterEl.classList.remove('hidden');
+    this.meter.start(meterEl, stream);
+  }
+
   private async handleChunk(chunk: AudioChunk): Promise<void> {
     if (!this.meeting) return;
+    this.progress.received += 1;
+    this.updateProgress();
     const result = await this.deps.transcribeChunk.execute({ meeting: this.meeting, chunk });
     if (result.ok) {
+      this.progress.transcribed += 1;
       this.appendSegment(result.value);
     } else {
-      this.setStatus(`Error: ${result.error.message}`);
+      this.progress.failed += 1;
+      this.progress.lastError = result.error.message;
+      this.showLastError(result.error.message);
     }
+    this.updateProgress();
+  }
+
+  private showProgress(): void {
+    const el = this.qs<HTMLElement>('#progress');
+    el.classList.remove('hidden');
+    this.updateProgress();
+  }
+
+  private updateProgress(): void {
+    const el = this.qs<HTMLElement>('#progress');
+    const p = this.progress;
+    if (p.received === 0) {
+      el.textContent = 'Waiting for the first 15s chunk…';
+      return;
+    }
+    el.textContent = `Chunks: ${p.received} received · ${p.transcribed} transcribed · ${p.failed} failed`;
+  }
+
+  private showLastError(message: string): void {
+    const el = this.qs<HTMLElement>('#last-error');
+    el.classList.remove('hidden');
+    el.textContent = `Last error: ${message}`;
   }
 
   private async handleStop(): Promise<void> {
@@ -173,8 +230,18 @@ export class HomePage implements Page {
     this.setStatus(this.t.t('home.stopping'));
     this.unsubChunks?.();
     this.unsubChunks = null;
+    this.meter.stop();
+    this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
     await this.deps.stopRecording.execute({ meeting: this.meeting });
+
+    if (this.meeting.segments.length === 0) {
+      this.setStatus(
+        'No audio was transcribed. The mic may not have captured sound or the API failed.',
+      );
+      return;
+    }
+
     this.setStatus(this.t.t('home.generating'));
     const summariesEl = this.qs<HTMLElement>('#summaries');
     summariesEl.innerHTML = '<em class="text-ink-400">…</em>';

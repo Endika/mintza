@@ -11,5 +11,6 @@ export interface AudioCapturePort {
   resume(): Promise<void>;
   stop(): Promise<void>;
   state(): RecordingState;
+  getStream(): MediaStream | null;
   onChunk(handler: AudioChunkHandler): Unsubscribe;
 }

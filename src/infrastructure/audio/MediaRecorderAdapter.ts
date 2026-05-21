@@ -7,7 +7,7 @@ import type {
 import { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { AppError } from '../../shared/errors/AppError';
 
-const DEFAULT_TIMESLICE_MS = 30_000;
+const DEFAULT_TIMESLICE_MS = 15_000;
 const PREFERRED_MIME_TYPES = [
   'audio/webm;codecs=opus',
   'audio/webm',
@@ -34,6 +34,10 @@ export class MediaRecorderAdapter implements AudioCapturePort {
 
   state(): RecordingState {
     return this.status;
+  }
+
+  getStream(): MediaStream | null {
+    return this.stream;
   }
 
   onChunk(handler: AudioChunkHandler): Unsubscribe {
