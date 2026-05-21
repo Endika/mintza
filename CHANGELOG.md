@@ -1,3 +1,10 @@
+## [1.18.4](https://github.com/Endika/mintza/compare/v1.18.3...v1.18.4) (2026-05-21)
+
+
+### Bug Fixes
+
+* **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
+
 ## [1.18.3](https://github.com/Endika/mintza/compare/v1.18.2...v1.18.3) (2026-05-21)
 
 
