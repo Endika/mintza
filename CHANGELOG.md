@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/Endika/mintza/compare/v1.17.0...v1.18.0) (2026-05-21)
+
+
+### Features
+
+* **templates:** block deletion when meetings still reference the template ([2d30940](https://github.com/Endika/mintza/commit/2d30940ca974f0c1b91ecd98534ba30d4554821a))
+
 # [1.17.0](https://github.com/Endika/mintza/compare/v1.16.0...v1.17.0) (2026-05-21)
 
 
