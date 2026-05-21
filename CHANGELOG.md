@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/Endika/mintza/compare/v1.15.0...v1.15.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **home:** freeze duration, counter and mic level meter while paused ([954436c](https://github.com/Endika/mintza/commit/954436c409fec366180222cd444106ceced7259a))
+
 # [1.15.0](https://github.com/Endika/mintza/compare/v1.14.0...v1.15.0) (2026-05-21)
 
 
