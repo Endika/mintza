@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/Endika/mintza/compare/v1.14.0...v1.15.0) (2026-05-21)
+
+
+### Features
+
+* **home:** standard play/pause/stop/record icons on control buttons ([64d06b0](https://github.com/Endika/mintza/commit/64d06b0bca0e0b7e711846b508ceecb08ad5b528))
+
 # [1.14.0](https://github.com/Endika/mintza/compare/v1.13.0...v1.14.0) (2026-05-21)
 
 
