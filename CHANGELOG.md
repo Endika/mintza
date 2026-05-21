@@ -1,3 +1,10 @@
+## [1.18.2](https://github.com/Endika/mintza/compare/v1.18.1...v1.18.2) (2026-05-21)
+
+
+### Bug Fixes
+
+* **meeting:** persist meeting and mind map after recording stops ([f25f39d](https://github.com/Endika/mintza/commit/f25f39d7af9bd2aa8aac0a0b611a71fd990d12e1))
+
 ## [1.18.1](https://github.com/Endika/mintza/compare/v1.18.0...v1.18.1) (2026-05-21)
 
 
