@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/Endika/mintza/compare/v1.8.0...v1.9.0) (2026-05-21)
+
+
+### Features
+
+* **home:** live mic level meter, chunk progress and last-error feedback ([6b9a7c0](https://github.com/Endika/mintza/commit/6b9a7c0e47551d456b6de6426a07c0895276ff6b))
+
 # [1.8.0](https://github.com/Endika/mintza/compare/v1.7.0...v1.8.0) (2026-05-21)
 
 
