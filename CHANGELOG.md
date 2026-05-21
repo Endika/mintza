@@ -1,3 +1,10 @@
+## [1.18.3](https://github.com/Endika/mintza/compare/v1.18.2...v1.18.3) (2026-05-21)
+
+
+### Bug Fixes
+
+* **persistence:** resolve custom templates when loading meetings ([2b15638](https://github.com/Endika/mintza/commit/2b156380d676f3ed0d618fd3cee953335c04de14))
+
 ## [1.18.2](https://github.com/Endika/mintza/compare/v1.18.1...v1.18.2) (2026-05-21)
 
 
