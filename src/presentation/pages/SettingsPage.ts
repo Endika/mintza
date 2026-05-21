@@ -24,73 +24,71 @@ export class SettingsPage implements Page {
   render(root: HTMLElement): void {
     this.root = root;
     const cfg = this.deps.config.get();
+    const tr = this.deps.config.translator;
+    const t = (key: Parameters<typeof tr.t>[0]): string => tr.t(key);
     root.innerHTML = `
       <main class="mx-auto max-w-2xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
-          <h1 class="text-3xl font-bold tracking-tight">Settings</h1>
-          <a href="#/" class="btn-ghost">← Back</a>
+          <h1 class="text-3xl font-bold tracking-tight">${t('settings.title')}</h1>
+          <a href="#/" class="btn-ghost">${t('nav.back')}</a>
         </header>
 
         <form id="settings-form" class="space-y-6">
           <section class="card">
-            <h2 class="mb-3 text-lg font-semibold">API keys</h2>
-            <p class="mb-4 text-sm text-ink-400">
-              Your keys are stored only in this browser's <code>localStorage</code>.
-              They never leave your device (MINTZA has no server). If you share this browser
-              with anyone else, they can read the keys. Use the button below to wipe them.
-            </p>
+            <h2 class="mb-3 text-lg font-semibold">${t('settings.api_keys')}</h2>
+            <p class="mb-4 text-sm text-ink-400">${t('settings.api_keys_warning')}</p>
             <div class="space-y-3">
-              ${apiKeyInput('openai', 'OpenAI (Whisper + GPT)', cfg.apiKeys.openai, true)}
-              ${apiKeyInput('google', 'Google (Gemini + Speech)', cfg.apiKeys.google, false)}
-              ${apiKeyInput('anthropic', 'Anthropic Claude', cfg.apiKeys.anthropic, false)}
-              ${apiKeyInput('azure', 'Azure Speech', cfg.apiKeys.azure, false)}
+              ${apiKeyInput('openai', 'OpenAI (Whisper + GPT)', cfg.apiKeys.openai, true, t('settings.btn_test'))}
+              ${apiKeyInput('google', 'Google (Gemini + Speech)', cfg.apiKeys.google, false, t('settings.btn_test'))}
+              ${apiKeyInput('anthropic', 'Anthropic Claude', cfg.apiKeys.anthropic, false, t('settings.btn_test'))}
+              ${apiKeyInput('azure', 'Azure Speech', cfg.apiKeys.azure, false, t('settings.btn_test'))}
             </div>
           </section>
 
           <section class="card">
-            <h2 class="mb-3 text-lg font-semibold">Quality profiles</h2>
-            ${qualityFieldset('summaryQuality', 'Summary quality', cfg.summaryQuality, [
-              { value: 'cheap', label: 'Cheap', hint: 'Gemini first, Claude fallback' },
-              { value: 'balanced', label: 'Balanced (recommended)', hint: 'GPT-4o-mini → Claude → Gemini' },
-              { value: 'premium', label: 'Premium', hint: 'GPT-4o, no fallback' },
+            <h2 class="mb-3 text-lg font-semibold">${t('settings.qualities')}</h2>
+            ${qualityFieldset('summaryQuality', t('settings.summary_quality'), cfg.summaryQuality, [
+              { value: 'cheap', label: t('settings.cheap'), hint: 'Gemini → Claude → GPT' },
+              { value: 'balanced', label: t('settings.balanced'), hint: 'GPT-4o-mini → Claude → Gemini' },
+              { value: 'premium', label: t('settings.premium'), hint: 'GPT-4o (no fallback)' },
             ])}
             ${qualityFieldset(
               'transcriptionQuality',
-              'Transcription quality',
+              t('settings.transcription_quality'),
               cfg.transcriptionQuality,
               [
-                { value: 'cheap', label: 'Cheap', hint: 'Google Speech first' },
-                { value: 'balanced', label: 'Balanced (recommended)', hint: 'Whisper + Google fallback' },
-                { value: 'premium', label: 'Premium', hint: 'Whisper + Azure fallback' },
+                { value: 'cheap', label: t('settings.cheap'), hint: 'Google Speech → Whisper' },
+                { value: 'balanced', label: t('settings.balanced'), hint: 'Whisper → Google Speech' },
+                { value: 'premium', label: t('settings.premium'), hint: 'Whisper only' },
               ],
             )}
           </section>
 
           <section class="card">
-            <h2 class="mb-3 text-lg font-semibold">Preferences</h2>
+            <h2 class="mb-3 text-lg font-semibold">${t('settings.preferences')}</h2>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label class="block">
-                <span class="text-sm font-medium">Interface language</span>
+                <span class="text-sm font-medium">${t('settings.interface_language')}</span>
                 <select name="language" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
                   <option value="en" ${cfg.language === 'en' ? 'selected' : ''}>English</option>
-                  <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Spanish</option>
-                  <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Basque</option>
+                  <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Español</option>
+                  <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Euskara</option>
                 </select>
               </label>
               <label class="block">
-                <span class="text-sm font-medium">Default template</span>
+                <span class="text-sm font-medium">${t('settings.default_template')}</span>
                 <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
-                  <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>Generic</option>
-                  <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>Work</option>
-                  <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>Interview</option>
+                  <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>${t('template.generic')}</option>
+                  <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>${t('template.work')}</option>
+                  <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.interview')}</option>
                 </select>
               </label>
             </div>
           </section>
 
           <div class="flex justify-between">
-            <button type="button" id="btn-clear" class="btn-ghost text-red-600">Clear keys</button>
-            <button type="submit" class="btn-primary">Save</button>
+            <button type="button" id="btn-clear" class="btn-ghost text-red-600">${t('settings.btn_clear')}</button>
+            <button type="submit" class="btn-primary">${t('settings.btn_save')}</button>
           </div>
           <p id="settings-status" class="text-sm text-ink-400"></p>
         </form>
@@ -122,13 +120,14 @@ export class SettingsPage implements Page {
     if (!input) return;
     const indicator = this.root.querySelector<HTMLElement>(`[data-status="${provider}"]`);
     if (!indicator) return;
-    indicator.textContent = 'Testing…';
+    const tr = this.deps.config.translator;
+    indicator.textContent = tr.t('settings.testing');
     indicator.className = 'text-xs text-ink-400';
     btn.disabled = true;
     const result = await this.deps.validateApiKey.execute({ provider, key: input.value });
     btn.disabled = false;
     if (result.ok) {
-      indicator.textContent = '✓ Valid';
+      indicator.textContent = tr.t('settings.valid');
       indicator.className = 'text-xs text-primary';
     } else {
       indicator.textContent = `✗ ${result.error.message}`;
@@ -148,7 +147,10 @@ export class SettingsPage implements Page {
     };
     await this.deps.updateConfig.execute({ config: next });
     await this.deps.config.update(next);
-    this.setStatus('Settings saved.');
+    if (next.language !== this.deps.config.get().language) {
+      this.render(this.root ?? document.createElement('div'));
+    }
+    this.setStatus(this.deps.config.translator.t('settings.saved'));
   }
 
   private async handleClear(): Promise<void> {
@@ -156,7 +158,7 @@ export class SettingsPage implements Page {
     await this.deps.updateConfig.execute({ config: cleared });
     await this.deps.config.update(cleared);
     this.qs<HTMLFormElement>('#settings-form').reset();
-    this.setStatus('Keys cleared from this browser.');
+    this.setStatus(this.deps.config.translator.t('settings.cleared'));
   }
 
   private setStatus(message: string): void {
@@ -176,6 +178,7 @@ const apiKeyInput = (
   label: string,
   value: string | undefined,
   required: boolean,
+  testLabel: string,
 ): string => `
   <div>
     <label class="block">
@@ -189,7 +192,7 @@ const apiKeyInput = (
           placeholder="${value ? '••••••••••' : 'sk-...'}"
           class="flex-1 rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
         />
-        <button type="button" data-test-key="${name}" class="btn-ghost text-sm">Test</button>
+        <button type="button" data-test-key="${name}" class="btn-ghost text-sm">${testLabel}</button>
       </div>
     </label>
     <p data-status="${name}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>

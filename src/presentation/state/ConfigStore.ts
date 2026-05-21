@@ -3,12 +3,14 @@ import {
   type AppConfig,
   type ConfigRepository,
 } from '../../domain/meeting/ports/ConfigRepository';
+import { Translator } from '../i18n/Translator';
 
 export type ConfigListener = (config: AppConfig) => void;
 
 export class ConfigStore {
   private current: AppConfig = DEFAULT_CONFIG;
   private readonly listeners: Set<ConfigListener> = new Set();
+  readonly translator: Translator = new Translator();
 
   constructor(private readonly repository: ConfigRepository) {}
 
@@ -16,6 +18,7 @@ export class ConfigStore {
     const result = await this.repository.load();
     if (result.ok) {
       this.current = result.value;
+      this.translator.setLanguage(result.value.language);
     }
   }
 
@@ -43,6 +46,7 @@ export class ConfigStore {
     const result = await this.repository.save(config);
     if (result.ok) {
       this.current = config;
+      this.translator.setLanguage(config.language);
       this.listeners.forEach((l) => l(config));
     }
   }
