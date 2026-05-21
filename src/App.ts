@@ -1,7 +1,5 @@
 import { buildAppDeps, type AppDeps } from './bootstrap/setup';
-import { HistoryPage } from './presentation/pages/HistoryPage';
 import { HomePage } from './presentation/pages/HomePage';
-import { SettingsPage } from './presentation/pages/SettingsPage';
 import { Router, type Page, type PageFactory } from './presentation/router/Router';
 
 export class App {
@@ -16,8 +14,8 @@ export class App {
 
     const routes = new Map<string, PageFactory>([
       ['/', (): Page => this.buildHome()],
-      ['/settings', (): Page => this.buildSettings()],
-      ['/history', (): Page => this.buildHistory()],
+      ['/settings', (): Promise<Page> => this.buildSettings()],
+      ['/history', (): Promise<Page> => this.buildHistory()],
     ]);
 
     const router = new Router(this.root, routes, (): Page => this.buildHome());
@@ -37,7 +35,8 @@ export class App {
     });
   }
 
-  private buildSettings(): SettingsPage {
+  private async buildSettings(): Promise<Page> {
+    const { SettingsPage } = await import('./presentation/pages/SettingsPage');
     return new SettingsPage({
       config: this.deps.configStore,
       updateConfig: this.deps.updateConfig,
@@ -45,7 +44,8 @@ export class App {
     });
   }
 
-  private buildHistory(): HistoryPage {
+  private async buildHistory(): Promise<Page> {
+    const { HistoryPage } = await import('./presentation/pages/HistoryPage');
     return new HistoryPage({
       listMeetings: this.deps.listMeetings,
       translator: this.deps.configStore.translator,

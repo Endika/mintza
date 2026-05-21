@@ -3,7 +3,7 @@ export interface Page {
   dispose?(): void;
 }
 
-export type PageFactory = () => Page;
+export type PageFactory = () => Page | Promise<Page>;
 
 export class Router {
   private current?: Page;
@@ -34,7 +34,7 @@ export class Router {
     this.current?.dispose?.();
     const path = (window.location.hash.replace(/^#/, '') || '/').toLowerCase();
     const factory = this.routes.get(path) ?? this.fallback;
-    const page = factory();
+    const page = await factory();
     this.current = page;
     await page.render(this.root);
   }

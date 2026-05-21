@@ -55,7 +55,8 @@ export class HomePage implements Page {
     const cfg = this.deps.config.get();
     const t = (key: TranslationKey): string => this.t.t(key);
     root.innerHTML = `
-      <main class="mx-auto max-w-3xl px-6 py-12">
+      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">Skip to content</a>
+      <main id="main" class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
           <div>
             <h1 class="text-4xl font-bold tracking-tight">MINTZA</h1>
@@ -78,8 +79,8 @@ export class HomePage implements Page {
               <button id="btn-stop" class="btn-ghost" disabled>${t('home.btn_stop')}</button>
             </div>
           </div>
-          <p id="status" class="mt-3 text-sm text-ink-400">${t('home.ready')}</p>
-          <div id="counter" class="mt-3 text-sm text-ink-400"></div>
+          <p id="status" role="status" aria-live="polite" class="mt-3 text-sm text-ink-400">${t('home.ready')}</p>
+          <div id="counter" aria-live="polite" class="mt-3 text-sm text-ink-400"></div>
         </section>
 
         <section id="temperature-card" class="card mb-6 hidden">
