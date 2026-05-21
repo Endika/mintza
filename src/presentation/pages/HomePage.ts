@@ -10,6 +10,7 @@ import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
+import { CostCounter } from '../components/CostCounter';
 import type { ConfigStore } from '../state/ConfigStore';
 import { Router, type Page } from '../router/Router';
 
@@ -27,6 +28,7 @@ export class HomePage implements Page {
   private root: HTMLElement | null = null;
   private meeting: Meeting | null = null;
   private unsubChunks: (() => void) | null = null;
+  private readonly counter = new CostCounter();
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -58,6 +60,7 @@ export class HomePage implements Page {
             </div>
           </div>
           <p id="status" class="mt-3 text-sm text-ink-400">Ready to record.</p>
+          <div id="counter" class="mt-3 text-sm text-ink-400"></div>
         </section>
 
         <section class="card mb-6">
@@ -82,6 +85,7 @@ export class HomePage implements Page {
   dispose(): void {
     this.unsubChunks?.();
     this.unsubChunks = null;
+    this.counter.stop();
   }
 
   private bind(): void {
@@ -110,6 +114,7 @@ export class HomePage implements Page {
     this.setStatus('Recording…');
     this.toggleButtons(true);
     this.qs<HTMLElement>('#transcription').innerHTML = '';
+    this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => void this.handleChunk(chunk));
   }
 
@@ -129,6 +134,7 @@ export class HomePage implements Page {
     this.setStatus('Stopping…');
     this.unsubChunks?.();
     this.unsubChunks = null;
+    this.counter.stop();
     await this.deps.stopRecording.execute({ meeting: this.meeting });
     this.setStatus('Generating summaries…');
     const summariesEl = this.qs<HTMLElement>('#summaries');
@@ -138,6 +144,7 @@ export class HomePage implements Page {
       kinds: SUMMARY_KINDS,
     });
     this.renderSummaries(summariesEl);
+    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
     await this.deps.saveMeeting.execute({ meeting: this.meeting });
     this.setStatus(`Done. Summaries: ${result.successCount} ok, ${result.failureCount} failed.`);
   }
