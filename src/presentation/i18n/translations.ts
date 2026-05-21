@@ -81,6 +81,13 @@ export type TranslationKey =
   | 'history.title'
   | 'history.loading'
   | 'history.empty'
+  | 'history.search_placeholder'
+  | 'history.sort_label'
+  | 'history.sort_recent'
+  | 'history.sort_oldest'
+  | 'history.sort_longest'
+  | 'history.sort_title'
+  | 'history.no_results'
   | 'export.label'
   | 'export.markdown'
   | 'export.json'
@@ -171,6 +178,13 @@ const EN: Translations = {
   'history.title': 'History',
   'history.loading': 'Loading…',
   'history.empty': 'No meetings saved yet.',
+  'history.search_placeholder': 'Search meetings…',
+  'history.sort_label': 'Sort',
+  'history.sort_recent': 'Newest first',
+  'history.sort_oldest': 'Oldest first',
+  'history.sort_longest': 'Longest first',
+  'history.sort_title': 'Title (A–Z)',
+  'history.no_results': 'No meetings match the search.',
   'export.label': 'Export:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -260,6 +274,13 @@ const ES: Translations = {
   'history.title': 'Historial',
   'history.loading': 'Cargando…',
   'history.empty': 'Aún no hay reuniones guardadas.',
+  'history.search_placeholder': 'Buscar reuniones…',
+  'history.sort_label': 'Orden',
+  'history.sort_recent': 'Más recientes primero',
+  'history.sort_oldest': 'Más antiguas primero',
+  'history.sort_longest': 'Más largas primero',
+  'history.sort_title': 'Título (A–Z)',
+  'history.no_results': 'Ninguna reunión coincide con la búsqueda.',
   'export.label': 'Exportar:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -349,6 +370,13 @@ const EU: Translations = {
   'history.title': 'Historia',
   'history.loading': 'Kargatzen…',
   'history.empty': 'Oraindik ez dago gordetako bilerarik.',
+  'history.search_placeholder': 'Bilatu bilerak…',
+  'history.sort_label': 'Ordena',
+  'history.sort_recent': 'Berrienak lehenengo',
+  'history.sort_oldest': 'Zaharrenak lehenengo',
+  'history.sort_longest': 'Luzeenak lehenengo',
+  'history.sort_title': 'Izenburua (A–Z)',
+  'history.no_results': 'Ez dago bat datorren bilerarik.',
   'export.label': 'Esportatu:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
