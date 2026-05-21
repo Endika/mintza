@@ -1,3 +1,13 @@
+# [1.4.0](https://github.com/Endika/mintza/compare/v1.3.0...v1.4.0) (2026-05-21)
+
+
+### Features
+
+* **domain:** parse temperature score from sentiment summary ([6650cac](https://github.com/Endika/mintza/commit/6650cac5f177ecd8ce050cf44adf54bc407c1a1e))
+* **domain:** statistics calculator and meeting exporter for md/json/txt/csv ([2fab551](https://github.com/Endika/mintza/commit/2fab5516029a465503d7ae07c86e5e9d98c01a28))
+* **presentation:** render temperature gauge after summaries ([7bfaa9f](https://github.com/Endika/mintza/commit/7bfaa9f5a40776c14f40d1a8583640c611e78df6))
+* **presentation:** statistics panel, export menu and integrated rendering ([2587a6a](https://github.com/Endika/mintza/commit/2587a6a13eff44ff9d1adf8cd78ea9cb6a5f9eb4))
+
 # [1.3.0](https://github.com/Endika/mintza/compare/v1.2.0...v1.3.0) (2026-05-21)
 
 
