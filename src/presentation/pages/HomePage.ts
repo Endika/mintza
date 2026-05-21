@@ -12,6 +12,8 @@ import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-obje
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import { CostCounter } from '../components/CostCounter';
+import { ExportMenu } from '../components/ExportMenu';
+import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { ConfigStore } from '../state/ConfigStore';
 import { Router, type Page } from '../router/Router';
@@ -33,6 +35,8 @@ export class HomePage implements Page {
   private readonly counter = new CostCounter();
   private readonly gauge = new TemperatureGauge();
   private readonly scoreParser = new SentimentScoreParser();
+  private readonly statsPanel = new StatisticsPanel();
+  private readonly exportMenu = new ExportMenu();
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -79,11 +83,20 @@ export class HomePage implements Page {
           </div>
         </section>
 
-        <section class="card">
+        <section class="card mb-6">
           <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">Summary</h3>
           <div id="summaries" class="text-ink-600">
             <em class="text-ink-400">Summaries are generated when you stop recording.</em>
           </div>
+        </section>
+
+        <section id="stats-card" class="card mb-6 hidden">
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">Statistics</h3>
+          <div id="stats-body"></div>
+        </section>
+
+        <section id="export-card" class="card hidden">
+          <div id="export-menu"></div>
         </section>
       </main>
     `;
@@ -154,6 +167,8 @@ export class HomePage implements Page {
     });
     this.renderSummaries(summariesEl);
     this.applyTemperature();
+    this.renderStatistics();
+    this.renderExportMenu();
     this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
     await this.deps.saveMeeting.execute({ meeting: this.meeting });
     this.setStatus(`Done. Summaries: ${result.successCount} ok, ${result.failureCount} failed.`);
@@ -184,6 +199,19 @@ export class HomePage implements Page {
           </article>`;
       })
       .join('');
+  }
+
+  private renderStatistics(): void {
+    if (!this.meeting) return;
+    const card = this.qs<HTMLElement>('#stats-card');
+    card.classList.remove('hidden');
+    this.statsPanel.render(this.qs<HTMLElement>('#stats-body'), this.meeting);
+  }
+
+  private renderExportMenu(): void {
+    const card = this.qs<HTMLElement>('#export-card');
+    card.classList.remove('hidden');
+    this.exportMenu.render(this.qs<HTMLElement>('#export-menu'), () => this.meeting);
   }
 
   private applyTemperature(): void {
