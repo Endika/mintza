@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/Endika/mintza/compare/v1.10.0...v1.10.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **pwa:** network-first for HTML and SW so new releases land instantly ([acfa9fa](https://github.com/Endika/mintza/commit/acfa9fadb54025d3eab7c7af946f8a456d0fc8d6))
+
 # [1.10.0](https://github.com/Endika/mintza/compare/v1.9.0...v1.10.0) (2026-05-21)
 
 
