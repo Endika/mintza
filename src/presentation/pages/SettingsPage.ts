@@ -83,6 +83,16 @@ export class SettingsPage implements Page {
                   <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.interview')}</option>
                 </select>
               </label>
+              <label class="block">
+                <span class="text-sm font-medium">Azure region</span>
+                <input
+                  type="text"
+                  name="azureRegion"
+                  value="${escapeAttr(cfg.azureRegion)}"
+                  placeholder="westeurope"
+                  class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm"
+                />
+              </label>
             </div>
           </section>
 
@@ -137,12 +147,16 @@ export class SettingsPage implements Page {
 
   private async handleSave(form: HTMLFormElement): Promise<void> {
     const data = new FormData(form);
+    const azureRegionRaw = data.get('azureRegion');
     const next: AppConfig = {
       ...this.deps.config.get(),
       language: (data.get('language') as 'es' | 'en' | 'eu') ?? 'en',
       defaultTemplate: (data.get('defaultTemplate') as TemplateKind) ?? 'generic',
       summaryQuality: (data.get('summaryQuality') as QualityProfile) ?? 'balanced',
       transcriptionQuality: (data.get('transcriptionQuality') as QualityProfile) ?? 'balanced',
+      azureRegion: typeof azureRegionRaw === 'string' && azureRegionRaw.trim().length > 0
+        ? azureRegionRaw.trim()
+        : 'westeurope',
       apiKeys: buildApiKeys(data),
     };
     await this.deps.updateConfig.execute({ config: next });

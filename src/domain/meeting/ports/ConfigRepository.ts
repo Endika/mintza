@@ -18,14 +18,16 @@ export interface AppConfig {
   readonly transcriptionQuality: QualityProfile;
   readonly summaryQuality: QualityProfile;
   readonly apiKeys: ApiKeys;
+  readonly azureRegion: string;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
-  language: 'es',
+  language: 'en',
   defaultTemplate: 'generic',
   transcriptionQuality: 'balanced',
   summaryQuality: 'balanced',
   apiKeys: {},
+  azureRegion: 'westeurope',
 };
 
 export interface ConfigRepository {

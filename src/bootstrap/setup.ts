@@ -22,6 +22,8 @@ import { OpenAISummarizationAdapter } from '../infrastructure/llm/OpenAISummariz
 import { SummarizationChainAdapter } from '../infrastructure/llm/SummarizationChainAdapter';
 import { IndexedDBMeetingRepository } from '../infrastructure/persistence/IndexedDBMeetingRepository';
 import { LocalStorageConfigRepository } from '../infrastructure/persistence/LocalStorageConfigRepository';
+import { AzureSpeechClient } from '../infrastructure/transcription/AzureSpeechClient';
+import { AzureSpeechTranscriptionAdapter } from '../infrastructure/transcription/AzureSpeechTranscriptionAdapter';
 import { GoogleSpeechClient } from '../infrastructure/transcription/GoogleSpeechClient';
 import { GoogleSpeechTranscriptionAdapter } from '../infrastructure/transcription/GoogleSpeechTranscriptionAdapter';
 import { TranscriptionChainAdapter } from '../infrastructure/transcription/TranscriptionChainAdapter';
@@ -57,12 +59,18 @@ export const buildAppDeps = (): AppDeps => {
   const whisperAdapter = new WhisperTranscriptionAdapter(whisper);
   const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleKey());
   const googleSpeechAdapter = new GoogleSpeechTranscriptionAdapter(googleSpeech);
+  const azureSpeech = new AzureSpeechClient(
+    http,
+    () => configStore.azureKey(),
+    () => configStore.azureRegion(),
+  );
+  const azureSpeechAdapter = new AzureSpeechTranscriptionAdapter(azureSpeech);
 
   const transcription = new TranscriptionChainAdapter(() =>
     pickTranscriptionChain(configStore.get().transcriptionQuality, {
       cheap: [googleSpeechAdapter, whisperAdapter],
       balanced: [whisperAdapter, googleSpeechAdapter],
-      premium: [whisperAdapter],
+      premium: [whisperAdapter, azureSpeechAdapter],
     }),
   );
 

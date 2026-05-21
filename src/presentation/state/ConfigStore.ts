@@ -42,6 +42,10 @@ export class ConfigStore {
     return this.current.apiKeys.azure;
   }
 
+  azureRegion(): string {
+    return this.current.azureRegion;
+  }
+
   async update(config: AppConfig): Promise<void> {
     const result = await this.repository.save(config);
     if (result.ok) {

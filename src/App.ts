@@ -48,6 +48,7 @@ export class App {
   private buildHistory(): HistoryPage {
     return new HistoryPage({
       listMeetings: this.deps.listMeetings,
+      translator: this.deps.configStore.translator,
     });
   }
 }
