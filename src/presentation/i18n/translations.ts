@@ -17,6 +17,8 @@ export type TranslationKey =
   | 'home.btn_resume'
   | 'home.btn_stop'
   | 'home.btn_new'
+  | 'home.btn_summarize_now'
+  | 'home.summarizing'
   | 'home.paused'
   | 'home.rec'
   | 'home.rec_paused'
@@ -102,6 +104,8 @@ const EN: Translations = {
   'home.btn_resume': 'Resume',
   'home.btn_stop': 'Stop',
   'home.btn_new': 'New meeting',
+  'home.btn_summarize_now': 'Summarize now',
+  'home.summarizing': 'Summarizing…',
   'home.paused': 'Paused — press Resume to continue.',
   'home.rec': 'REC',
   'home.rec_paused': 'Paused',
@@ -187,6 +191,8 @@ const ES: Translations = {
   'home.btn_resume': 'Reanudar',
   'home.btn_stop': 'Parar',
   'home.btn_new': 'Nueva reunión',
+  'home.btn_summarize_now': 'Resumir ahora',
+  'home.summarizing': 'Resumiendo…',
   'home.paused': 'Pausado — pulsa Reanudar para continuar.',
   'home.rec': 'GRABANDO',
   'home.rec_paused': 'Pausa',
@@ -272,6 +278,8 @@ const EU: Translations = {
   'home.btn_resume': 'Jarraitu',
   'home.btn_stop': 'Gelditu',
   'home.btn_new': 'Bilera berria',
+  'home.btn_summarize_now': 'Laburtu orain',
+  'home.summarizing': 'Laburtzen…',
   'home.paused': 'Pausan — sakatu Jarraitu jarraitzeko.',
   'home.rec': 'GRABATZEN',
   'home.rec_paused': 'Pausan',

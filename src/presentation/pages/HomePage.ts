@@ -101,6 +101,7 @@ export class HomePage implements Page {
               </button>
               <button id="btn-pause" class="btn-ghost" disabled>${t('home.btn_pause')}</button>
               <button id="btn-stop" class="btn-danger" disabled>${t('home.btn_stop')}</button>
+              <button id="btn-summarize" class="btn-ghost hidden">${t('home.btn_summarize_now')}</button>
               <button id="btn-new" class="btn-ghost hidden">${t('home.btn_new')}</button>
             </div>
             <p id="status" role="status" aria-live="polite" class="text-sm text-ink-400">${t('home.ready')}</p>
@@ -161,6 +162,7 @@ export class HomePage implements Page {
     this.qs<HTMLButtonElement>('#btn-record').addEventListener('click', () => void this.handleStart());
     this.qs<HTMLButtonElement>('#btn-pause').addEventListener('click', () => void this.handlePauseResume());
     this.qs<HTMLButtonElement>('#btn-stop').addEventListener('click', () => void this.handleStop());
+    this.qs<HTMLButtonElement>('#btn-summarize').addEventListener('click', () => void this.handleSummarizeNow());
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
   }
 
@@ -244,6 +246,39 @@ export class HomePage implements Page {
     this.render(this.root);
   }
 
+  private async handleSummarizeNow(): Promise<void> {
+    if (!this.meeting) return;
+    if (this.meeting.fullText().isEmpty()) {
+      this.setStatus(this.t.t('home.no_audio'));
+      return;
+    }
+    const btn = this.qs<HTMLButtonElement>('#btn-summarize');
+    btn.disabled = true;
+    const previousStatus = this.qs<HTMLElement>('#status').textContent ?? '';
+    this.setStatus(this.t.t('home.summarizing'));
+    const result = await this.deps.generateSummaries.execute({
+      meeting: this.meeting,
+      kinds: SUMMARY_KINDS,
+    });
+    this.renderSummaries(this.qs<HTMLElement>('#summaries'));
+    this.applyTemperature();
+    this.renderStatistics();
+    this.renderExportMenu();
+    void this.generateAndRenderMindMap();
+    btn.disabled = this.screenState !== 'recording' && this.screenState !== 'paused';
+    if (this.screenState === 'recording' || this.screenState === 'paused') {
+      this.setStatus(
+        `${this.t.t('home.done')} ${result.successCount} ok / ${result.failureCount} failed.`,
+      );
+      window.setTimeout(() => {
+        if (this.screenState === 'recording') this.setStatus(this.t.t('home.recording'));
+        else if (this.screenState === 'paused') this.setStatus(this.t.t('home.paused'));
+      }, 2500);
+    } else {
+      this.setStatus(previousStatus);
+    }
+  }
+
   private startMeter(): void {
     const stream = this.deps.audio.getStream();
     const meterEl = this.qs<HTMLElement>('#meter');
@@ -310,6 +345,7 @@ export class HomePage implements Page {
     const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
     const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
     const stopBtn = this.qs<HTMLButtonElement>('#btn-stop');
+    const summarizeBtn = this.qs<HTMLButtonElement>('#btn-summarize');
     const newBtn = this.qs<HTMLButtonElement>('#btn-new');
     const badge = this.qs<HTMLElement>('#rec-badge');
     const badgeLabel = this.qs<HTMLElement>('#rec-badge-label');
@@ -320,6 +356,7 @@ export class HomePage implements Page {
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
         pauseBtn.textContent = this.t.t('home.btn_pause');
+        summarizeBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
         badge.classList.add('hidden');
         break;
@@ -328,6 +365,8 @@ export class HomePage implements Page {
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
         pauseBtn.textContent = this.t.t('home.btn_pause');
+        summarizeBtn.classList.remove('hidden');
+        summarizeBtn.disabled = false;
         newBtn.classList.add('hidden');
         badge.classList.remove('hidden', 'rec-badge-paused');
         badge.classList.add('rec-badge');
@@ -339,6 +378,8 @@ export class HomePage implements Page {
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
         pauseBtn.textContent = this.t.t('home.btn_resume');
+        summarizeBtn.classList.remove('hidden');
+        summarizeBtn.disabled = false;
         newBtn.classList.add('hidden');
         badge.classList.remove('hidden', 'rec-badge');
         badge.classList.add('rec-badge-paused');
@@ -348,6 +389,7 @@ export class HomePage implements Page {
         recordBtn.disabled = true;
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
+        summarizeBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
         badge.classList.add('hidden');
         break;
@@ -355,6 +397,7 @@ export class HomePage implements Page {
         recordBtn.disabled = true;
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
+        summarizeBtn.classList.add('hidden');
         newBtn.classList.remove('hidden');
         badge.classList.add('hidden');
         break;
