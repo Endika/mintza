@@ -1,3 +1,10 @@
+## [1.18.1](https://github.com/Endika/mintza/compare/v1.18.0...v1.18.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **templates:** prefill duplicate/edit with defaults and enlarge text areas ([68bb25c](https://github.com/Endika/mintza/commit/68bb25c351ecf841c22bf93fde73eda2c613ac26))
+
 # [1.18.0](https://github.com/Endika/mintza/compare/v1.17.0...v1.18.0) (2026-05-21)
 
 
