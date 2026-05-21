@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/Endika/mintza/compare/v1.5.1...v1.6.0) (2026-05-21)
+
+
+### Features
+
+* **brand:** waveform favicon with brand gradient and live demo badge ([9a0eae7](https://github.com/Endika/mintza/commit/9a0eae7501a8291eea0de9e25d0a0e5f1d577176))
+
 ## [1.5.1](https://github.com/Endika/mintza/compare/v1.5.0...v1.5.1) (2026-05-21)
 
 
