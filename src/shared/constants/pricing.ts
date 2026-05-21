@@ -3,8 +3,17 @@ export interface LLMPricing {
   readonly outputPerMillion: number;
 }
 
+export interface TranscriptionPricing {
+  readonly perMinuteUsd: number;
+}
+
 export const PRICING = {
-  whisper: { perMinuteUsd: 0.006 },
+  transcription: {
+    whisper: { perMinuteUsd: 0.006 },
+    google: { perMinuteUsd: 0.004 },
+    azure: { perMinuteUsd: 0.005 },
+    webspeech: { perMinuteUsd: 0 },
+  } as Readonly<Record<string, TranscriptionPricing>>,
   llm: {
     'gpt-4o-mini': { inputPerMillion: 0.15, outputPerMillion: 0.6 },
     'gpt-4o': { inputPerMillion: 5, outputPerMillion: 15 },

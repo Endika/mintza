@@ -1,11 +1,14 @@
-import { PRICING, type LLMPricing } from '../../../shared/constants/pricing';
+import { PRICING, type LLMPricing, type TranscriptionPricing } from '../../../shared/constants/pricing';
+import type { TranscriptionProviderName } from '../../transcription/value-objects/TranscriptionProvider';
 import { Money } from '../value-objects/Money';
 import { TokenCount } from '../value-objects/TokenCount';
 
 export class CostCalculator {
-  whisperCost(durationMs: number): Money {
+  transcriptionCost(provider: TranscriptionProviderName, durationMs: number): Money {
     if (durationMs <= 0) return Money.zero();
-    return Money.fromUsd((durationMs / 60_000) * PRICING.whisper.perMinuteUsd);
+    const pricing: TranscriptionPricing | undefined = PRICING.transcription[provider];
+    if (!pricing) return Money.zero();
+    return Money.fromUsd((durationMs / 60_000) * pricing.perMinuteUsd);
   }
 
   llmCost(model: string, tokensIn: TokenCount, tokensOut: TokenCount): Money {
