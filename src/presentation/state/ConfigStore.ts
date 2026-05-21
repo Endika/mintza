@@ -27,6 +27,18 @@ export class ConfigStore {
     return this.current.apiKeys.openai;
   }
 
+  anthropicKey(): string | undefined {
+    return this.current.apiKeys.anthropic;
+  }
+
+  googleKey(): string | undefined {
+    return this.current.apiKeys.google;
+  }
+
+  azureKey(): string | undefined {
+    return this.current.apiKeys.azure;
+  }
+
   async update(config: AppConfig): Promise<void> {
     const result = await this.repository.save(config);
     if (result.ok) {

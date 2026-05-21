@@ -1,5 +1,10 @@
 import type { UpdateConfigUseCase } from '../../application/use-cases/UpdateConfigUseCase';
-import type { ApiKeys, AppConfig } from '../../domain/meeting/ports/ConfigRepository';
+import type {
+  ApiKeys,
+  AppConfig,
+  QualityProfile,
+} from '../../domain/meeting/ports/ConfigRepository';
+import type { TemplateKind } from '../../domain/meeting/value-objects/Template';
 import type { ConfigStore } from '../state/ConfigStore';
 import type { Page } from '../router/Router';
 
@@ -33,22 +38,51 @@ export class SettingsPage implements Page {
             </p>
             <div class="space-y-3">
               ${apiKeyInput('openai', 'OpenAI (Whisper + GPT)', cfg.apiKeys.openai, true)}
-              ${apiKeyInput('google', 'Google Speech (optional)', cfg.apiKeys.google, false)}
-              ${apiKeyInput('azure', 'Azure Speech (optional)', cfg.apiKeys.azure, false)}
-              ${apiKeyInput('anthropic', 'Anthropic Claude (optional)', cfg.apiKeys.anthropic, false)}
+              ${apiKeyInput('google', 'Google (Gemini + Speech)', cfg.apiKeys.google, false)}
+              ${apiKeyInput('anthropic', 'Anthropic Claude', cfg.apiKeys.anthropic, false)}
+              ${apiKeyInput('azure', 'Azure Speech', cfg.apiKeys.azure, false)}
             </div>
           </section>
 
           <section class="card">
+            <h2 class="mb-3 text-lg font-semibold">Quality profiles</h2>
+            ${qualityFieldset('summaryQuality', 'Summary quality', cfg.summaryQuality, [
+              { value: 'cheap', label: 'Cheap', hint: 'Gemini first, Claude fallback' },
+              { value: 'balanced', label: 'Balanced (recommended)', hint: 'GPT-4o-mini → Claude → Gemini' },
+              { value: 'premium', label: 'Premium', hint: 'GPT-4o, no fallback' },
+            ])}
+            ${qualityFieldset(
+              'transcriptionQuality',
+              'Transcription quality',
+              cfg.transcriptionQuality,
+              [
+                { value: 'cheap', label: 'Cheap', hint: 'Google Speech first' },
+                { value: 'balanced', label: 'Balanced (recommended)', hint: 'Whisper + Google fallback' },
+                { value: 'premium', label: 'Premium', hint: 'Whisper + Azure fallback' },
+              ],
+            )}
+          </section>
+
+          <section class="card">
             <h2 class="mb-3 text-lg font-semibold">Preferences</h2>
-            <label class="block">
-              <span class="text-sm font-medium">Interface language</span>
-              <select name="language" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
-                <option value="en" ${cfg.language === 'en' ? 'selected' : ''}>English</option>
-                <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Spanish</option>
-                <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Basque</option>
-              </select>
-            </label>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label class="block">
+                <span class="text-sm font-medium">Interface language</span>
+                <select name="language" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
+                  <option value="en" ${cfg.language === 'en' ? 'selected' : ''}>English</option>
+                  <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Spanish</option>
+                  <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Basque</option>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-sm font-medium">Default template</span>
+                <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
+                  <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>Generic</option>
+                  <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>Work</option>
+                  <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>Interview</option>
+                </select>
+              </label>
+            </div>
           </section>
 
           <div class="flex justify-between">
@@ -78,6 +112,9 @@ export class SettingsPage implements Page {
     const next: AppConfig = {
       ...this.deps.config.get(),
       language: (data.get('language') as 'es' | 'en' | 'eu') ?? 'en',
+      defaultTemplate: (data.get('defaultTemplate') as TemplateKind) ?? 'generic',
+      summaryQuality: (data.get('summaryQuality') as QualityProfile) ?? 'balanced',
+      transcriptionQuality: (data.get('transcriptionQuality') as QualityProfile) ?? 'balanced',
       apiKeys: buildApiKeys(data),
     };
     await this.deps.updateConfig.execute({ config: next });
@@ -122,6 +159,31 @@ const apiKeyInput = (
       class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
     />
   </label>
+`;
+
+const qualityFieldset = (
+  name: 'summaryQuality' | 'transcriptionQuality',
+  legend: string,
+  current: QualityProfile,
+  options: ReadonlyArray<{ value: QualityProfile; label: string; hint: string }>,
+): string => `
+  <fieldset class="mb-4">
+    <legend class="block text-sm font-medium mb-2">${legend}</legend>
+    <div class="space-y-2">
+      ${options
+        .map(
+          (opt) => `
+        <label class="flex items-start gap-2 cursor-pointer rounded-lg border border-ink-100 px-3 py-2 hover:bg-ink-50">
+          <input type="radio" name="${name}" value="${opt.value}" class="mt-1" ${opt.value === current ? 'checked' : ''} />
+          <span>
+            <span class="block text-sm font-medium">${opt.label}</span>
+            <span class="block text-xs text-ink-400">${opt.hint}</span>
+          </span>
+        </label>`,
+        )
+        .join('')}
+    </div>
+  </fieldset>
 `;
 
 const buildApiKeys = (data: FormData): ApiKeys => {

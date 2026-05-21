@@ -9,13 +9,19 @@ import { TranscribeChunkUseCase } from '../application/use-cases/TranscribeChunk
 import { UpdateConfigUseCase } from '../application/use-cases/UpdateConfigUseCase';
 import { MediaRecorderAdapter } from '../infrastructure/audio/MediaRecorderAdapter';
 import { HttpClient } from '../infrastructure/http/HttpClient';
+import { ClaudeClient } from '../infrastructure/llm/ClaudeClient';
+import { ClaudeSummarizationAdapter } from '../infrastructure/llm/ClaudeSummarizationAdapter';
+import { GeminiClient } from '../infrastructure/llm/GeminiClient';
+import { GeminiSummarizationAdapter } from '../infrastructure/llm/GeminiSummarizationAdapter';
 import { OpenAIClient } from '../infrastructure/llm/OpenAIClient';
 import { OpenAISummarizationAdapter } from '../infrastructure/llm/OpenAISummarizationAdapter';
+import { SummarizationChainAdapter } from '../infrastructure/llm/SummarizationChainAdapter';
 import { IndexedDBMeetingRepository } from '../infrastructure/persistence/IndexedDBMeetingRepository';
 import { LocalStorageConfigRepository } from '../infrastructure/persistence/LocalStorageConfigRepository';
 import { WhisperClient } from '../infrastructure/transcription/WhisperClient';
 import { WhisperTranscriptionAdapter } from '../infrastructure/transcription/WhisperTranscriptionAdapter';
 import { ConfigStore } from '../presentation/state/ConfigStore';
+import type { SummarizationPort } from '../domain/summary/ports/SummarizationPort';
 
 export interface AppDeps {
   readonly configStore: ConfigStore;
@@ -41,7 +47,22 @@ export const buildAppDeps = (): AppDeps => {
   const transcription = new WhisperTranscriptionAdapter(whisper);
 
   const openai = new OpenAIClient(http, () => configStore.openAIKey());
-  const summarization = new OpenAISummarizationAdapter(openai);
+  const openaiAdapter = new OpenAISummarizationAdapter(openai);
+  const openaiPremiumAdapter = new OpenAISummarizationAdapter(openai, { model: 'gpt-4o' });
+
+  const claude = new ClaudeClient(http, () => configStore.anthropicKey());
+  const claudeAdapter = new ClaudeSummarizationAdapter(claude);
+
+  const gemini = new GeminiClient(http, () => configStore.googleKey());
+  const geminiAdapter = new GeminiSummarizationAdapter(gemini);
+
+  const summarization = new SummarizationChainAdapter(() =>
+    pickChain(configStore.get().summaryQuality, {
+      cheap: [geminiAdapter, claudeAdapter, openaiAdapter],
+      balanced: [openaiAdapter, claudeAdapter, geminiAdapter],
+      premium: [openaiPremiumAdapter],
+    }),
+  );
 
   const audio = new MediaRecorderAdapter();
 
@@ -59,3 +80,8 @@ export const buildAppDeps = (): AppDeps => {
     updateConfig: new UpdateConfigUseCase(configRepo),
   };
 };
+
+const pickChain = (
+  quality: 'cheap' | 'balanced' | 'premium',
+  chains: Record<'cheap' | 'balanced' | 'premium', readonly SummarizationPort[]>,
+): readonly SummarizationPort[] => chains[quality];
