@@ -5,15 +5,13 @@ import type { GenerateSummariesUseCase } from '../../application/use-cases/Gener
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
 import type { AudioCapturePort } from '../../domain/audio/ports/AudioCapturePort';
 import type { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
-import { Language } from '../../domain/language/value-objects/Language';
+import { Language, type LanguageCode } from '../../domain/language/value-objects/Language';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
-import { Template } from '../../domain/meeting/value-objects/Template';
-import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
+import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import type { ConfigStore } from '../state/ConfigStore';
 import { Router, type Page } from '../router/Router';
-
-const PHASE_1_KINDS: readonly SummaryKind[] = ['bullet_points', 'action_items', 'one_liner'];
 
 export interface HomePageDeps {
   readonly config: ConfigStore;
@@ -34,6 +32,7 @@ export class HomePage implements Page {
 
   render(root: HTMLElement): void {
     this.root = root;
+    const cfg = this.deps.config.get();
     root.innerHTML = `
       <main class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
@@ -48,16 +47,17 @@ export class HomePage implements Page {
         </header>
 
         <section class="card mb-6">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-semibold">New meeting</h2>
-              <p id="status" class="mt-1 text-sm text-ink-400">Ready to record.</p>
+          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:gap-6">
+              ${templateRadios(cfg.defaultTemplate)}
+              ${languageSelect(cfg.language)}
             </div>
             <div class="flex gap-2">
               <button id="btn-start" class="btn-primary">Record</button>
               <button id="btn-stop" class="btn-ghost" disabled>Stop</button>
             </div>
           </div>
+          <p id="status" class="mt-3 text-sm text-ink-400">Ready to record.</p>
         </section>
 
         <section class="card mb-6">
@@ -99,8 +99,8 @@ export class HomePage implements Page {
     }
     this.setStatus('Requesting microphone permission…');
     const result = await this.deps.startRecording.execute({
-      template: Template.generic(),
-      language: Language.default(),
+      template: Template.of(this.readTemplate()),
+      language: Language.of(this.readLanguage()),
     });
     if (!result.ok) {
       this.setStatus(result.error.message);
@@ -135,7 +135,7 @@ export class HomePage implements Page {
     summariesEl.innerHTML = '<em class="text-ink-400">Working…</em>';
     const result = await this.deps.generateSummaries.execute({
       meeting: this.meeting,
-      kinds: PHASE_1_KINDS,
+      kinds: SUMMARY_KINDS,
     });
     this.renderSummaries(summariesEl);
     await this.deps.saveMeeting.execute({ meeting: this.meeting });
@@ -151,20 +151,32 @@ export class HomePage implements Page {
 
   private renderSummaries(target: HTMLElement): void {
     if (!this.meeting) return;
-    const items = Array.from(this.meeting.summaries.values());
-    if (items.length === 0) {
+    const summaries = this.meeting.summaries;
+    if (summaries.size === 0) {
       target.innerHTML = '<em class="text-ink-400">No summaries were generated.</em>';
       return;
     }
-    target.innerHTML = items
-      .map(
-        (s) =>
-          `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${labelFor(s.kind)}</h4>
-            <p class="mt-1 whitespace-pre-wrap">${escapeHtml(s.content)}</p>
-          </article>`,
-      )
+    const order = this.meeting.template.featuredSummaryOrder();
+    target.innerHTML = order
+      .map((kind) => {
+        const summary = summaries.get(kind);
+        if (!summary) return '';
+        return `<article class="mb-4">
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${labelFor(kind)}</h4>
+            <p class="mt-1 whitespace-pre-wrap">${escapeHtml(summary.content)}</p>
+          </article>`;
+      })
       .join('');
+  }
+
+  private readTemplate(): TemplateKind {
+    const input = this.qs<HTMLInputElement>('input[name="template"]:checked');
+    return input.value as TemplateKind;
+  }
+
+  private readLanguage(): LanguageCode {
+    const select = this.qs<HTMLSelectElement>('#lang-select');
+    return select.value as LanguageCode;
   }
 
   private toggleButtons(recording: boolean): void {
@@ -184,18 +196,47 @@ export class HomePage implements Page {
   }
 }
 
-const labelFor = (kind: SummaryKind): string => {
-  switch (kind) {
-    case 'bullet_points':
-      return 'Key points';
-    case 'action_items':
-      return 'Action items';
-    case 'one_liner':
-      return 'One-liner';
-    default:
-      return kind;
-  }
+const templateRadios = (current: TemplateKind): string => `
+  <fieldset>
+    <legend class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">Template</legend>
+    <div class="flex gap-3 text-sm">
+      ${templateRadio('generic', 'Generic', current)}
+      ${templateRadio('work', 'Work', current)}
+      ${templateRadio('interview', 'Interview', current)}
+    </div>
+  </fieldset>
+`;
+
+const templateRadio = (value: TemplateKind, label: string, current: TemplateKind): string => `
+  <label class="inline-flex items-center gap-1.5 cursor-pointer">
+    <input type="radio" name="template" value="${value}" ${value === current ? 'checked' : ''} />
+    <span>${label}</span>
+  </label>
+`;
+
+const languageSelect = (current: LanguageCode): string => `
+  <label class="block">
+    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">Spoken language</span>
+    <select id="lang-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
+      <option value="en" ${current === 'en' ? 'selected' : ''}>English</option>
+      <option value="es" ${current === 'es' ? 'selected' : ''}>Spanish</option>
+      <option value="eu" ${current === 'eu' ? 'selected' : ''}>Basque</option>
+    </select>
+  </label>
+`;
+
+const SUMMARY_LABELS: Record<SummaryKind, string> = {
+  bullet_points: 'Key points',
+  action_items: 'Action items',
+  one_liner: 'One-liner',
+  keywords: 'Keywords',
+  sentiment: 'Sentiment',
+  timeline: 'Timeline',
+  decisions: 'Decisions',
+  next_steps: 'Next steps',
 };
+
+const labelFor = (kind: SummaryKind): string => SUMMARY_LABELS[kind];
 
 const escapeHtml = (raw: string): string =>
   raw
