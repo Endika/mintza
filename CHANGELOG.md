@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/Endika/mintza/compare/v1.2.0...v1.3.0) (2026-05-21)
+
+
+### Features
+
+* **infrastructure:** Google Speech client and transcription chain with quality profiles ([edc389d](https://github.com/Endika/mintza/commit/edc389dfdee15d1df5533aabb35993c433321fba))
+
 # [1.2.0](https://github.com/Endika/mintza/compare/v1.1.0...v1.2.0) (2026-05-21)
 
 
