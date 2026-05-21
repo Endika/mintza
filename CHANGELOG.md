@@ -1,3 +1,16 @@
+# [1.7.0](https://github.com/Endika/mintza/compare/v1.6.0...v1.7.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* **cost-counter:** use real transcribed segments and provider-aware pricing ([6b84a7b](https://github.com/Endika/mintza/commit/6b84a7b7fefac07b148f49226d553d94115f62a1))
+
+
+### Features
+
+* **brand:** show app version baked from package.json in a discreet badge ([3f52072](https://github.com/Endika/mintza/commit/3f52072ac9bd3b3783c95f1610cbc7e2200c4173))
+* **history:** clickable detail page, per-entry delete and clear all ([041434c](https://github.com/Endika/mintza/commit/041434c29ad914daf57ff2ac849f75ab87d5454e))
+
 # [1.6.0](https://github.com/Endika/mintza/compare/v1.5.1...v1.6.0) (2026-05-21)
 
 
