@@ -38,6 +38,7 @@ export class App {
       transcribeChunk: this.deps.transcribeChunk,
       generateSummaries: this.deps.generateSummaries,
       generateMindMap: this.deps.generateMindMap,
+      finalizeMeeting: this.deps.finalizeMeeting,
       saveMeeting: this.deps.saveMeeting,
       listTemplates: this.deps.listTemplates,
       templateRegistry: this.deps.templateRegistry,

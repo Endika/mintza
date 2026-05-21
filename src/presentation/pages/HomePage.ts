@@ -1,3 +1,4 @@
+import type { FinalizeMeetingUseCase } from '../../application/use-cases/FinalizeMeetingUseCase';
 import type { GenerateMindMapUseCase } from '../../application/use-cases/GenerateMindMapUseCase';
 import type { GenerateSummariesUseCase } from '../../application/use-cases/GenerateSummariesUseCase';
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
@@ -9,6 +10,7 @@ import type { AudioCapturePort } from '../../domain/audio/ports/AudioCapturePort
 import type { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { Language, type LanguageCode } from '../../domain/language/value-objects/Language';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
+import type { MindMap } from '../../domain/mindmap/entities/MindMap';
 import type { TemplateRegistry } from '../../domain/meeting/services/TemplateRegistry';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
@@ -34,6 +36,7 @@ export interface HomePageDeps {
   readonly transcribeChunk: TranscribeChunkUseCase;
   readonly generateSummaries: GenerateSummariesUseCase;
   readonly generateMindMap: GenerateMindMapUseCase;
+  readonly finalizeMeeting: FinalizeMeetingUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listTemplates: ListTemplatesUseCase;
   readonly templateRegistry: TemplateRegistry;
@@ -246,24 +249,41 @@ export class HomePage implements Page {
       return;
     }
 
+    const transcriptSaved = await this.deps.saveMeeting.execute({ meeting: this.meeting });
+    if (!transcriptSaved.ok) {
+      this.showSaveError(transcriptSaved.error.message);
+    }
+
     this.setStatus(this.t.t('home.generating'));
     const summariesEl = this.qs<HTMLElement>('#summaries');
     summariesEl.innerHTML = '<em class="text-ink-400">…</em>';
-    const result = await this.deps.generateSummaries.execute({
+
+    const result = await this.deps.finalizeMeeting.execute({
       meeting: this.meeting,
       kinds: SUMMARY_KINDS,
     });
+
     this.renderSummaries(summariesEl);
-    this.applyTemperature();
+    this.renderTemperature();
     this.renderStatistics();
     this.renderExportMenu();
-    void this.generateAndRenderMindMap();
+    if (result.mindMap) this.renderMindMap(result.mindMap);
     this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
-    await this.deps.saveMeeting.execute({ meeting: this.meeting });
-    this.setStatus(
-      `${this.t.t('home.done')} ${result.successCount} ok / ${result.failureCount} failed.`,
-    );
+
+    if (result.saveError) {
+      this.showSaveError(result.saveError.message);
+    } else {
+      this.setStatus(
+        `${this.t.t('home.done')} ${result.summarySuccessCount} ok / ${result.summaryFailureCount} failed.`,
+      );
+    }
     this.setScreenState('done');
+  }
+
+  private showSaveError(message: string): void {
+    const status = this.qs<HTMLElement>('#status');
+    status.textContent = `Save failed: ${message}`;
+    status.classList.add('text-rose-500');
   }
 
   private handleNewMeeting(): void {
@@ -451,9 +471,22 @@ export class HomePage implements Page {
     if (!this.meeting) return;
     const result = await this.deps.generateMindMap.execute({ meeting: this.meeting });
     if (!result.ok) return;
+    this.renderMindMap(result.value);
+  }
+
+  private renderMindMap(mindMap: MindMap): void {
     const card = this.qs<HTMLElement>('#mindmap-card');
     card.classList.remove('hidden');
-    this.mindMapView.render(this.qs<HTMLElement>('#mindmap'), result.value);
+    this.mindMapView.render(this.qs<HTMLElement>('#mindmap'), mindMap);
+  }
+
+  private renderTemperature(): void {
+    if (!this.meeting) return;
+    const score = this.meeting.temperature;
+    if (!score) return;
+    const card = this.qs<HTMLElement>('#temperature-card');
+    card.classList.remove('hidden');
+    this.gauge.render(this.qs<HTMLElement>('#temperature'), score);
   }
 
   private renderStatistics(): void {

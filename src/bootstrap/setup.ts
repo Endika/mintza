@@ -1,6 +1,7 @@
 import { ClearMeetingsUseCase } from '../application/use-cases/ClearMeetingsUseCase';
 import { DeleteMeetingUseCase } from '../application/use-cases/DeleteMeetingUseCase';
 import { DeleteTemplateUseCase } from '../application/use-cases/DeleteTemplateUseCase';
+import { FinalizeMeetingUseCase } from '../application/use-cases/FinalizeMeetingUseCase';
 import { GenerateMindMapUseCase } from '../application/use-cases/GenerateMindMapUseCase';
 import { GenerateSummariesUseCase } from '../application/use-cases/GenerateSummariesUseCase';
 import { GetConfigUseCase } from '../application/use-cases/GetConfigUseCase';
@@ -16,6 +17,7 @@ import { TranscribeChunkUseCase } from '../application/use-cases/TranscribeChunk
 import { UpdateConfigUseCase } from '../application/use-cases/UpdateConfigUseCase';
 import { ValidateApiKeyUseCase } from '../application/use-cases/ValidateApiKeyUseCase';
 import { TemplateRegistry } from '../domain/meeting/services/TemplateRegistry';
+import { SentimentScoreParser } from '../domain/temperature/services/SentimentScoreParser';
 import { HttpApiKeyValidator } from '../infrastructure/api/HttpApiKeyValidator';
 import { MediaRecorderAdapter } from '../infrastructure/audio/MediaRecorderAdapter';
 import { HttpClient } from '../infrastructure/http/HttpClient';
@@ -53,6 +55,7 @@ export interface AppDeps {
   readonly transcribeChunk: TranscribeChunkUseCase;
   readonly generateSummaries: GenerateSummariesUseCase;
   readonly generateMindMap: GenerateMindMapUseCase;
+  readonly finalizeMeeting: FinalizeMeetingUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listMeetings: ListMeetingsUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
@@ -134,6 +137,9 @@ export const buildAppDeps = (): AppDeps => {
     }),
   );
 
+  const mindMapPort = new LLMMindMapAdapter(openai);
+  const sentimentParser = new SentimentScoreParser();
+
   const audio = new MediaRecorderAdapter();
 
   return {
@@ -143,7 +149,13 @@ export const buildAppDeps = (): AppDeps => {
     stopRecording: new StopRecordingUseCase(audio),
     transcribeChunk: new TranscribeChunkUseCase(transcription),
     generateSummaries: new GenerateSummariesUseCase(summarization),
-    generateMindMap: new GenerateMindMapUseCase(new LLMMindMapAdapter(openai)),
+    generateMindMap: new GenerateMindMapUseCase(mindMapPort),
+    finalizeMeeting: new FinalizeMeetingUseCase(
+      summarization,
+      mindMapPort,
+      meetingRepo,
+      sentimentParser,
+    ),
     saveMeeting: new SaveMeetingUseCase(meetingRepo),
     listMeetings: new ListMeetingsUseCase(meetingRepo),
     deleteMeeting: new DeleteMeetingUseCase(meetingRepo),

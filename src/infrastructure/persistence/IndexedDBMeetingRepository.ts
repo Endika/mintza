@@ -6,6 +6,8 @@ import type {
   MeetingListItem,
   MeetingRepository,
 } from '../../domain/meeting/ports/MeetingRepository';
+import { MindMap } from '../../domain/mindmap/entities/MindMap';
+import { MindMapNode } from '../../domain/mindmap/value-objects/MindMapNode';
 import { Summary } from '../../domain/summary/entities/Summary';
 import type { LLMProviderName } from '../../domain/summary/value-objects/LLMProvider';
 import { isSummaryKind, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
@@ -40,6 +42,11 @@ interface PersistedSummary {
   readonly generatedAt: string;
 }
 
+interface PersistedMindMapNode {
+  readonly label: string;
+  readonly children: PersistedMindMapNode[];
+}
+
 interface PersistedMeeting {
   readonly id: string;
   readonly title: string;
@@ -50,6 +57,7 @@ interface PersistedMeeting {
   readonly segments: PersistedSegment[];
   readonly summaries: PersistedSummary[];
   readonly temperature?: number;
+  readonly mindMap?: PersistedMindMapNode;
   readonly costMicroUsd: number;
   readonly starred: boolean;
   readonly tags: string[];
@@ -193,10 +201,19 @@ const toPersisted = (meeting: Meeting): PersistedMeeting => ({
     generatedAt: s.generatedAt.toISOString(),
   })),
   ...(meeting.temperature !== undefined ? { temperature: meeting.temperature.value } : {}),
+  ...(meeting.mindMap ? { mindMap: nodeToPersisted(meeting.mindMap.root) } : {}),
   costMicroUsd: meeting.cost.microUsd,
   starred: meeting.starred,
   tags: [...meeting.tags],
 });
+
+const nodeToPersisted = (node: MindMapNode): PersistedMindMapNode => ({
+  label: node.label,
+  children: node.children.map(nodeToPersisted),
+});
+
+const nodeFromPersisted = (node: PersistedMindMapNode): MindMapNode =>
+  new MindMapNode(node.label, node.children.map(nodeFromPersisted));
 
 const fromPersisted = (p: PersistedMeeting): Meeting => {
   const summaries = new Map<SummaryKind, Summary>();
@@ -234,6 +251,7 @@ const fromPersisted = (p: PersistedMeeting): Meeting => {
     ),
     summaries,
     ...(p.temperature !== undefined ? { temperature: TemperatureScore.of(p.temperature) } : {}),
+    ...(p.mindMap ? { mindMap: new MindMap(nodeFromPersisted(p.mindMap)) } : {}),
     cost: Money.fromUsd(p.costMicroUsd / 1_000_000),
     starred: p.starred,
     tags: [...p.tags],

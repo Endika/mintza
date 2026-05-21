@@ -24,12 +24,6 @@ export class RegenerateSummariesUseCase {
   }
 
   async execute(input: RegenerateSummariesInput): Promise<GenerateSummariesOutput> {
-    const before = new Map(input.meeting.summaries);
-    for (const kind of before.keys()) {
-      // remove from internal map by overwriting the meeting summaries via direct delete is not possible.
-      // We rely on the next generate to overwrite the same kinds; remaining stale kinds stay if not in new template.
-      void kind;
-    }
     const output = await this.delegate.execute({
       meeting: input.meeting,
       kinds: input.template.summaryKinds,
