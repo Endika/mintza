@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/Endika/mintza/compare/v1.9.0...v1.10.0) (2026-05-21)
+
+
+### Features
+
+* **home:** pause/resume, new-meeting reset and reactive button states ([41dea10](https://github.com/Endika/mintza/commit/41dea10572d14e5c8cdb6dcc92aa25313df38603))
+
 # [1.9.0](https://github.com/Endika/mintza/compare/v1.8.0...v1.9.0) (2026-05-21)
 
 
