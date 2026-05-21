@@ -13,7 +13,11 @@ export type TranslationKey =
   | 'home.generating'
   | 'home.done'
   | 'home.btn_record'
+  | 'home.btn_pause'
+  | 'home.btn_resume'
   | 'home.btn_stop'
+  | 'home.btn_new'
+  | 'home.paused'
   | 'home.transcript'
   | 'home.transcript_placeholder'
   | 'home.summary'
@@ -78,7 +82,11 @@ const EN: Translations = {
   'home.generating': 'Generating summaries…',
   'home.done': 'Done.',
   'home.btn_record': 'Record',
+  'home.btn_pause': 'Pause',
+  'home.btn_resume': 'Resume',
   'home.btn_stop': 'Stop',
+  'home.btn_new': 'New meeting',
+  'home.paused': 'Paused — press Resume to continue.',
   'home.transcript': 'Transcript',
   'home.transcript_placeholder': 'The transcript will appear here while you talk.',
   'home.summary': 'Summary',
@@ -143,7 +151,11 @@ const ES: Translations = {
   'home.generating': 'Generando resúmenes…',
   'home.done': 'Listo.',
   'home.btn_record': 'Grabar',
+  'home.btn_pause': 'Pausar',
+  'home.btn_resume': 'Reanudar',
   'home.btn_stop': 'Parar',
+  'home.btn_new': 'Nueva reunión',
+  'home.paused': 'Pausado — pulsa Reanudar para continuar.',
   'home.transcript': 'Transcripción',
   'home.transcript_placeholder': 'La transcripción aparecerá aquí mientras hablas.',
   'home.summary': 'Resumen',
@@ -208,7 +220,11 @@ const EU: Translations = {
   'home.generating': 'Laburpenak sortzen…',
   'home.done': 'Eginda.',
   'home.btn_record': 'Grabatu',
+  'home.btn_pause': 'Etenaldia',
+  'home.btn_resume': 'Jarraitu',
   'home.btn_stop': 'Gelditu',
+  'home.btn_new': 'Bilera berria',
+  'home.paused': 'Pausan — sakatu Jarraitu jarraitzeko.',
   'home.transcript': 'Transkripzioa',
   'home.transcript_placeholder': 'Transkripzioa hemen agertuko da hitz egin ahala.',
   'home.summary': 'Laburpena',

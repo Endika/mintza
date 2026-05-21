@@ -34,6 +34,8 @@ export interface HomePageDeps {
   readonly saveMeeting: SaveMeetingUseCase;
 }
 
+type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
+
 interface ChunkProgress {
   received: number;
   transcribed: number;
@@ -45,6 +47,7 @@ export class HomePage implements Page {
   private root: HTMLElement | null = null;
   private meeting: Meeting | null = null;
   private unsubChunks: (() => void) | null = null;
+  private screenState: ScreenState = 'idle';
   private readonly counter = new CostCounter();
   private readonly gauge = new TemperatureGauge();
   private readonly scoreParser = new SentimentScoreParser();
@@ -79,21 +82,32 @@ export class HomePage implements Page {
         </header>
 
         <section class="card mb-6">
-          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div class="flex flex-col gap-3 md:flex-row md:items-end md:gap-6">
-              ${templateRadios(cfg.defaultTemplate, t)}
-              ${languageSelect(cfg.language, t)}
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
+                ${templateRadios(cfg.defaultTemplate, t)}
+                ${languageSelect(cfg.language, t)}
+              </div>
+              <span id="rec-badge" class="rec-badge hidden">
+                <span class="rec-dot"></span>
+                <span id="rec-badge-label">REC</span>
+              </span>
             </div>
-            <div class="flex gap-2">
-              <button id="btn-start" class="btn-primary">${t('home.btn_record')}</button>
-              <button id="btn-stop" class="btn-ghost" disabled>${t('home.btn_stop')}</button>
+            <div class="flex flex-wrap gap-2">
+              <button id="btn-record" class="btn-primary">
+                <span class="rec-dot" aria-hidden="true"></span>
+                ${t('home.btn_record')}
+              </button>
+              <button id="btn-pause" class="btn-ghost" disabled>${t('home.btn_pause')}</button>
+              <button id="btn-stop" class="btn-danger" disabled>${t('home.btn_stop')}</button>
+              <button id="btn-new" class="btn-ghost hidden">${t('home.btn_new')}</button>
             </div>
+            <p id="status" role="status" aria-live="polite" class="text-sm text-ink-400">${t('home.ready')}</p>
+            <div id="meter" class="hidden"></div>
+            <div id="progress" class="text-xs text-ink-400 hidden"></div>
+            <div id="last-error" class="text-xs text-red-600 hidden"></div>
+            <div id="counter" aria-live="polite" class="text-sm text-ink-400"></div>
           </div>
-          <p id="status" role="status" aria-live="polite" class="mt-3 text-sm text-ink-400">${t('home.ready')}</p>
-          <div id="meter" class="mt-3 hidden"></div>
-          <div id="progress" class="mt-2 text-xs text-ink-400 hidden"></div>
-          <div id="last-error" class="mt-1 text-xs text-red-600 hidden"></div>
-          <div id="counter" aria-live="polite" class="mt-3 text-sm text-ink-400"></div>
         </section>
 
         <section id="temperature-card" class="card mb-6 hidden">
@@ -132,6 +146,7 @@ export class HomePage implements Page {
     `;
 
     this.bind();
+    this.applyScreenState();
   }
 
   dispose(): void {
@@ -142,10 +157,10 @@ export class HomePage implements Page {
   }
 
   private bind(): void {
-    const startBtn = this.qs<HTMLButtonElement>('#btn-start');
-    const stopBtn = this.qs<HTMLButtonElement>('#btn-stop');
-    startBtn.addEventListener('click', () => void this.handleStart());
-    stopBtn.addEventListener('click', () => void this.handleStop());
+    this.qs<HTMLButtonElement>('#btn-record').addEventListener('click', () => void this.handleStart());
+    this.qs<HTMLButtonElement>('#btn-pause').addEventListener('click', () => void this.handlePauseResume());
+    this.qs<HTMLButtonElement>('#btn-stop').addEventListener('click', () => void this.handleStop());
+    this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
   }
 
   private async handleStart(): Promise<void> {
@@ -165,14 +180,67 @@ export class HomePage implements Page {
     }
     this.meeting = result.value.meeting;
     this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
-    this.setStatus(this.t.t('home.recording'));
-    this.toggleButtons(true);
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
-    this.showProgress();
     this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => void this.handleChunk(chunk));
+    this.setScreenState('recording');
+  }
+
+  private async handlePauseResume(): Promise<void> {
+    if (this.screenState === 'recording') {
+      await this.deps.audio.pause();
+      this.setScreenState('paused');
+      this.setStatus(this.t.t('home.paused'));
+    } else if (this.screenState === 'paused') {
+      await this.deps.audio.resume();
+      this.setScreenState('recording');
+    }
+  }
+
+  private async handleStop(): Promise<void> {
+    if (!this.meeting) return;
+    this.setScreenState('processing');
+    this.setStatus(this.t.t('home.stopping'));
+    this.unsubChunks?.();
+    this.unsubChunks = null;
+    this.meter.stop();
+    this.qs<HTMLElement>('#meter').classList.add('hidden');
+    this.counter.stop();
+    await this.deps.stopRecording.execute({ meeting: this.meeting });
+
+    if (this.meeting.segments.length === 0) {
+      this.setStatus('No audio was transcribed. The mic may not have captured sound or the API failed.');
+      this.setScreenState('done');
+      return;
+    }
+
+    this.setStatus(this.t.t('home.generating'));
+    const summariesEl = this.qs<HTMLElement>('#summaries');
+    summariesEl.innerHTML = '<em class="text-ink-400">…</em>';
+    const result = await this.deps.generateSummaries.execute({
+      meeting: this.meeting,
+      kinds: SUMMARY_KINDS,
+    });
+    this.renderSummaries(summariesEl);
+    this.applyTemperature();
+    this.renderStatistics();
+    this.renderExportMenu();
+    void this.generateAndRenderMindMap();
+    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
+    await this.deps.saveMeeting.execute({ meeting: this.meeting });
+    this.setStatus(
+      `${this.t.t('home.done')} ${result.successCount} ok / ${result.failureCount} failed.`,
+    );
+    this.setScreenState('done');
+  }
+
+  private handleNewMeeting(): void {
+    if (!this.root) return;
+    this.meeting = null;
+    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.render(this.root);
   }
 
   private startMeter(): void {
@@ -202,14 +270,9 @@ export class HomePage implements Page {
     this.updateProgress();
   }
 
-  private showProgress(): void {
-    const el = this.qs<HTMLElement>('#progress');
-    el.classList.remove('hidden');
-    this.updateProgress();
-  }
-
   private updateProgress(): void {
     const el = this.qs<HTMLElement>('#progress');
+    el.classList.remove('hidden');
     const p = this.progress;
     if (p.received === 0) {
       el.textContent = 'Waiting for the first 15s chunk…';
@@ -224,41 +287,67 @@ export class HomePage implements Page {
     el.textContent = `Last error: ${message}`;
   }
 
-  private async handleStop(): Promise<void> {
-    if (!this.meeting) return;
-    this.toggleButtons(false);
-    this.setStatus(this.t.t('home.stopping'));
-    this.unsubChunks?.();
-    this.unsubChunks = null;
-    this.meter.stop();
-    this.qs<HTMLElement>('#meter').classList.add('hidden');
-    this.counter.stop();
-    await this.deps.stopRecording.execute({ meeting: this.meeting });
+  private setScreenState(next: ScreenState): void {
+    this.screenState = next;
+    this.applyScreenState();
+  }
 
-    if (this.meeting.segments.length === 0) {
-      this.setStatus(
-        'No audio was transcribed. The mic may not have captured sound or the API failed.',
-      );
-      return;
+  private applyScreenState(): void {
+    if (!this.root) return;
+    const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
+    const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
+    const stopBtn = this.qs<HTMLButtonElement>('#btn-stop');
+    const newBtn = this.qs<HTMLButtonElement>('#btn-new');
+    const badge = this.qs<HTMLElement>('#rec-badge');
+    const badgeLabel = this.qs<HTMLElement>('#rec-badge-label');
+
+    switch (this.screenState) {
+      case 'idle':
+        recordBtn.disabled = false;
+        pauseBtn.disabled = true;
+        stopBtn.disabled = true;
+        pauseBtn.textContent = this.t.t('home.btn_pause');
+        newBtn.classList.add('hidden');
+        badge.classList.add('hidden');
+        break;
+      case 'recording':
+        recordBtn.disabled = true;
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+        pauseBtn.textContent = this.t.t('home.btn_pause');
+        newBtn.classList.add('hidden');
+        badge.classList.remove('hidden');
+        badgeLabel.textContent = 'REC';
+        badge.classList.remove('bg-ink-100', 'text-ink-600');
+        badge.classList.add('bg-red-50', 'text-red-700');
+        this.setStatus(this.t.t('home.recording'));
+        break;
+      case 'paused':
+        recordBtn.disabled = true;
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+        pauseBtn.textContent = this.t.t('home.btn_resume');
+        newBtn.classList.add('hidden');
+        badge.classList.remove('hidden');
+        badgeLabel.textContent = 'PAUSED';
+        badge.classList.remove('bg-red-50', 'text-red-700');
+        badge.classList.add('bg-ink-100', 'text-ink-600');
+        break;
+      case 'processing':
+        recordBtn.disabled = true;
+        pauseBtn.disabled = true;
+        stopBtn.disabled = true;
+        newBtn.classList.add('hidden');
+        badge.classList.add('hidden');
+        break;
+      case 'done':
+        recordBtn.disabled = true;
+        pauseBtn.disabled = true;
+        stopBtn.disabled = true;
+        newBtn.classList.remove('hidden');
+        badge.classList.add('hidden');
+        break;
     }
-
-    this.setStatus(this.t.t('home.generating'));
-    const summariesEl = this.qs<HTMLElement>('#summaries');
-    summariesEl.innerHTML = '<em class="text-ink-400">…</em>';
-    const result = await this.deps.generateSummaries.execute({
-      meeting: this.meeting,
-      kinds: SUMMARY_KINDS,
-    });
-    this.renderSummaries(summariesEl);
-    this.applyTemperature();
-    this.renderStatistics();
-    this.renderExportMenu();
-    void this.generateAndRenderMindMap();
-    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
-    await this.deps.saveMeeting.execute({ meeting: this.meeting });
-    this.setStatus(
-      `${this.t.t('home.done')} ${result.successCount} ok / ${result.failureCount} failed.`,
-    );
   }
 
   private async generateAndRenderMindMap(): Promise<void> {
@@ -330,11 +419,6 @@ export class HomePage implements Page {
   private readLanguage(): LanguageCode {
     const select = this.qs<HTMLSelectElement>('#lang-select');
     return select.value as LanguageCode;
-  }
-
-  private toggleButtons(recording: boolean): void {
-    this.qs<HTMLButtonElement>('#btn-start').disabled = recording;
-    this.qs<HTMLButtonElement>('#btn-stop').disabled = !recording;
   }
 
   private setStatus(message: string): void {
