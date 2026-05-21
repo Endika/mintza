@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/Endika/mintza/compare/v1.11.0...v1.11.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* **audio,errors,ux:** rotate MediaRecorder per chunk, polished REC badge, i18n update banner and Google multi-endpoint validation ([52dc4a8](https://github.com/Endika/mintza/commit/52dc4a8c37cd96907b4f82d94654746db2763468))
+
 # [1.11.0](https://github.com/Endika/mintza/compare/v1.10.1...v1.11.0) (2026-05-21)
 
 
