@@ -3,12 +3,17 @@ import type {
   TranscriptionRequest,
 } from '../../domain/transcription/ports/TranscriptionPort';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
-import { AppError } from '../../shared/errors/AppError';
+import { AppError, type ProviderAttempt } from '../../shared/errors/AppError';
 import { err, type Result } from '../../shared/result/Result';
 
-export type TranscriptionProvidersResolver = () => readonly TranscriptionPort[];
+export interface NamedTranscriptionPort {
+  readonly name: string;
+  readonly port: TranscriptionPort;
+}
 
-const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR']);
+export type TranscriptionProvidersResolver = () => readonly NamedTranscriptionPort[];
+
+const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR', 'CONFIG_INVALID']);
 
 export class TranscriptionChainAdapter implements TranscriptionPort {
   constructor(private readonly resolve: TranscriptionProvidersResolver) {}
@@ -20,13 +25,20 @@ export class TranscriptionChainAdapter implements TranscriptionPort {
     if (providers.length === 0) {
       return err(new AppError('TRANSCRIPTION_FAILED', 'No transcription providers configured'));
     }
-    let lastError: AppError | null = null;
-    for (const provider of providers) {
-      const result = await provider.transcribe(request);
+    const attempts: ProviderAttempt[] = [];
+    for (const { name, port } of providers) {
+      const result = await port.transcribe(request);
       if (result.ok) return result;
-      lastError = result.error;
+      attempts.push({ provider: name, code: result.error.code, message: result.error.message });
       if (!RECOVERABLE_CODES.has(result.error.code)) break;
     }
-    return err(lastError ?? new AppError('TRANSCRIPTION_FAILED', 'All providers failed'));
+    return err(
+      new AppError(
+        'TRANSCRIPTION_FAILED',
+        `All ${attempts.length} transcription providers failed`,
+        undefined,
+        attempts,
+      ),
+    );
   }
 }

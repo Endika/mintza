@@ -12,6 +12,7 @@ import { Template, type TemplateKind } from '../../domain/meeting/value-objects/
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
+import type { ProviderAttempt } from '../../shared/errors/AppError';
 import { AudioLevelMeter } from '../components/AudioLevelMeter';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
@@ -265,7 +266,7 @@ export class HomePage implements Page {
     } else {
       this.progress.failed += 1;
       this.progress.lastError = result.error.message;
-      this.showLastError(result.error.message);
+      this.showLastError(result.error.message, result.error.attempts);
     }
     this.updateProgress();
   }
@@ -281,10 +282,17 @@ export class HomePage implements Page {
     el.textContent = `Chunks: ${p.received} received · ${p.transcribed} transcribed · ${p.failed} failed`;
   }
 
-  private showLastError(message: string): void {
+  private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
     const el = this.qs<HTMLElement>('#last-error');
     el.classList.remove('hidden');
-    el.textContent = `Last error: ${message}`;
+    if (attempts.length === 0) {
+      el.textContent = `Last error: ${message}`;
+      return;
+    }
+    const lines = attempts
+      .map((a) => `  • ${escapeHtml(a.provider)}: ${escapeHtml(a.message)}`)
+      .join('<br/>');
+    el.innerHTML = `<strong>${escapeHtml(message)}</strong><br/>${lines}`;
   }
 
   private setScreenState(next: ScreenState): void {

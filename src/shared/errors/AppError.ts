@@ -10,13 +10,23 @@ export type AppErrorCode =
   | 'NETWORK_ERROR'
   | 'UNKNOWN';
 
+export interface ProviderAttempt {
+  readonly provider: string;
+  readonly code: AppErrorCode;
+  readonly message: string;
+}
+
 export class AppError extends Error {
+  public readonly attempts: readonly ProviderAttempt[];
+
   constructor(
     public readonly code: AppErrorCode,
     message: string,
     public readonly cause?: unknown,
+    attempts: readonly ProviderAttempt[] = [],
   ) {
     super(message);
     this.name = 'AppError';
+    this.attempts = attempts;
   }
 }

@@ -16,7 +16,10 @@ describe('SummarizationChainAdapter', () => {
   it('returns the first successful provider response', async () => {
     const primary = new FakeSummarizationPort({ kind: 'success', content: 'first' });
     const secondary = new FakeSummarizationPort({ kind: 'success', content: 'second' });
-    const chain = new SummarizationChainAdapter(() => [primary, secondary]);
+    const chain = new SummarizationChainAdapter(() => [
+      { name: 'A', port: primary },
+      { name: 'B', port: secondary },
+    ]);
     const result = await chain.summarize(request);
     expect(result.ok && result.value.content).toBe('first');
     expect(secondary.calls).toHaveLength(0);
@@ -29,23 +32,33 @@ describe('SummarizationChainAdapter', () => {
       message: 'no key',
     });
     const secondary = new FakeSummarizationPort({ kind: 'success', content: 'second', provider: 'anthropic' });
-    const chain = new SummarizationChainAdapter(() => [primary, secondary]);
+    const chain = new SummarizationChainAdapter(() => [
+      { name: 'Gemini', port: primary },
+      { name: 'Claude', port: secondary },
+    ]);
     const result = await chain.summarize(request);
     expect(result.ok && result.value.provider).toBe('anthropic');
     expect(secondary.calls).toHaveLength(1);
   });
 
-  it('stops on a non recoverable error', async () => {
+  it('stops on a non recoverable error and reports attempts', async () => {
     const primary = new FakeSummarizationPort({
       kind: 'failure',
       code: 'SUMMARIZATION_FAILED',
       message: 'bad request',
     });
     const secondary = new FakeSummarizationPort({ kind: 'success', content: 'unused' });
-    const chain = new SummarizationChainAdapter(() => [primary, secondary]);
+    const chain = new SummarizationChainAdapter(() => [
+      { name: 'GPT', port: primary },
+      { name: 'Claude', port: secondary },
+    ]);
     const result = await chain.summarize(request);
     expect(result.ok).toBe(false);
     expect(secondary.calls).toHaveLength(0);
+    if (!result.ok) {
+      expect(result.error.attempts).toHaveLength(1);
+      expect(result.error.attempts[0]?.provider).toBe('GPT');
+    }
   });
 
   it('returns an error when no providers are configured', async () => {

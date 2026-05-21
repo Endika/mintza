@@ -33,11 +33,15 @@ export class AzureSpeechClient {
   ): Promise<Result<AzureSpeechResult, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Missing Azure Speech key'));
+      return err(
+        new AppError('API_KEY_INVALID', 'Azure Speech: missing subscription key in Settings'),
+      );
     }
     const region = this.regionProvider();
     if (region.trim().length === 0) {
-      return err(new AppError('CONFIG_INVALID', 'Missing Azure Speech region'));
+      return err(
+        new AppError('CONFIG_INVALID', 'Azure Speech: missing region in Settings'),
+      );
     }
     const tag = LANGUAGE_TAG[language.code] ?? 'en-US';
     const url = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${encodeURIComponent(tag)}&format=detailed`;

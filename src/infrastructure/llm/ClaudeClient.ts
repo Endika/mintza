@@ -36,7 +36,9 @@ export class ClaudeClient {
   async chat(request: ClaudeChatRequest): Promise<Result<ClaudeChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Missing Anthropic API key'));
+      return err(
+        new AppError('API_KEY_INVALID', 'Claude: missing Anthropic API key in Settings'),
+      );
     }
     const body = JSON.stringify({
       model: request.model,
@@ -64,7 +66,7 @@ export class ClaudeClient {
         .map((c) => c.text ?? '')
         .join('');
       if (text.length === 0) {
-        return err(new AppError('SUMMARIZATION_FAILED', 'Empty Claude response'));
+        return err(new AppError('SUMMARIZATION_FAILED', 'Claude: empty response'));
       }
       return ok({
         content: text,
@@ -72,7 +74,7 @@ export class ClaudeClient {
         completionTokens: parsed.usage?.output_tokens ?? 0,
       });
     } catch (cause) {
-      return err(new AppError('SUMMARIZATION_FAILED', 'Invalid Claude response', cause));
+      return err(new AppError('SUMMARIZATION_FAILED', 'Claude: invalid response body', cause));
     }
   }
 }

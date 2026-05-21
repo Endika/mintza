@@ -37,7 +37,9 @@ export class GoogleSpeechClient {
   ): Promise<Result<GoogleSpeechResult, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Missing Google API key for Speech'));
+      return err(
+        new AppError('API_KEY_INVALID', 'Google Speech: missing Google API key in Settings'),
+      );
     }
     const base64 = await blobToBase64(audio);
     const body = JSON.stringify({
@@ -62,14 +64,14 @@ export class GoogleSpeechClient {
       const first = parsed.results?.[0]?.alternatives?.[0];
       const text = first?.transcript ?? '';
       if (text.length === 0) {
-        return err(new AppError('TRANSCRIPTION_FAILED', 'Empty Google Speech response'));
+        return err(new AppError('TRANSCRIPTION_FAILED', 'Google Speech: empty response (no audio detected?)'));
       }
       return ok({
         text,
         ...(first?.confidence !== undefined ? { confidence: first.confidence } : {}),
       });
     } catch (cause) {
-      return err(new AppError('TRANSCRIPTION_FAILED', 'Invalid Google Speech response', cause));
+      return err(new AppError('TRANSCRIPTION_FAILED', 'Google Speech: invalid response body', cause));
     }
   }
 }

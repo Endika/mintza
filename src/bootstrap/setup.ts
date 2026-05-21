@@ -21,19 +21,23 @@ import { GeminiSummarizationAdapter } from '../infrastructure/llm/GeminiSummariz
 import { LLMMindMapAdapter } from '../infrastructure/llm/LLMMindMapAdapter';
 import { OpenAIClient } from '../infrastructure/llm/OpenAIClient';
 import { OpenAISummarizationAdapter } from '../infrastructure/llm/OpenAISummarizationAdapter';
-import { SummarizationChainAdapter } from '../infrastructure/llm/SummarizationChainAdapter';
+import {
+  SummarizationChainAdapter,
+  type NamedSummarizationPort,
+} from '../infrastructure/llm/SummarizationChainAdapter';
 import { IndexedDBMeetingRepository } from '../infrastructure/persistence/IndexedDBMeetingRepository';
 import { LocalStorageConfigRepository } from '../infrastructure/persistence/LocalStorageConfigRepository';
 import { AzureSpeechClient } from '../infrastructure/transcription/AzureSpeechClient';
 import { AzureSpeechTranscriptionAdapter } from '../infrastructure/transcription/AzureSpeechTranscriptionAdapter';
 import { GoogleSpeechClient } from '../infrastructure/transcription/GoogleSpeechClient';
 import { GoogleSpeechTranscriptionAdapter } from '../infrastructure/transcription/GoogleSpeechTranscriptionAdapter';
-import { TranscriptionChainAdapter } from '../infrastructure/transcription/TranscriptionChainAdapter';
+import {
+  TranscriptionChainAdapter,
+  type NamedTranscriptionPort,
+} from '../infrastructure/transcription/TranscriptionChainAdapter';
 import { WhisperClient } from '../infrastructure/transcription/WhisperClient';
 import { WhisperTranscriptionAdapter } from '../infrastructure/transcription/WhisperTranscriptionAdapter';
 import { ConfigStore } from '../presentation/state/ConfigStore';
-import type { SummarizationPort } from '../domain/summary/ports/SummarizationPort';
-import type { TranscriptionPort } from '../domain/transcription/ports/TranscriptionPort';
 
 export interface AppDeps {
   readonly configStore: ConfigStore;
@@ -60,15 +64,24 @@ export const buildAppDeps = (): AppDeps => {
   const meetingRepo = new IndexedDBMeetingRepository();
 
   const whisper = new WhisperClient(http, () => configStore.openAIKey());
-  const whisperAdapter = new WhisperTranscriptionAdapter(whisper);
+  const whisperAdapter: NamedTranscriptionPort = {
+    name: 'Whisper',
+    port: new WhisperTranscriptionAdapter(whisper),
+  };
   const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleKey());
-  const googleSpeechAdapter = new GoogleSpeechTranscriptionAdapter(googleSpeech);
+  const googleSpeechAdapter: NamedTranscriptionPort = {
+    name: 'Google Speech',
+    port: new GoogleSpeechTranscriptionAdapter(googleSpeech),
+  };
   const azureSpeech = new AzureSpeechClient(
     http,
     () => configStore.azureKey(),
     () => configStore.azureRegion(),
   );
-  const azureSpeechAdapter = new AzureSpeechTranscriptionAdapter(azureSpeech);
+  const azureSpeechAdapter: NamedTranscriptionPort = {
+    name: 'Azure Speech',
+    port: new AzureSpeechTranscriptionAdapter(azureSpeech),
+  };
 
   const transcription = new TranscriptionChainAdapter(() =>
     pickTranscriptionChain(configStore.get().transcriptionQuality, {
@@ -79,14 +92,26 @@ export const buildAppDeps = (): AppDeps => {
   );
 
   const openai = new OpenAIClient(http, () => configStore.openAIKey());
-  const openaiAdapter = new OpenAISummarizationAdapter(openai);
-  const openaiPremiumAdapter = new OpenAISummarizationAdapter(openai, { model: 'gpt-4o' });
+  const openaiAdapter: NamedSummarizationPort = {
+    name: 'GPT-4o-mini',
+    port: new OpenAISummarizationAdapter(openai),
+  };
+  const openaiPremiumAdapter: NamedSummarizationPort = {
+    name: 'GPT-4o',
+    port: new OpenAISummarizationAdapter(openai, { model: 'gpt-4o' }),
+  };
 
   const claude = new ClaudeClient(http, () => configStore.anthropicKey());
-  const claudeAdapter = new ClaudeSummarizationAdapter(claude);
+  const claudeAdapter: NamedSummarizationPort = {
+    name: 'Claude',
+    port: new ClaudeSummarizationAdapter(claude),
+  };
 
   const gemini = new GeminiClient(http, () => configStore.googleKey());
-  const geminiAdapter = new GeminiSummarizationAdapter(gemini);
+  const geminiAdapter: NamedSummarizationPort = {
+    name: 'Gemini',
+    port: new GeminiSummarizationAdapter(gemini),
+  };
 
   const summarization = new SummarizationChainAdapter(() =>
     pickChain(configStore.get().summaryQuality, {
@@ -119,10 +144,10 @@ export const buildAppDeps = (): AppDeps => {
 
 const pickChain = (
   quality: 'cheap' | 'balanced' | 'premium',
-  chains: Record<'cheap' | 'balanced' | 'premium', readonly SummarizationPort[]>,
-): readonly SummarizationPort[] => chains[quality];
+  chains: Record<'cheap' | 'balanced' | 'premium', readonly NamedSummarizationPort[]>,
+): readonly NamedSummarizationPort[] => chains[quality];
 
 const pickTranscriptionChain = (
   quality: 'cheap' | 'balanced' | 'premium',
-  chains: Record<'cheap' | 'balanced' | 'premium', readonly TranscriptionPort[]>,
-): readonly TranscriptionPort[] => chains[quality];
+  chains: Record<'cheap' | 'balanced' | 'premium', readonly NamedTranscriptionPort[]>,
+): readonly NamedTranscriptionPort[] => chains[quality];

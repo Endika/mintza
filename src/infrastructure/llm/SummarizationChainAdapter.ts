@@ -3,12 +3,17 @@ import type {
   SummarizationRequest,
 } from '../../domain/summary/ports/SummarizationPort';
 import type { Summary } from '../../domain/summary/entities/Summary';
-import { AppError } from '../../shared/errors/AppError';
+import { AppError, type ProviderAttempt } from '../../shared/errors/AppError';
 import { err, type Result } from '../../shared/result/Result';
 
-export type ProvidersResolver = () => readonly SummarizationPort[];
+export interface NamedSummarizationPort {
+  readonly name: string;
+  readonly port: SummarizationPort;
+}
 
-const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR']);
+export type ProvidersResolver = () => readonly NamedSummarizationPort[];
+
+const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR', 'CONFIG_INVALID']);
 
 export class SummarizationChainAdapter implements SummarizationPort {
   constructor(private readonly resolve: ProvidersResolver) {}
@@ -18,13 +23,20 @@ export class SummarizationChainAdapter implements SummarizationPort {
     if (providers.length === 0) {
       return err(new AppError('SUMMARIZATION_FAILED', 'No summarization providers configured'));
     }
-    let lastError: AppError | null = null;
-    for (const provider of providers) {
-      const result = await provider.summarize(request);
+    const attempts: ProviderAttempt[] = [];
+    for (const { name, port } of providers) {
+      const result = await port.summarize(request);
       if (result.ok) return result;
-      lastError = result.error;
+      attempts.push({ provider: name, code: result.error.code, message: result.error.message });
       if (!RECOVERABLE_CODES.has(result.error.code)) break;
     }
-    return err(lastError ?? new AppError('SUMMARIZATION_FAILED', 'All providers failed'));
+    return err(
+      new AppError(
+        'SUMMARIZATION_FAILED',
+        `All ${attempts.length} summarization providers failed`,
+        undefined,
+        attempts,
+      ),
+    );
   }
 }

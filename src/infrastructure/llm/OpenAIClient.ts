@@ -35,7 +35,9 @@ export class OpenAIClient {
   async chat(request: OpenAIChatRequest): Promise<Result<OpenAIChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Missing OpenAI API key'));
+      return err(
+        new AppError('API_KEY_INVALID', 'OpenAI: missing OpenAI API key in Settings'),
+      );
     }
     const body = JSON.stringify({
       model: request.model,
@@ -60,7 +62,7 @@ export class OpenAIClient {
       const parsed = await response.value.json<ChatBody>();
       const content = parsed.choices[0]?.message.content;
       if (typeof content !== 'string' || content.length === 0) {
-        return err(new AppError('SUMMARIZATION_FAILED', 'Empty OpenAI response'));
+        return err(new AppError('SUMMARIZATION_FAILED', 'OpenAI: empty response'));
       }
       return ok({
         content,
@@ -68,7 +70,7 @@ export class OpenAIClient {
         completionTokens: parsed.usage?.completion_tokens ?? 0,
       });
     } catch (cause) {
-      return err(new AppError('SUMMARIZATION_FAILED', 'Invalid OpenAI response', cause));
+      return err(new AppError('SUMMARIZATION_FAILED', 'OpenAI: invalid response body', cause));
     }
   }
 }
