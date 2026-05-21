@@ -33,26 +33,57 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
   const isApiCall =
     url.host.includes('openai.com') ||
     url.host.includes('googleapis.com') ||
     url.host.includes('anthropic.com') ||
     url.host.includes('cognitiveservices.azure.com');
-
   if (isApiCall) return;
+  if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          if (response.ok && url.origin === self.location.origin) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match('/mintza/index.html'));
-    }),
-  );
+  const isNavigation = request.mode === 'navigate' || request.destination === 'document';
+  const isShell =
+    isNavigation ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname === '/mintza/' ||
+    url.pathname.endsWith('/manifest.json') ||
+    url.pathname.endsWith('/sw.js');
+
+  if (isShell) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  event.respondWith(cacheFirst(request));
 });
+
+const networkFirst = async (request) => {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, clone);
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const shell = await caches.match('/mintza/index.html');
+    if (shell) return shell;
+    throw error;
+  }
+};
+
+const cacheFirst = async (request) => {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) {
+    const clone = response.clone();
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, clone);
+  }
+  return response;
+};
