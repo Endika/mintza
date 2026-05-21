@@ -152,6 +152,21 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
       return err(new AppError('STORAGE_FAILED', 'Failed to delete meeting', cause));
     }
   }
+
+  async clearAll(): Promise<Result<void, AppError>> {
+    try {
+      const db = await this.getDb();
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      return ok(undefined);
+    } catch (cause) {
+      return err(new AppError('STORAGE_FAILED', 'Failed to clear meetings', cause));
+    }
+  }
 }
 
 const toPersisted = (meeting: Meeting): PersistedMeeting => ({

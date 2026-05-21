@@ -16,6 +16,7 @@ export class App {
       ['/', (): Page => this.buildHome()],
       ['/settings', (): Promise<Page> => this.buildSettings()],
       ['/history', (): Promise<Page> => this.buildHistory()],
+      ['/meeting', (): Promise<Page> => this.buildMeetingDetail()],
     ]);
 
     const router = new Router(this.root, routes, (): Page => this.buildHome());
@@ -48,6 +49,17 @@ export class App {
     const { HistoryPage } = await import('./presentation/pages/HistoryPage');
     return new HistoryPage({
       listMeetings: this.deps.listMeetings,
+      deleteMeeting: this.deps.deleteMeeting,
+      clearMeetings: this.deps.clearMeetings,
+      translator: this.deps.configStore.translator,
+    });
+  }
+
+  private async buildMeetingDetail(): Promise<Page> {
+    const { MeetingDetailPage } = await import('./presentation/pages/MeetingDetailPage');
+    return new MeetingDetailPage({
+      getMeeting: this.deps.getMeeting,
+      deleteMeeting: this.deps.deleteMeeting,
       translator: this.deps.configStore.translator,
     });
   }

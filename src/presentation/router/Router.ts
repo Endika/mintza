@@ -32,7 +32,8 @@ export class Router {
 
   private async handle(): Promise<void> {
     this.current?.dispose?.();
-    const path = (window.location.hash.replace(/^#/, '') || '/').toLowerCase();
+    const raw = window.location.hash.replace(/^#/, '') || '/';
+    const path = (raw.split('?')[0] ?? '/').toLowerCase();
     const factory = this.routes.get(path) ?? this.fallback;
     const page = await factory();
     this.current = page;

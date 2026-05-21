@@ -1,7 +1,9 @@
+import { ClearMeetingsUseCase } from '../application/use-cases/ClearMeetingsUseCase';
 import { DeleteMeetingUseCase } from '../application/use-cases/DeleteMeetingUseCase';
 import { GenerateMindMapUseCase } from '../application/use-cases/GenerateMindMapUseCase';
 import { GenerateSummariesUseCase } from '../application/use-cases/GenerateSummariesUseCase';
 import { GetConfigUseCase } from '../application/use-cases/GetConfigUseCase';
+import { GetMeetingUseCase } from '../application/use-cases/GetMeetingUseCase';
 import { ListMeetingsUseCase } from '../application/use-cases/ListMeetingsUseCase';
 import { SaveMeetingUseCase } from '../application/use-cases/SaveMeetingUseCase';
 import { StartRecordingUseCase } from '../application/use-cases/StartRecordingUseCase';
@@ -44,6 +46,8 @@ export interface AppDeps {
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listMeetings: ListMeetingsUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
+  readonly clearMeetings: ClearMeetingsUseCase;
+  readonly getMeeting: GetMeetingUseCase;
   readonly getConfig: GetConfigUseCase;
   readonly updateConfig: UpdateConfigUseCase;
   readonly validateApiKey: ValidateApiKeyUseCase;
@@ -105,6 +109,8 @@ export const buildAppDeps = (): AppDeps => {
     saveMeeting: new SaveMeetingUseCase(meetingRepo),
     listMeetings: new ListMeetingsUseCase(meetingRepo),
     deleteMeeting: new DeleteMeetingUseCase(meetingRepo),
+    clearMeetings: new ClearMeetingsUseCase(meetingRepo),
+    getMeeting: new GetMeetingUseCase(meetingRepo),
     getConfig: new GetConfigUseCase(configRepo),
     updateConfig: new UpdateConfigUseCase(configRepo),
     validateApiKey: new ValidateApiKeyUseCase(new HttpApiKeyValidator(http)),

@@ -17,4 +17,5 @@ export interface MeetingRepository {
   findById(id: MeetingId): Promise<Result<Meeting | null, AppError>>;
   list(): Promise<Result<MeetingListItem[], AppError>>;
   delete(id: MeetingId): Promise<Result<void, AppError>>;
+  clearAll(): Promise<Result<void, AppError>>;
 }
