@@ -74,6 +74,8 @@ export type TranslationKey =
   | 'settings.valid'
   | 'settings.saved'
   | 'settings.cleared'
+  | 'settings.no_changes'
+  | 'settings.unsaved'
   | 'settings.interface_language'
   | 'settings.default_template'
   | 'history.title'
@@ -162,6 +164,8 @@ const EN: Translations = {
   'settings.valid': '✓ Valid',
   'settings.saved': 'Settings saved.',
   'settings.cleared': 'Keys cleared from this browser.',
+  'settings.no_changes': 'No changes to save.',
+  'settings.unsaved': 'Unsaved changes',
   'settings.interface_language': 'Interface language',
   'settings.default_template': 'Default template',
   'history.title': 'History',
@@ -249,6 +253,8 @@ const ES: Translations = {
   'settings.valid': '✓ Válida',
   'settings.saved': 'Ajustes guardados.',
   'settings.cleared': 'Claves borradas de este navegador.',
+  'settings.no_changes': 'Sin cambios que guardar.',
+  'settings.unsaved': 'Cambios sin guardar',
   'settings.interface_language': 'Idioma de la interfaz',
   'settings.default_template': 'Plantilla por defecto',
   'history.title': 'Historial',
@@ -336,6 +342,8 @@ const EU: Translations = {
   'settings.valid': '✓ Baliozkoa',
   'settings.saved': 'Ezarpenak gordeta.',
   'settings.cleared': 'Nabigatzaile honetako gakoak garbituta.',
+  'settings.no_changes': 'Ez dago aldaketarik gordetzeko.',
+  'settings.unsaved': 'Gorde gabeko aldaketak',
   'settings.interface_language': 'Interfazearen hizkuntza',
   'settings.default_template': 'Txantiloi lehenetsia',
   'history.title': 'Historia',

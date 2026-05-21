@@ -98,13 +98,17 @@ export class SettingsPage implements Page {
 
           <div class="flex justify-between">
             <button type="button" id="btn-clear" class="btn-ghost text-red-600">${t('settings.btn_clear')}</button>
-            <button type="submit" class="btn-primary">${t('settings.btn_save')}</button>
+            <span class="flex items-center gap-3">
+              <span id="dirty-indicator" class="text-xs text-amber-600 hidden">● ${t('settings.unsaved')}</span>
+              <button type="submit" id="btn-save" class="btn-primary" disabled>${t('settings.btn_save')}</button>
+            </span>
           </div>
           <p id="settings-status" class="text-sm text-ink-400"></p>
         </form>
       </main>
     `;
     this.bind();
+    this.refreshButtonStates();
   }
 
   private bind(): void {
@@ -113,6 +117,8 @@ export class SettingsPage implements Page {
       e.preventDefault();
       void this.handleSave(form);
     });
+    form.addEventListener('input', () => this.refreshButtonStates());
+    form.addEventListener('change', () => this.refreshButtonStates());
     this.qs<HTMLButtonElement>('#btn-clear').addEventListener('click', () => {
       void this.handleClear();
     });
@@ -120,6 +126,24 @@ export class SettingsPage implements Page {
     this.root.querySelectorAll<HTMLButtonElement>('[data-test-key]').forEach((btn) => {
       btn.addEventListener('click', () => void this.handleValidate(btn));
     });
+  }
+
+  private refreshButtonStates(): void {
+    if (!this.root) return;
+    const form = this.qs<HTMLFormElement>('#settings-form');
+    const saveBtn = this.qs<HTMLButtonElement>('#btn-save');
+    const clearBtn = this.qs<HTMLButtonElement>('#btn-clear');
+    const dirty = this.qs<HTMLElement>('#dirty-indicator');
+    const cfg = this.deps.config.get();
+    const data = new FormData(form);
+    const proposed = buildProposedConfig(data, cfg);
+    const isDirty = !configsEqual(cfg, proposed);
+    saveBtn.disabled = !isDirty;
+    dirty.classList.toggle('hidden', !isDirty);
+    const hasAnyKey = Object.values(cfg.apiKeys).some(
+      (v) => typeof v === 'string' && v.length > 0,
+    );
+    clearBtn.disabled = !hasAnyKey;
   }
 
   private async handleValidate(btn: HTMLButtonElement): Promise<void> {
@@ -159,33 +183,38 @@ export class SettingsPage implements Page {
   }
 
   private async handleSave(form: HTMLFormElement): Promise<void> {
+    const tr = this.deps.config.translator;
+    const current = this.deps.config.get();
     const data = new FormData(form);
-    const azureRegionRaw = data.get('azureRegion');
-    const next: AppConfig = {
-      ...this.deps.config.get(),
-      language: (data.get('language') as 'es' | 'en' | 'eu') ?? 'en',
-      defaultTemplate: (data.get('defaultTemplate') as TemplateKind) ?? 'generic',
-      summaryQuality: (data.get('summaryQuality') as QualityProfile) ?? 'balanced',
-      transcriptionQuality: (data.get('transcriptionQuality') as QualityProfile) ?? 'balanced',
-      azureRegion: typeof azureRegionRaw === 'string' && azureRegionRaw.trim().length > 0
-        ? azureRegionRaw.trim()
-        : 'westeurope',
-      apiKeys: buildApiKeys(data),
-    };
+    const next = buildProposedConfig(data, current);
+    if (configsEqual(current, next)) {
+      this.setStatus(tr.t('settings.no_changes'));
+      return;
+    }
+    const languageChanged = current.language !== next.language;
     await this.deps.updateConfig.execute({ config: next });
     await this.deps.config.update(next);
-    if (next.language !== this.deps.config.get().language) {
-      this.render(this.root ?? document.createElement('div'));
+    if (languageChanged && this.root) {
+      this.render(this.root);
+    } else {
+      this.refreshButtonStates();
     }
-    this.setStatus(this.deps.config.translator.t('settings.saved'));
+    this.setStatus(tr.t('settings.saved'));
   }
 
   private async handleClear(): Promise<void> {
-    const cleared: AppConfig = { ...this.deps.config.get(), apiKeys: {} };
+    const tr = this.deps.config.translator;
+    const current = this.deps.config.get();
+    const hasAnyKey = Object.values(current.apiKeys).some(
+      (v) => typeof v === 'string' && v.length > 0,
+    );
+    if (!hasAnyKey) return;
+    const cleared: AppConfig = { ...current, apiKeys: {} };
     await this.deps.updateConfig.execute({ config: cleared });
     await this.deps.config.update(cleared);
     this.qs<HTMLFormElement>('#settings-form').reset();
-    this.setStatus(this.deps.config.translator.t('settings.cleared'));
+    this.refreshButtonStates();
+    this.setStatus(tr.t('settings.cleared'));
   }
 
   private setStatus(message: string): void {
@@ -199,6 +228,37 @@ export class SettingsPage implements Page {
     return el;
   }
 }
+
+const buildProposedConfig = (data: FormData, current: AppConfig): AppConfig => {
+  const azureRegionRaw = data.get('azureRegion');
+  return {
+    ...current,
+    language: (data.get('language') as 'es' | 'en' | 'eu') ?? current.language,
+    defaultTemplate: (data.get('defaultTemplate') as TemplateKind) ?? current.defaultTemplate,
+    summaryQuality: (data.get('summaryQuality') as QualityProfile) ?? current.summaryQuality,
+    transcriptionQuality:
+      (data.get('transcriptionQuality') as QualityProfile) ?? current.transcriptionQuality,
+    azureRegion:
+      typeof azureRegionRaw === 'string' && azureRegionRaw.trim().length > 0
+        ? azureRegionRaw.trim()
+        : current.azureRegion,
+    apiKeys: buildApiKeys(data),
+  };
+};
+
+const configsEqual = (a: AppConfig, b: AppConfig): boolean => {
+  if (
+    a.language !== b.language ||
+    a.defaultTemplate !== b.defaultTemplate ||
+    a.summaryQuality !== b.summaryQuality ||
+    a.transcriptionQuality !== b.transcriptionQuality ||
+    a.azureRegion !== b.azureRegion
+  ) {
+    return false;
+  }
+  const fields: Array<keyof AppConfig['apiKeys']> = ['openai', 'google', 'azure', 'anthropic'];
+  return fields.every((f) => (a.apiKeys[f] ?? '') === (b.apiKeys[f] ?? ''));
+};
 
 const apiKeyInput = (
   name: string,
