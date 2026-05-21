@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/Endika/mintza/compare/v1.12.0...v1.13.0) (2026-05-21)
+
+
+### Features
+
+* **home:** summarize-now button generates summary mid-recording without stopping ([650bbf3](https://github.com/Endika/mintza/commit/650bbf3c14ede2089c56705c3ae59621c7004cc5))
+
 # [1.12.0](https://github.com/Endika/mintza/compare/v1.11.1...v1.12.0) (2026-05-21)
 
 
