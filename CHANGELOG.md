@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/Endika/mintza/compare/v1.7.0...v1.8.0) (2026-05-21)
+
+
+### Features
+
+* **pwa:** versioned cache, in-app update banner and semantic-release npm sync ([7462a80](https://github.com/Endika/mintza/commit/7462a8035c8bc509e20608e5d33869d5ecc877b6))
+
 # [1.7.0](https://github.com/Endika/mintza/compare/v1.6.0...v1.7.0) (2026-05-21)
 
 
