@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/Endika/mintza/compare/v1.13.0...v1.14.0) (2026-05-21)
+
+
+### Features
+
+* **settings:** dirty-state Save button, Clear disabled when empty, no-changes feedback ([3327383](https://github.com/Endika/mintza/commit/33273834bf981223f24f0e004039543cf55c6b9b))
+
 # [1.13.0](https://github.com/Endika/mintza/compare/v1.12.0...v1.13.0) (2026-05-21)
 
 
