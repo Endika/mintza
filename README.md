@@ -4,9 +4,9 @@
 
 > 🔴 **Live demo:** https://endika.github.io/mintza/
 
-[![CI](https://github.com/Endika/mintza/actions/workflows/ci.yml/badge.svg)](https://github.com/Endika/mintza/actions/workflows/ci.yml)
-[![Release & Deploy](https://github.com/Endika/mintza/actions/workflows/release.yml/badge.svg)](https://github.com/Endika/mintza/actions/workflows/release.yml)
+[![Release & Deploy](https://github.com/Endika/mintza/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/Endika/mintza/actions/workflows/release.yml)
 [![GitHub release](https://img.shields.io/github/v/release/Endika/mintza)](https://github.com/Endika/mintza/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Stack
 
