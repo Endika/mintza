@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/Endika/mintza/compare/v1.5.0...v1.5.1) (2026-05-21)
+
+
+### Performance Improvements
+
+* **presentation:** lazy-load Settings and History; add a11y skip link and live regions ([86c4f49](https://github.com/Endika/mintza/commit/86c4f4939c5d934acf50bb9c04cc5e8916ded69b))
+
 # [1.5.0](https://github.com/Endika/mintza/compare/v1.4.0...v1.5.0) (2026-05-21)
 
 
