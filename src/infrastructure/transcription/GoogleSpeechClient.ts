@@ -58,7 +58,17 @@ export class GoogleSpeechClient {
       headers: { 'content-type': 'application/json' },
       body,
     });
-    if (!response.ok) return response;
+    if (!response.ok) {
+      if (response.error.code === 'API_KEY_INVALID') {
+        return err(
+          new AppError(
+            'API_KEY_INVALID',
+            'Google Speech: 401 unauthorized. Enable Speech-to-Text at console.cloud.google.com/apis/library/speech.googleapis.com and make sure billing is active.',
+          ),
+        );
+      }
+      return response;
+    }
     try {
       const parsed = await response.value.json<GoogleResponseBody>();
       const first = parsed.results?.[0]?.alternatives?.[0];

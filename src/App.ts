@@ -1,5 +1,6 @@
 import { buildAppDeps, type AppDeps } from './bootstrap/setup';
 import { HomePage } from './presentation/pages/HomePage';
+import type { Translator } from './presentation/i18n/Translator';
 import { Router, type Page, type PageFactory } from './presentation/router/Router';
 
 export class App {
@@ -7,6 +8,10 @@ export class App {
 
   constructor(private readonly root: HTMLElement) {
     this.deps = buildAppDeps();
+  }
+
+  get translator(): Translator {
+    return this.deps.configStore.translator;
   }
 
   async start(): Promise<void> {

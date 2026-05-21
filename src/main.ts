@@ -18,6 +18,6 @@ version.setAttribute('aria-label', `MINTZA version ${__APP_VERSION__}`);
 document.body.appendChild(version);
 
 if (import.meta.env.PROD) {
-  registerServiceWorker('/mintza/sw.js');
+  registerServiceWorker('/mintza/sw.js', app.translator);
 }
 

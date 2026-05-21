@@ -1,3 +1,5 @@
+import type { Translator } from '../i18n/Translator';
+
 const SMOOTHING = 0.3;
 
 export class AudioLevelMeter {
@@ -8,13 +10,13 @@ export class AudioLevelMeter {
   private smoothed = 0;
   private silentTicks = 0;
 
-  start(target: HTMLElement, stream: MediaStream): void {
+  start(target: HTMLElement, stream: MediaStream, translator: Translator): void {
     this.stop();
     target.innerHTML = `
       <div class="flex items-center gap-3">
-        <span class="text-xs text-ink-400 w-16">Mic level</span>
-        <div class="flex-1 h-2 rounded-full bg-ink-100 overflow-hidden">
-          <div data-bar class="h-full rounded-full bg-primary transition-[width] duration-75 ease-linear" style="width:0%"></div>
+        <span class="text-xs text-ink-400 w-16">${translator.t('home.mic_level')}</span>
+        <div class="meter-bar-track flex-1">
+          <div data-bar class="meter-bar-fill bg-primary" style="width:0%"></div>
         </div>
         <span data-hint class="text-xs text-ink-400 w-44 text-right"></span>
       </div>
@@ -51,14 +53,14 @@ export class AudioLevelMeter {
       }
       hint.textContent =
         this.silentTicks > 60
-          ? 'No sound detected · check mic'
+          ? translator.t('home.mic_none')
           : percent < 4
-            ? 'Silent'
+            ? translator.t('home.mic_silent')
             : percent < 25
-              ? 'Quiet'
+              ? translator.t('home.mic_quiet')
               : percent < 65
-                ? 'OK'
-                : 'Loud';
+                ? translator.t('home.mic_ok')
+                : translator.t('home.mic_loud');
       this.rafId = requestAnimationFrame(tick);
     };
     tick();

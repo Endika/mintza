@@ -1,8 +1,9 @@
 import { UpdateBanner } from '../components/UpdateBanner';
+import type { Translator } from '../i18n/Translator';
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
-export const registerServiceWorker = (scriptUrl: string): void => {
+export const registerServiceWorker = (scriptUrl: string, translator: Translator): void => {
   if (!('serviceWorker' in navigator)) return;
 
   const banner = new UpdateBanner();
@@ -19,14 +20,14 @@ export const registerServiceWorker = (scriptUrl: string): void => {
       try {
         const registration = await navigator.serviceWorker.register(scriptUrl);
         if (registration.waiting && navigator.serviceWorker.controller) {
-          showUpdate(banner, registration.waiting);
+          showUpdate(banner, registration.waiting, translator);
         }
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (!newWorker) return;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdate(banner, newWorker);
+              showUpdate(banner, newWorker, translator);
             }
           });
         });
@@ -45,6 +46,6 @@ export const registerServiceWorker = (scriptUrl: string): void => {
   });
 };
 
-const showUpdate = (banner: UpdateBanner, worker: ServiceWorker): void => {
-  banner.show(() => worker.postMessage({ type: 'SKIP_WAITING' }));
+const showUpdate = (banner: UpdateBanner, worker: ServiceWorker, translator: Translator): void => {
+  banner.show(() => worker.postMessage({ type: 'SKIP_WAITING' }), translator);
 };

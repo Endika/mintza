@@ -69,7 +69,7 @@ export class HomePage implements Page {
     const cfg = this.deps.config.get();
     const t = (key: TranslationKey): string => this.t.t(key);
     root.innerHTML = `
-      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">Skip to content</a>
+      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">${t('home.skip')}</a>
       <main id="main" class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
           <div>
@@ -89,9 +89,9 @@ export class HomePage implements Page {
                 ${templateRadios(cfg.defaultTemplate, t)}
                 ${languageSelect(cfg.language, t)}
               </div>
-              <span id="rec-badge" class="rec-badge hidden">
-                <span class="rec-dot"></span>
-                <span id="rec-badge-label">REC</span>
+              <span id="rec-badge" class="rec-badge hidden" aria-live="polite">
+                <span class="rec-dot" aria-hidden="true"></span>
+                <span id="rec-badge-label">${t('home.rec')}</span>
               </span>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -212,7 +212,7 @@ export class HomePage implements Page {
     await this.deps.stopRecording.execute({ meeting: this.meeting });
 
     if (this.meeting.segments.length === 0) {
-      this.setStatus('No audio was transcribed. The mic may not have captured sound or the API failed.');
+      this.setStatus(this.t.t('home.no_audio'));
       this.setScreenState('done');
       return;
     }
@@ -252,7 +252,7 @@ export class HomePage implements Page {
       return;
     }
     meterEl.classList.remove('hidden');
-    this.meter.start(meterEl, stream);
+    this.meter.start(meterEl, stream, this.t);
   }
 
   private async handleChunk(chunk: AudioChunk): Promise<void> {
@@ -276,17 +276,22 @@ export class HomePage implements Page {
     el.classList.remove('hidden');
     const p = this.progress;
     if (p.received === 0) {
-      el.textContent = 'Waiting for the first 15s chunk…';
+      el.textContent = this.t.t('home.chunks_wait');
       return;
     }
-    el.textContent = `Chunks: ${p.received} received · ${p.transcribed} transcribed · ${p.failed} failed`;
+    el.textContent = this.t
+      .t('home.chunks_progress')
+      .replace('{received}', String(p.received))
+      .replace('{transcribed}', String(p.transcribed))
+      .replace('{failed}', String(p.failed));
   }
 
   private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
     const el = this.qs<HTMLElement>('#last-error');
     el.classList.remove('hidden');
+    const label = this.t.t('home.last_error');
     if (attempts.length === 0) {
-      el.textContent = `Last error: ${message}`;
+      el.textContent = `${label}: ${message}`;
       return;
     }
     const lines = attempts
@@ -324,10 +329,9 @@ export class HomePage implements Page {
         stopBtn.disabled = false;
         pauseBtn.textContent = this.t.t('home.btn_pause');
         newBtn.classList.add('hidden');
-        badge.classList.remove('hidden');
-        badgeLabel.textContent = 'REC';
-        badge.classList.remove('bg-ink-100', 'text-ink-600');
-        badge.classList.add('bg-red-50', 'text-red-700');
+        badge.classList.remove('hidden', 'rec-badge-paused');
+        badge.classList.add('rec-badge');
+        badgeLabel.textContent = this.t.t('home.rec');
         this.setStatus(this.t.t('home.recording'));
         break;
       case 'paused':
@@ -336,10 +340,9 @@ export class HomePage implements Page {
         stopBtn.disabled = false;
         pauseBtn.textContent = this.t.t('home.btn_resume');
         newBtn.classList.add('hidden');
-        badge.classList.remove('hidden');
-        badgeLabel.textContent = 'PAUSED';
-        badge.classList.remove('bg-red-50', 'text-red-700');
-        badge.classList.add('bg-ink-100', 'text-ink-600');
+        badge.classList.remove('hidden', 'rec-badge');
+        badge.classList.add('rec-badge-paused');
+        badgeLabel.textContent = this.t.t('home.rec_paused');
         break;
       case 'processing':
         recordBtn.disabled = true;

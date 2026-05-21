@@ -18,6 +18,22 @@ export type TranslationKey =
   | 'home.btn_stop'
   | 'home.btn_new'
   | 'home.paused'
+  | 'home.rec'
+  | 'home.rec_paused'
+  | 'home.mic_level'
+  | 'home.mic_silent'
+  | 'home.mic_quiet'
+  | 'home.mic_ok'
+  | 'home.mic_loud'
+  | 'home.mic_none'
+  | 'home.chunks_wait'
+  | 'home.chunks_progress'
+  | 'home.no_audio'
+  | 'home.skip'
+  | 'home.last_error'
+  | 'update.title'
+  | 'update.reload'
+  | 'update.dismiss'
   | 'home.transcript'
   | 'home.transcript_placeholder'
   | 'home.summary'
@@ -87,6 +103,22 @@ const EN: Translations = {
   'home.btn_stop': 'Stop',
   'home.btn_new': 'New meeting',
   'home.paused': 'Paused — press Resume to continue.',
+  'home.rec': 'REC',
+  'home.rec_paused': 'Paused',
+  'home.mic_level': 'Mic level',
+  'home.mic_silent': 'Silent',
+  'home.mic_quiet': 'Quiet',
+  'home.mic_ok': 'OK',
+  'home.mic_loud': 'Loud',
+  'home.mic_none': 'No sound detected · check mic',
+  'home.chunks_wait': 'Waiting for the first chunk…',
+  'home.chunks_progress': 'Chunks: {received} received · {transcribed} transcribed · {failed} failed',
+  'home.no_audio': 'No audio was transcribed. The mic may not have captured sound or the API failed.',
+  'home.skip': 'Skip to content',
+  'home.last_error': 'Last error',
+  'update.title': 'New version available',
+  'update.reload': 'Reload',
+  'update.dismiss': 'Dismiss',
   'home.transcript': 'Transcript',
   'home.transcript_placeholder': 'The transcript will appear here while you talk.',
   'home.summary': 'Summary',
@@ -156,6 +188,22 @@ const ES: Translations = {
   'home.btn_stop': 'Parar',
   'home.btn_new': 'Nueva reunión',
   'home.paused': 'Pausado — pulsa Reanudar para continuar.',
+  'home.rec': 'GRABANDO',
+  'home.rec_paused': 'Pausa',
+  'home.mic_level': 'Nivel mic',
+  'home.mic_silent': 'Silencio',
+  'home.mic_quiet': 'Bajo',
+  'home.mic_ok': 'OK',
+  'home.mic_loud': 'Alto',
+  'home.mic_none': 'No se detecta sonido · revisa el mic',
+  'home.chunks_wait': 'Esperando al primer fragmento…',
+  'home.chunks_progress': 'Fragmentos: {received} recibidos · {transcribed} transcritos · {failed} fallidos',
+  'home.no_audio': 'No se transcribió nada. El micro pudo no captar sonido o la API falló.',
+  'home.skip': 'Saltar al contenido',
+  'home.last_error': 'Último error',
+  'update.title': 'Nueva versión disponible',
+  'update.reload': 'Recargar',
+  'update.dismiss': 'Descartar',
   'home.transcript': 'Transcripción',
   'home.transcript_placeholder': 'La transcripción aparecerá aquí mientras hablas.',
   'home.summary': 'Resumen',
@@ -225,6 +273,22 @@ const EU: Translations = {
   'home.btn_stop': 'Gelditu',
   'home.btn_new': 'Bilera berria',
   'home.paused': 'Pausan — sakatu Jarraitu jarraitzeko.',
+  'home.rec': 'GRABATZEN',
+  'home.rec_paused': 'Pausan',
+  'home.mic_level': 'Mic maila',
+  'home.mic_silent': 'Isila',
+  'home.mic_quiet': 'Baxua',
+  'home.mic_ok': 'OK',
+  'home.mic_loud': 'Altua',
+  'home.mic_none': 'Ez da soinurik antzeman · egiaztatu mikrofonoa',
+  'home.chunks_wait': 'Lehen zatiaren zain…',
+  'home.chunks_progress': 'Zatiak: {received} jasota · {transcribed} transkribatuta · {failed} hutsegite',
+  'home.no_audio': 'Ez da audiorik transkribatu. Mikrofonoak agian ez du jaso edo APIa huts egin du.',
+  'home.skip': 'Edukira jauzi',
+  'home.last_error': 'Azken errorea',
+  'update.title': 'Bertsio berria erabilgarri',
+  'update.reload': 'Birkargatu',
+  'update.dismiss': 'Baztertu',
   'home.transcript': 'Transkripzioa',
   'home.transcript_placeholder': 'Transkripzioa hemen agertuko da hitz egin ahala.',
   'home.summary': 'Laburpena',
