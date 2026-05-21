@@ -158,43 +158,50 @@ export class TemplatesPage implements Page {
     const editor = this.qs<HTMLElement>('#editor');
     editor.classList.remove('hidden');
     const def = this.editing;
+    const isNew = def.id === '';
     editor.innerHTML = `
-      <form id="tpl-form" class="card space-y-4">
+      <form id="tpl-form" class="card space-y-5">
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_name')}</span>
-          <input name="name" required value="${escape(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm" />
+          <input name="name" required value="${escape(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_system_role')}</span>
-          <input name="systemRole" required value="${escape(def.systemRole)}" placeholder="a doctor's appointment, a brainstorm…" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm" />
+          <input name="systemRole" required value="${escape(def.systemRole)}" placeholder="a doctor's appointment, a brainstorm…" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
+          <span class="mt-1 block text-xs text-ink-400">Text injected after "You are an expert assistant analyzing…"</span>
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
-          <input name="mindMapStructure" required value="${escape(def.mindMapStructure)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm" />
+          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base">${escape(def.mindMapStructure)}</textarea>
         </label>
         <fieldset>
-          <legend class="text-sm font-medium mb-1">${t.t('templates.field_kinds')}</legend>
-          <div class="space-y-1">
-            ${SUMMARY_KINDS.map(
-              (k) => `
-              <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="kind_${k}" ${def.summaryKinds.includes(k) ? 'checked' : ''} />
-                <span class="w-32">${defaultLabelFor(k)}</span>
-                <input name="label_${k}" placeholder="Custom label" value="${escape(def.kindLabels[k] ?? '')}" class="flex-1 rounded border border-ink-100 px-2 py-1 text-xs" />
-              </label>`,
-            ).join('')}
+          <legend class="text-sm font-medium mb-2">${t.t('templates.field_kinds')}</legend>
+          <div class="space-y-2">
+            ${SUMMARY_KINDS.map((k) => {
+              const checked = isNew ? true : def.summaryKinds.includes(k);
+              const labelValue = def.kindLabels[k] ?? (isNew ? '' : defaultLabelFor(k));
+              return `
+              <label class="flex items-center gap-3 text-sm">
+                <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
+                <span class="w-32 text-ink-400">${defaultLabelFor(k)}</span>
+                <input name="label_${k}" placeholder="${escapeAttr(defaultLabelFor(k))}" value="${escape(labelValue)}" class="flex-1 rounded border border-ink-100 px-2 py-1.5 text-sm" />
+              </label>`;
+            }).join('')}
           </div>
         </fieldset>
         <fieldset>
-          <legend class="text-sm font-medium mb-1">${t.t('templates.field_prompt_overrides')}</legend>
-          <div class="space-y-2">
-            ${SUMMARY_KINDS.map(
-              (k) => `
-              <details>
-                <summary class="cursor-pointer text-xs text-ink-400">${defaultLabelFor(k)}</summary>
-                <textarea name="prompt_${k}" rows="3" placeholder="${escapeAttr(defaultInstructionFor(k))}" class="mt-1 block w-full rounded border border-ink-100 px-2 py-1 text-xs font-mono">${escape(def.promptOverrides[k] ?? '')}</textarea>
-              </details>`,
-            ).join('')}
+          <legend class="text-sm font-medium mb-2">${t.t('templates.field_prompt_overrides')}</legend>
+          <div class="space-y-3">
+            ${SUMMARY_KINDS.map((k) => {
+              const promptValue = def.promptOverrides[k] ?? (isNew ? '' : defaultInstructionFor(k));
+              return `
+              <details${promptValue ? ' open' : ''} class="rounded-lg border border-ink-100">
+                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${defaultLabelFor(k)}</summary>
+                <div class="px-3 pb-3">
+                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeAttr(defaultInstructionFor(k))}" class="block w-full rounded border border-ink-100 px-3 py-2 text-sm font-mono">${escape(promptValue)}</textarea>
+                </div>
+              </details>`;
+            }).join('')}
           </div>
         </fieldset>
         <div class="flex justify-end gap-2">
