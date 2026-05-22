@@ -5,6 +5,25 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.18.4](https://github.com/Endika/mintza/compare/v1.18.3...v1.18.4) (2026-05-22)
+
+
+### Bug Fixes
+
+* **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
+* **release:** pass -R repo to gh pr merge ([ffbacda](https://github.com/Endika/mintza/commit/ffbacdad398b4cfa605b7e681ceb012e9aa73fe9))
+
+
+### Documentation
+
+* **readme:** align structure with kartaak and converthub ([3ff8927](https://github.com/Endika/mintza/commit/3ff892704abfd2438e59511acf9a1294f7e42688))
+
+
+### Chores
+
+* **release:** 1.18.4 ([ada110d](https://github.com/Endika/mintza/commit/ada110db505f5a1f0cf3dff856da9b4ecea7c3cc))
+* **release:** migrate from semantic-release to release-please with auto-merge ([8722c18](https://github.com/Endika/mintza/commit/8722c185aa88fced46bacf5e5a0906f758b21c84))
+
 ## [1.18.3](https://github.com/Endika/mintza/compare/v1.18.2...v1.18.3) (2026-05-21)
 
 
