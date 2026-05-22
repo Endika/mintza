@@ -3,6 +3,7 @@ name: Release & Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -32,10 +33,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
         run: |
           PR=${{ fromJson(steps.release.outputs.pr).number }}
           gh pr merge --rebase --auto -R "$REPO" "$PR" \
             || gh pr merge --rebase -R "$REPO" "$PR"
+          for _ in $(seq 1 30); do
+            STATE=$(gh pr view "$PR" -R "$REPO" --json state --jq .state)
+            [ "$STATE" = "MERGED" ] && break
+            sleep 2
+          done
+          gh workflow run "$WORKFLOW" -R "$REPO" --ref main
 
   deploy:
     name: Deploy to GitHub Pages
