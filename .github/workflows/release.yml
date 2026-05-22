@@ -31,9 +31,11 @@ jobs:
       - if: ${{ steps.release.outputs.pr }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           PR=${{ fromJson(steps.release.outputs.pr).number }}
-          gh pr merge --rebase --auto "$PR" || gh pr merge --rebase "$PR"
+          gh pr merge --rebase --auto -R "$REPO" "$PR" \
+            || gh pr merge --rebase -R "$REPO" "$PR"
 
   deploy:
     name: Deploy to GitHub Pages
