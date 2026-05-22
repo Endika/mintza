@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.18.8](https://github.com/Endika/mintza/compare/v1.18.7...v1.18.8) (2026-05-22)
+
+
+### Bug Fixes
+
+* **ci:** parse release-please pr payload in run script, not env ([8d53af0](https://github.com/Endika/mintza/commit/8d53af083d5f493c1bb6c688896d79b8627d4b06))
+
 ## [1.18.7](https://github.com/Endika/mintza/compare/v1.18.6...v1.18.7) (2026-05-22)
 
 
