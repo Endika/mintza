@@ -35,6 +35,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           WORKFLOW: ${{ github.workflow }}
+          BRANCH: ${{ fromJson(steps.release.outputs.pr).headBranchName }}
         run: |
           PR=${{ fromJson(steps.release.outputs.pr).number }}
           gh pr merge --rebase --auto -R "$REPO" "$PR" \
@@ -44,6 +45,7 @@ jobs:
             [ "$STATE" = "MERGED" ] && break
             sleep 2
           done
+          gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" 2>/dev/null || true
           gh workflow run "$WORKFLOW" -R "$REPO" --ref main
 
   deploy:
