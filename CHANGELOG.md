@@ -5,6 +5,26 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.18.5](https://github.com/Endika/mintza/compare/v1.18.4...v1.18.5) (2026-05-22)
+
+
+### Bug Fixes
+
+* **release:** pass -R repo to gh pr merge ([ffbacda](https://github.com/Endika/mintza/commit/ffbacdad398b4cfa605b7e681ceb012e9aa73fe9))
+
+
+### Documentation
+
+* **changelog:** remove duplicate 1.18.4 entry left by migration ([175efeb](https://github.com/Endika/mintza/commit/175efeb6c31adbcc30a0ab86229bf11ab91ac662))
+* **license:** add MIT LICENSE file ([dd36753](https://github.com/Endika/mintza/commit/dd367530131399cde4b2539b8203cd376c8f2051))
+* **readme:** align structure with kartaak and converthub ([3ff8927](https://github.com/Endika/mintza/commit/3ff892704abfd2438e59511acf9a1294f7e42688))
+
+
+### Chores
+
+* **main:** release 1.18.4 ([e423d80](https://github.com/Endika/mintza/commit/e423d8071b9898cd2cd91e4875ed2b82e7c36dc0))
+* **release:** migrate from semantic-release to release-please with auto-merge ([8722c18](https://github.com/Endika/mintza/commit/8722c185aa88fced46bacf5e5a0906f758b21c84))
+
 ## [1.18.3](https://github.com/Endika/mintza/compare/v1.18.2...v1.18.3) (2026-05-21)
 
 
