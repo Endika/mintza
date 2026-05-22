@@ -5,6 +5,15 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.18.6](https://github.com/Endika/mintza/compare/v1.18.5...v1.18.6) (2026-05-22)
+
+
+### Bug Fixes
+
+* **ci:** delete PR branch on close regardless of merge state ([58d6ba3](https://github.com/Endika/mintza/commit/58d6ba31166af6f17ff1f5f597121908938a0582))
+* **ci:** grant actions: write to enable workflow_dispatch self-rearm ([fd37cef](https://github.com/Endika/mintza/commit/fd37cef460c4af557c82331531ee14c4c154097e))
+* **ci:** re-trigger release-please via workflow_dispatch after auto-merge ([f0aefc1](https://github.com/Endika/mintza/commit/f0aefc1698ac57665d0fc36498420c84bac7e19e))
+
 ## [1.18.5](https://github.com/Endika/mintza/compare/v1.18.4...v1.18.5) (2026-05-22)
 
 
