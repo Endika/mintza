@@ -35,9 +35,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           WORKFLOW: ${{ github.workflow }}
-          BRANCH: ${{ fromJson(steps.release.outputs.pr).headBranchName }}
+          PR_JSON: ${{ steps.release.outputs.pr }}
         run: |
-          PR=${{ fromJson(steps.release.outputs.pr).number }}
+          PR=$(echo "$PR_JSON" | jq -r .number)
+          BRANCH=$(echo "$PR_JSON" | jq -r .headBranchName)
           gh pr merge --rebase --auto -R "$REPO" "$PR" \
             || gh pr merge --rebase -R "$REPO" "$PR"
           for _ in $(seq 1 30); do
