@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint:fix": "eslint --fix \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format": "prettier --write \"src/**/*.{ts,css}\" \"test/**/*.ts\""
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.{ts,css}\" \"test/**/*.ts\""
   },
   "devDependencies": {
     "@types/node": "^20.19.41",
