@@ -1,8 +1,5 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
-import {
-  MeetingExporter,
-  type ExportFormat,
-} from '../../domain/meeting/services/MeetingExporter';
+import { MeetingExporter, type ExportFormat } from '../../domain/meeting/services/MeetingExporter';
 import { PdfExporter } from '../../infrastructure/export/PdfExporter';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
@@ -21,11 +18,7 @@ export class ExportMenu {
   private readonly exporter = new MeetingExporter();
   private readonly pdfExporter = new PdfExporter();
 
-  render(
-    target: HTMLElement,
-    getMeeting: () => Meeting | null,
-    translator: Translator,
-  ): void {
+  render(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     target.innerHTML = `
       <div class="flex flex-wrap items-center gap-2 text-sm">
         <span class="text-ink-400">${translator.t('export.label')}</span>

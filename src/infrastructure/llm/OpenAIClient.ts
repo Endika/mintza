@@ -35,9 +35,7 @@ export class OpenAIClient {
   async chat(request: OpenAIChatRequest): Promise<Result<OpenAIChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(
-        new AppError('API_KEY_INVALID', 'OpenAI: missing OpenAI API key in Settings'),
-      );
+      return err(new AppError('API_KEY_INVALID', 'OpenAI: missing OpenAI API key in Settings'));
     }
     const body = JSON.stringify({
       model: request.model,

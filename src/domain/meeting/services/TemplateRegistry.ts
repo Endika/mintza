@@ -1,11 +1,7 @@
 import type { AppError } from '../../../shared/errors/AppError';
 import { err, ok, type Result } from '../../../shared/result/Result';
 import type { TemplateRepository } from '../ports/TemplateRepository';
-import {
-  BUILT_IN_TEMPLATES,
-  Template,
-  type TemplateDefinition,
-} from '../value-objects/Template';
+import { BUILT_IN_TEMPLATES, Template, type TemplateDefinition } from '../value-objects/Template';
 
 export class TemplateRegistry {
   constructor(private readonly repository: TemplateRepository) {}

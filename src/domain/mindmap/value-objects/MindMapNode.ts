@@ -4,7 +4,10 @@ export interface MindMapNodeProps {
 }
 
 export class MindMapNode {
-  constructor(public readonly label: string, public readonly children: readonly MindMapNode[]) {
+  constructor(
+    public readonly label: string,
+    public readonly children: readonly MindMapNode[],
+  ) {
     if (label.trim().length === 0) {
       throw new Error('MindMapNode label cannot be empty');
     }

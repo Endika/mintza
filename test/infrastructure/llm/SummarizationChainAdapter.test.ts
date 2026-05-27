@@ -31,7 +31,11 @@ describe('SummarizationChainAdapter', () => {
       code: 'API_KEY_INVALID',
       message: 'no key',
     });
-    const secondary = new FakeSummarizationPort({ kind: 'success', content: 'second', provider: 'anthropic' });
+    const secondary = new FakeSummarizationPort({
+      kind: 'success',
+      content: 'second',
+      provider: 'anthropic',
+    });
     const chain = new SummarizationChainAdapter(() => [
       { name: 'Gemini', port: primary },
       { name: 'Claude', port: secondary },

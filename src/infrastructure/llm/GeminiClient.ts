@@ -37,9 +37,7 @@ export class GeminiClient {
   async chat(request: GeminiChatRequest): Promise<Result<GeminiChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(
-        new AppError('API_KEY_INVALID', 'Gemini: missing Google API key in Settings'),
-      );
+      return err(new AppError('API_KEY_INVALID', 'Gemini: missing Google API key in Settings'));
     }
     const url = `${GEMINI_BASE}/${request.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const body = JSON.stringify({

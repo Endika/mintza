@@ -18,9 +18,7 @@ const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR', 'CONFIG_I
 export class TranscriptionChainAdapter implements TranscriptionPort {
   constructor(private readonly resolve: TranscriptionProvidersResolver) {}
 
-  async transcribe(
-    request: TranscriptionRequest,
-  ): Promise<Result<TranscriptSegment, AppError>> {
+  async transcribe(request: TranscriptionRequest): Promise<Result<TranscriptSegment, AppError>> {
     const providers = this.resolve();
     if (providers.length === 0) {
       return err(new AppError('TRANSCRIPTION_FAILED', 'No transcription providers configured'));

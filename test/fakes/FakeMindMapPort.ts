@@ -18,9 +18,7 @@ export class FakeMindMapPort implements MindMapPort {
     if (this.behavior.kind === 'failure') {
       return Promise.resolve(err(new AppError(this.behavior.code, this.behavior.message)));
     }
-    const children = (this.behavior.childLabels ?? []).map(
-      (label) => new MindMapNode(label, []),
-    );
+    const children = (this.behavior.childLabels ?? []).map((label) => new MindMapNode(label, []));
     return Promise.resolve(ok(new MindMap(new MindMapNode(this.behavior.rootLabel, children))));
   }
 }

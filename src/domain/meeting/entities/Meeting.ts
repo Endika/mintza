@@ -150,10 +150,7 @@ export class Meeting {
       throw new Error('Meeting cannot end before it started');
     }
     if (this.state.pausedAt) {
-      this.state.totalPausedMs += Math.max(
-        0,
-        at.getTime() - this.state.pausedAt.getTime(),
-      );
+      this.state.totalPausedMs += Math.max(0, at.getTime() - this.state.pausedAt.getTime());
       delete this.state.pausedAt;
     }
     this.state.endedAt = at;
@@ -166,10 +163,7 @@ export class Meeting {
 
   resume(at: Date = new Date()): void {
     if (this.isFinished || !this.state.pausedAt) return;
-    this.state.totalPausedMs += Math.max(
-      0,
-      at.getTime() - this.state.pausedAt.getTime(),
-    );
+    this.state.totalPausedMs += Math.max(0, at.getTime() - this.state.pausedAt.getTime());
     delete this.state.pausedAt;
   }
 

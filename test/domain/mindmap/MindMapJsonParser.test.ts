@@ -30,7 +30,9 @@ describe('MindMapJsonParser', () => {
 
   it('rejects deeply nested mind maps', () => {
     const nest = (depth: number): unknown =>
-      depth === 0 ? { label: 'leaf', children: [] } : { label: `d${depth}`, children: [nest(depth - 1)] };
+      depth === 0
+        ? { label: 'leaf', children: [] }
+        : { label: `d${depth}`, children: [nest(depth - 1)] };
     expect(() => parser.parse(JSON.stringify(nest(8)))).toThrow();
   });
 });

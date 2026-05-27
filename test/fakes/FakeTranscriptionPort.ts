@@ -17,9 +17,7 @@ export class FakeTranscriptionPort implements TranscriptionPort {
       | { kind: 'failure'; code: AppErrorCode; message: string },
   ) {}
 
-  async transcribe(
-    request: TranscriptionRequest,
-  ): Promise<Result<TranscriptSegment, AppError>> {
+  async transcribe(request: TranscriptionRequest): Promise<Result<TranscriptSegment, AppError>> {
     this.calls.push(request);
     if (this.behavior.kind === 'failure') {
       return Promise.resolve(err(new AppError(this.behavior.code, this.behavior.message)));

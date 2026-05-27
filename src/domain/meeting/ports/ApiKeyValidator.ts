@@ -14,8 +14,5 @@ export interface ValidationOutcome {
 }
 
 export interface ApiKeyValidator {
-  validate(
-    provider: ApiKeyProviderName,
-    key: string,
-  ): Promise<Result<ValidationOutcome, AppError>>;
+  validate(provider: ApiKeyProviderName, key: string): Promise<Result<ValidationOutcome, AppError>>;
 }

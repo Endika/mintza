@@ -139,4 +139,3 @@ const formatDuration = (ms: number): string => {
   const pad = (n: number): string => String(n).padStart(2, '0');
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
-

@@ -183,10 +183,19 @@ export class HomePage implements Page {
   }
 
   private bind(): void {
-    this.qs<HTMLButtonElement>('#btn-record').addEventListener('click', () => void this.handleStart());
-    this.qs<HTMLButtonElement>('#btn-pause').addEventListener('click', () => void this.handlePauseResume());
+    this.qs<HTMLButtonElement>('#btn-record').addEventListener(
+      'click',
+      () => void this.handleStart(),
+    );
+    this.qs<HTMLButtonElement>('#btn-pause').addEventListener(
+      'click',
+      () => void this.handlePauseResume(),
+    );
     this.qs<HTMLButtonElement>('#btn-stop').addEventListener('click', () => void this.handleStop());
-    this.qs<HTMLButtonElement>('#btn-summarize').addEventListener('click', () => void this.handleSummarizeNow());
+    this.qs<HTMLButtonElement>('#btn-summarize').addEventListener(
+      'click',
+      () => void this.handleSummarizeNow(),
+    );
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
   }
 
@@ -413,9 +422,7 @@ export class HomePage implements Page {
     switch (this.screenState) {
       case 'idle':
         recordBtn.disabled = !hasKey;
-        recordBtn.title = hasKey
-          ? this.t.t('home.btn_record')
-          : this.t.t('home.configure_key');
+        recordBtn.title = hasKey ? this.t.t('home.btn_record') : this.t.t('home.configure_key');
         pauseBtn.disabled = true;
         stopBtn.disabled = true;
         pauseLabel.textContent = this.t.t('home.btn_pause');
@@ -612,10 +619,7 @@ const templateSelect = (
 `;
 };
 
-const languageSelect = (
-  current: LanguageCode,
-  t: (key: TranslationKey) => string,
-): string => `
+const languageSelect = (current: LanguageCode, t: (key: TranslationKey) => string): string => `
   <label class="block">
     <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${t('home.field_language')}</span>
     <select id="lang-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
@@ -627,8 +631,4 @@ const languageSelect = (
 `;
 
 const escapeHtml = (raw: string): string =>
-  raw
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

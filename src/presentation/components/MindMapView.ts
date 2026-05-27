@@ -10,7 +10,9 @@ export class MindMapView {
         <h4 class="text-lg font-semibold mb-3">${escape(mindMap.root.label)}</h4>
         <ul class="space-y-2">
           ${mindMap.root.children
-            .map((branch, index) => this.renderBranch(branch, BRANCH_COLORS[index % BRANCH_COLORS.length] ?? '#00B380'))
+            .map((branch, index) =>
+              this.renderBranch(branch, BRANCH_COLORS[index % BRANCH_COLORS.length] ?? '#00B380'),
+            )
             .join('')}
         </ul>
       </div>
@@ -30,9 +32,11 @@ export class MindMapView {
       <li>
         <div class="flex items-center gap-2">
           <span class="inline-block h-2 w-2 rounded-full" style="background:${color}"></span>
-          ${node.isLeaf()
-            ? `<span class="font-medium">${escape(node.label)}</span>`
-            : `<button type="button" data-toggle aria-expanded="true" class="font-medium text-left hover:underline">${escape(node.label)}</button>`}
+          ${
+            node.isLeaf()
+              ? `<span class="font-medium">${escape(node.label)}</span>`
+              : `<button type="button" data-toggle aria-expanded="true" class="font-medium text-left hover:underline">${escape(node.label)}</button>`
+          }
         </div>
         ${node.isLeaf() ? '' : `<ul class="mt-1 ml-5 space-y-1 border-l-2 pl-3" style="border-color:${color}">${node.children.map((c) => this.renderLeaf(c)).join('')}</ul>`}
       </li>

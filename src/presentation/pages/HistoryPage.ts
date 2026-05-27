@@ -83,7 +83,8 @@ export class HistoryPage implements Page {
   private async load(): Promise<void> {
     const result = await this.deps.listMeetings.execute();
     if (!result.ok) {
-      this.qs<HTMLElement>('#list').innerHTML = `<p class="text-red-600">Error: ${result.error.message}</p>`;
+      this.qs<HTMLElement>('#list').innerHTML =
+        `<p class="text-red-600">Error: ${result.error.message}</p>`;
       this.qs<HTMLButtonElement>('#btn-clear').classList.add('hidden');
       this.qs<HTMLElement>('#filters').classList.add('hidden');
       return;
@@ -196,8 +197,4 @@ export class HistoryPage implements Page {
 }
 
 const escapeHtml = (raw: string): string =>
-  raw
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

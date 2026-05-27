@@ -11,10 +11,7 @@ import {
   defaultInstructionFor,
   defaultLabelFor,
 } from '../../domain/summary/services/SummaryDefaults';
-import {
-  SUMMARY_KINDS,
-  type SummaryKind,
-} from '../../domain/summary/value-objects/SummaryKind';
+import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import type { Translator } from '../i18n/Translator';
 import type { Page } from '../router/Router';
 
@@ -60,7 +57,8 @@ export class TemplatesPage implements Page {
       this.deps.listMeetings.execute(),
     ]);
     if (!templatesResult.ok) {
-      this.qs<HTMLElement>('#list').innerHTML = `<p class="text-red-600">Error: ${templatesResult.error.message}</p>`;
+      this.qs<HTMLElement>('#list').innerHTML =
+        `<p class="text-red-600">Error: ${templatesResult.error.message}</p>`;
       return;
     }
     this.templates = templatesResult.value;
@@ -234,9 +232,7 @@ export class TemplatesPage implements Page {
     const mindMapStructure = String(data.get('mindMapStructure') ?? '').trim();
     if (!name || !systemRole || !mindMapStructure) return;
 
-    const kinds: SummaryKind[] = SUMMARY_KINDS.filter(
-      (k) => data.get(`kind_${k}`) === 'on',
-    );
+    const kinds: SummaryKind[] = SUMMARY_KINDS.filter((k) => data.get(`kind_${k}`) === 'on');
     if (kinds.length === 0) {
       this.showFormError('Select at least one summary section');
       return;

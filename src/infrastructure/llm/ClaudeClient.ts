@@ -36,9 +36,7 @@ export class ClaudeClient {
   async chat(request: ClaudeChatRequest): Promise<Result<ClaudeChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(
-        new AppError('API_KEY_INVALID', 'Claude: missing Anthropic API key in Settings'),
-      );
+      return err(new AppError('API_KEY_INVALID', 'Claude: missing Anthropic API key in Settings'));
     }
     const body = JSON.stringify({
       model: request.model,

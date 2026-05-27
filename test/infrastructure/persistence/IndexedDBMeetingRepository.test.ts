@@ -52,9 +52,7 @@ describe('IndexedDBMeetingRepository', () => {
     );
     meeting.setTemperature(TemperatureScore.of(0.42));
     meeting.setMindMap(
-      new MindMap(
-        new MindMapNode('root', [new MindMapNode('a', []), new MindMapNode('b', [])]),
-      ),
+      new MindMap(new MindMapNode('root', [new MindMapNode('a', []), new MindMapNode('b', [])])),
     );
     meeting.finish(new Date('2026-05-21T10:30:00Z'));
 
@@ -84,16 +82,14 @@ describe('IndexedDBMeetingRepository', () => {
       kindLabels: {},
       promptOverrides: {},
     };
-    const templates: typeof customDef[] = [customDef];
+    const templates: (typeof customDef)[] = [customDef];
     const templateRepo = {
       load: () => Promise.resolve({ ok: true as const, value: templates }),
       save: () => Promise.resolve({ ok: true as const, value: undefined }),
       delete: () => Promise.resolve({ ok: true as const, value: undefined }),
     };
     const registry = new TemplateRegistry(templateRepo);
-    repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) =>
-      registry.resolveOrFallback(id),
-    );
+    repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) => registry.resolveOrFallback(id));
 
     const meeting = Meeting.start({
       template: Template.fromDefinition(customDef),
@@ -118,9 +114,7 @@ describe('IndexedDBMeetingRepository', () => {
       delete: () => Promise.resolve({ ok: true as const, value: undefined }),
     };
     const registry = new TemplateRegistry(templateRepo);
-    repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) =>
-      registry.resolveOrFallback(id),
-    );
+    repo = new IndexedDBMeetingRepository(new IDBFactory(), (id) => registry.resolveOrFallback(id));
 
     const orphanDef = {
       id: 'deleted-template',

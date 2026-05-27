@@ -1,4 +1,8 @@
-import { PRICING, type LLMPricing, type TranscriptionPricing } from '../../../shared/constants/pricing';
+import {
+  PRICING,
+  type LLMPricing,
+  type TranscriptionPricing,
+} from '../../../shared/constants/pricing';
 import type { TranscriptionProviderName } from '../../transcription/value-objects/TranscriptionProvider';
 import { Money } from '../value-objects/Money';
 import { TokenCount } from '../value-objects/TokenCount';

@@ -5,9 +5,7 @@ import type { RegenerateSummariesUseCase } from '../../application/use-cases/Reg
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import type { Template } from '../../domain/meeting/value-objects/Template';
-import {
-  defaultLabelFor,
-} from '../../domain/summary/services/SummaryDefaults';
+import { defaultLabelFor } from '../../domain/summary/services/SummaryDefaults';
 import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
@@ -106,11 +104,15 @@ export class MeetingDetailPage implements Page {
         <div id="detail-cost" class="mt-3"></div>
       </section>
 
-      ${meeting.temperature ? `
+      ${
+        meeting.temperature
+          ? `
         <section class="card mb-6">
           <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.sentiment')}</h3>
           <div id="detail-temperature"></div>
-        </section>` : ''}
+        </section>`
+          : ''
+      }
 
       <section class="card mb-6">
         <div class="mb-3 flex items-center justify-between gap-3 flex-wrap">
@@ -121,11 +123,15 @@ export class MeetingDetailPage implements Page {
         <div id="detail-summaries"></div>
       </section>
 
-      ${meeting.mindMap ? `
+      ${
+        meeting.mindMap
+          ? `
         <section class="card mb-6">
           <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.mind_map')}</h3>
           <div id="detail-mindmap"></div>
-        </section>` : ''}
+        </section>`
+          : ''
+      }
 
       <section class="card mb-6">
         <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.transcript')}</h3>
@@ -146,14 +152,24 @@ export class MeetingDetailPage implements Page {
 
     this.costCounter.renderFinal(target.querySelector<HTMLElement>('#detail-cost')!, meeting);
     if (meeting.temperature) {
-      this.gauge.render(target.querySelector<HTMLElement>('#detail-temperature')!, meeting.temperature);
+      this.gauge.render(
+        target.querySelector<HTMLElement>('#detail-temperature')!,
+        meeting.temperature,
+      );
     }
     this.renderSummaries(target.querySelector<HTMLElement>('#detail-summaries')!, meeting);
     if (meeting.mindMap) {
-      this.mindMapView.render(target.querySelector<HTMLElement>('#detail-mindmap')!, meeting.mindMap);
+      this.mindMapView.render(
+        target.querySelector<HTMLElement>('#detail-mindmap')!,
+        meeting.mindMap,
+      );
     }
     this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting);
-    this.exportMenu.render(target.querySelector<HTMLElement>('#detail-export')!, () => this.meeting, t);
+    this.exportMenu.render(
+      target.querySelector<HTMLElement>('#detail-export')!,
+      () => this.meeting,
+      t,
+    );
 
     target.querySelector<HTMLButtonElement>('#btn-regen')?.addEventListener('click', () => {
       void this.handleRegenerate();
@@ -226,7 +242,6 @@ export class MeetingDetailPage implements Page {
       .join('');
   }
 }
-
 
 const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
   bullet_points: 'summary.bullet_points',

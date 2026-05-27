@@ -22,8 +22,12 @@ export class UpdateBanner {
       </button>
       <button type="button" data-dismiss aria-label="${translator.t('update.dismiss')}" class="text-ink-400 hover:text-ink-600 transition-colors text-base leading-none">×</button>
     `;
-    node.querySelector<HTMLButtonElement>('[data-reload]')?.addEventListener('click', () => onReload());
-    node.querySelector<HTMLButtonElement>('[data-dismiss]')?.addEventListener('click', () => this.hide());
+    node
+      .querySelector<HTMLButtonElement>('[data-reload]')
+      ?.addEventListener('click', () => onReload());
+    node
+      .querySelector<HTMLButtonElement>('[data-dismiss]')
+      ?.addEventListener('click', () => this.hide());
     document.body.appendChild(node);
     this.banner = node;
   }

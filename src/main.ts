@@ -20,4 +20,3 @@ document.body.appendChild(version);
 if (import.meta.env.PROD) {
   registerServiceWorker('/mintza/sw.js', app.translator);
 }
-

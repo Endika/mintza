@@ -27,10 +27,7 @@ export class AzureSpeechClient {
     private readonly regionProvider: () => string,
   ) {}
 
-  async recognize(
-    audio: Blob,
-    language: Language,
-  ): Promise<Result<AzureSpeechResult, AppError>> {
+  async recognize(audio: Blob, language: Language): Promise<Result<AzureSpeechResult, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
       return err(
@@ -39,9 +36,7 @@ export class AzureSpeechClient {
     }
     const region = this.regionProvider();
     if (region.trim().length === 0) {
-      return err(
-        new AppError('CONFIG_INVALID', 'Azure Speech: missing region in Settings'),
-      );
+      return err(new AppError('CONFIG_INVALID', 'Azure Speech: missing region in Settings'));
     }
     const tag = LANGUAGE_TAG[language.code] ?? 'en-US';
     const url = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${encodeURIComponent(tag)}&format=detailed`;

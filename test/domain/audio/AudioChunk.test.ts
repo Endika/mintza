@@ -5,14 +5,19 @@ const blob = (): Blob => new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/we
 
 describe('AudioChunk', () => {
   it('exposes timing metadata', () => {
-    const chunk = new AudioChunk({ blob: blob(), startMs: 0, endMs: 30_000, mimeType: 'audio/webm' });
+    const chunk = new AudioChunk({
+      blob: blob(),
+      startMs: 0,
+      endMs: 30_000,
+      mimeType: 'audio/webm',
+    });
     expect(chunk.durationMs).toBe(30_000);
     expect(chunk.mimeType).toBe('audio/webm');
   });
 
   it('rejects an end time before the start', () => {
-    expect(() =>
-      new AudioChunk({ blob: blob(), startMs: 200, endMs: 100, mimeType: 'audio/webm' }),
+    expect(
+      () => new AudioChunk({ blob: blob(), startMs: 200, endMs: 100, mimeType: 'audio/webm' }),
     ).toThrow();
   });
 

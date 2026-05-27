@@ -145,8 +145,10 @@ const EN: Translations = {
   'home.mic_loud': 'Loud',
   'home.mic_none': 'No sound detected · check mic',
   'home.chunks_wait': 'Waiting for the first chunk…',
-  'home.chunks_progress': 'Chunks: {received} received · {transcribed} transcribed · {failed} failed',
-  'home.no_audio': 'No audio was transcribed. The mic may not have captured sound or the API failed.',
+  'home.chunks_progress':
+    'Chunks: {received} received · {transcribed} transcribed · {failed} failed',
+  'home.no_audio':
+    'No audio was transcribed. The mic may not have captured sound or the API failed.',
   'home.skip': 'Skip to content',
   'home.last_error': 'Last error',
   'update.title': 'New version available',
@@ -261,7 +263,8 @@ const ES: Translations = {
   'home.mic_loud': 'Alto',
   'home.mic_none': 'No se detecta sonido · revisa el mic',
   'home.chunks_wait': 'Esperando al primer fragmento…',
-  'home.chunks_progress': 'Fragmentos: {received} recibidos · {transcribed} transcritos · {failed} fallidos',
+  'home.chunks_progress':
+    'Fragmentos: {received} recibidos · {transcribed} transcritos · {failed} fallidos',
   'home.no_audio': 'No se transcribió nada. El micro pudo no captar sonido o la API falló.',
   'home.skip': 'Saltar al contenido',
   'home.last_error': 'Último error',
@@ -377,8 +380,10 @@ const EU: Translations = {
   'home.mic_loud': 'Altua',
   'home.mic_none': 'Ez da soinurik antzeman · egiaztatu mikrofonoa',
   'home.chunks_wait': 'Lehen zatiaren zain…',
-  'home.chunks_progress': 'Zatiak: {received} jasota · {transcribed} transkribatuta · {failed} hutsegite',
-  'home.no_audio': 'Ez da audiorik transkribatu. Mikrofonoak agian ez du jaso edo APIa huts egin du.',
+  'home.chunks_progress':
+    'Zatiak: {received} jasota · {transcribed} transkribatuta · {failed} hutsegite',
+  'home.no_audio':
+    'Ez da audiorik transkribatu. Mikrofonoak agian ez du jaso edo APIa huts egin du.',
   'home.skip': 'Edukira jauzi',
   'home.last_error': 'Azken errorea',
   'update.title': 'Bertsio berria erabilgarri',
