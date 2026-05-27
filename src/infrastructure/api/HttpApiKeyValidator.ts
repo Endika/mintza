@@ -38,9 +38,7 @@ export class HttpApiKeyValidator implements ApiKeyValidator {
       if (response.ok) {
         checks.push({ service: probe.service, ok: true });
       } else {
-        const message = probe.hint
-          ? probe.hint(response.error.message)
-          : response.error.message;
+        const message = probe.hint ? probe.hint(response.error.message) : response.error.message;
         checks.push({ service: probe.service, ok: false, message });
       }
     }

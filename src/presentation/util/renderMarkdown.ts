@@ -6,8 +6,7 @@ const HTML_ESCAPES: Record<string, string> = {
   "'": '&#39;',
 };
 
-const escapeHtml = (raw: string): string =>
-  raw.replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch] ?? ch);
+const escapeHtml = (raw: string): string => raw.replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch] ?? ch);
 
 const renderInline = (text: string): string => {
   let html = escapeHtml(text);

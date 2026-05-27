@@ -19,7 +19,11 @@ export class PdfExporter {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(120);
-    y = this.writeLine(doc, `${meeting.startedAt.toISOString()} · ${formatDuration(meeting.durationMs)} · ${meeting.template.kind}`, y + 2);
+    y = this.writeLine(
+      doc,
+      `${meeting.startedAt.toISOString()} · ${formatDuration(meeting.durationMs)} · ${meeting.template.kind}`,
+      y + 2,
+    );
     if (meeting.temperature) {
       y = this.writeLine(doc, `Sentiment score: ${meeting.temperature.value}`, y);
     }
@@ -62,11 +66,7 @@ export class PdfExporter {
     return doc.output('blob');
   }
 
-  private writeLine(
-    doc: JsPDFType,
-    text: string,
-    y: number,
-  ): number {
+  private writeLine(doc: JsPDFType, text: string, y: number): number {
     doc.text(text, PAGE_MARGIN, y);
     return y + LINE_HEIGHT;
   }

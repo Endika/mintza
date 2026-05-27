@@ -102,10 +102,7 @@ export class CostCounter {
     return result;
   }
 
-  private providerSpans<K extends string>(
-    costs: Map<K, Money>,
-    labels: Record<K, string>,
-  ): string {
+  private providerSpans<K extends string>(costs: Map<K, Money>, labels: Record<K, string>): string {
     return [...costs.entries()]
       .filter(([, cost]) => cost.toUsd() > 0)
       .map(

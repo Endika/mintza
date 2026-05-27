@@ -9,7 +9,10 @@ import { TranscriptText } from '../../../src/domain/transcription/value-objects/
 describe('StatisticsCalculator', () => {
   const calc = new StatisticsCalculator();
 
-  const meetingWith = (texts: string[], providers: Array<'whisper' | 'google'> = ['whisper']): Meeting => {
+  const meetingWith = (
+    texts: string[],
+    providers: Array<'whisper' | 'google'> = ['whisper'],
+  ): Meeting => {
     const start = new Date('2026-05-21T10:00:00Z');
     const end = new Date('2026-05-21T10:02:00Z');
     const meeting = Meeting.start({

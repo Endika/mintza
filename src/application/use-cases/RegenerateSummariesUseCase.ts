@@ -3,10 +3,7 @@ import type { MeetingRepository } from '../../domain/meeting/ports/MeetingReposi
 import type { Template } from '../../domain/meeting/value-objects/Template';
 import type { SummarizationPort } from '../../domain/summary/ports/SummarizationPort';
 import type { AppError } from '../../shared/errors/AppError';
-import {
-  GenerateSummariesUseCase,
-  type GenerateSummariesOutput,
-} from './GenerateSummariesUseCase';
+import { GenerateSummariesUseCase, type GenerateSummariesOutput } from './GenerateSummariesUseCase';
 
 export interface RegenerateSummariesInput {
   readonly meeting: Meeting;

@@ -31,10 +31,7 @@ export class GoogleSpeechClient {
     private readonly apiKeyProvider: () => string | undefined,
   ) {}
 
-  async recognize(
-    audio: Blob,
-    language: Language,
-  ): Promise<Result<GoogleSpeechResult, AppError>> {
+  async recognize(audio: Blob, language: Language): Promise<Result<GoogleSpeechResult, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
       return err(
@@ -74,14 +71,21 @@ export class GoogleSpeechClient {
       const first = parsed.results?.[0]?.alternatives?.[0];
       const text = first?.transcript ?? '';
       if (text.length === 0) {
-        return err(new AppError('TRANSCRIPTION_FAILED', 'Google Speech: empty response (no audio detected?)'));
+        return err(
+          new AppError(
+            'TRANSCRIPTION_FAILED',
+            'Google Speech: empty response (no audio detected?)',
+          ),
+        );
       }
       return ok({
         text,
         ...(first?.confidence !== undefined ? { confidence: first.confidence } : {}),
       });
     } catch (cause) {
-      return err(new AppError('TRANSCRIPTION_FAILED', 'Google Speech: invalid response body', cause));
+      return err(
+        new AppError('TRANSCRIPTION_FAILED', 'Google Speech: invalid response body', cause),
+      );
     }
   }
 }

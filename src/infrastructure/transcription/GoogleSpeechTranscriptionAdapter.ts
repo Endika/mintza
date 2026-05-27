@@ -12,9 +12,7 @@ import type { GoogleSpeechClient } from './GoogleSpeechClient';
 export class GoogleSpeechTranscriptionAdapter implements TranscriptionPort {
   constructor(private readonly client: GoogleSpeechClient) {}
 
-  async transcribe(
-    request: TranscriptionRequest,
-  ): Promise<Result<TranscriptSegment, AppError>> {
+  async transcribe(request: TranscriptionRequest): Promise<Result<TranscriptSegment, AppError>> {
     const result = await this.client.recognize(request.chunk.blob, request.language);
     if (!result.ok) return result;
     return ok(toSegment(request.chunk, result.value.text, result.value.confidence));

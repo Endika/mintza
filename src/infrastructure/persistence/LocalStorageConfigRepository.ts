@@ -16,9 +16,7 @@ export class LocalStorageConfigRepository implements ConfigRepository {
       const raw = this.storage.getItem(STORAGE_KEY);
       if (!raw) return Promise.resolve(ok(DEFAULT_CONFIG));
       const parsed = JSON.parse(raw) as Partial<AppConfig>;
-      return Promise.resolve(
-        ok({ ...DEFAULT_CONFIG, ...parsed, apiKeys: { ...parsed.apiKeys } }),
-      );
+      return Promise.resolve(ok({ ...DEFAULT_CONFIG, ...parsed, apiKeys: { ...parsed.apiKeys } }));
     } catch (cause) {
       return Promise.resolve(
         err(new AppError('STORAGE_FAILED', 'Failed to load configuration', cause)),

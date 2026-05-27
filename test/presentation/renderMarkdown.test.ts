@@ -21,9 +21,7 @@ describe('renderMarkdown', () => {
   });
 
   it('renders ordered lists', () => {
-    expect(renderMarkdown('1. first\n2. second')).toBe(
-      '<ol><li>first</li><li>second</li></ol>',
-    );
+    expect(renderMarkdown('1. first\n2. second')).toBe('<ol><li>first</li><li>second</li></ol>');
   });
 
   it('separates paragraphs by blank lines and keeps line breaks inside', () => {

@@ -1,8 +1,5 @@
 import type { MindMap } from '../../domain/mindmap/entities/MindMap';
-import type {
-  MindMapPort,
-  MindMapRequest,
-} from '../../domain/mindmap/ports/MindMapPort';
+import type { MindMapPort, MindMapRequest } from '../../domain/mindmap/ports/MindMapPort';
 import { MindMapJsonParser } from '../../domain/mindmap/services/MindMapJsonParser';
 import { MindMapPromptBuilder } from '../../domain/mindmap/services/MindMapPromptBuilder';
 import { AppError } from '../../shared/errors/AppError';

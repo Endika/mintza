@@ -49,7 +49,11 @@ export class SettingsPage implements Page {
             <h2 class="mb-3 text-lg font-semibold">${t('settings.qualities')}</h2>
             ${qualityFieldset('summaryQuality', t('settings.summary_quality'), cfg.summaryQuality, [
               { value: 'cheap', label: t('settings.cheap'), hint: 'Gemini → Claude → GPT' },
-              { value: 'balanced', label: t('settings.balanced'), hint: 'GPT-4o-mini → Claude → Gemini' },
+              {
+                value: 'balanced',
+                label: t('settings.balanced'),
+                hint: 'GPT-4o-mini → Claude → Gemini',
+              },
               { value: 'premium', label: t('settings.premium'), hint: 'GPT-4o (no fallback)' },
             ])}
             ${qualityFieldset(
@@ -58,7 +62,11 @@ export class SettingsPage implements Page {
               cfg.transcriptionQuality,
               [
                 { value: 'cheap', label: t('settings.cheap'), hint: 'Google Speech → Whisper' },
-                { value: 'balanced', label: t('settings.balanced'), hint: 'Whisper → Google Speech' },
+                {
+                  value: 'balanced',
+                  label: t('settings.balanced'),
+                  hint: 'Whisper → Google Speech',
+                },
                 { value: 'premium', label: t('settings.premium'), hint: 'Whisper only' },
               ],
             )}
@@ -150,9 +158,7 @@ export class SettingsPage implements Page {
     const isDirty = !configsEqual(cfg, proposed);
     saveBtn.disabled = !isDirty;
     dirty.classList.toggle('hidden', !isDirty);
-    const hasAnyKey = Object.values(cfg.apiKeys).some(
-      (v) => typeof v === 'string' && v.length > 0,
-    );
+    const hasAnyKey = Object.values(cfg.apiKeys).some((v) => typeof v === 'string' && v.length > 0);
     clearBtn.disabled = !hasAnyKey;
   }
 
