@@ -20,9 +20,7 @@ export class TranscribeChunkUseCase {
     private readonly hallucinations: HallucinationFilter = new HallucinationFilter(),
   ) {}
 
-  async execute(
-    input: TranscribeChunkInput,
-  ): Promise<Result<TranscriptSegment | null, AppError>> {
+  async execute(input: TranscribeChunkInput): Promise<Result<TranscriptSegment | null, AppError>> {
     const peak = input.chunk.peakLevel;
     if (peak !== undefined && peak < SILENCE_PEAK_THRESHOLD) {
       return ok(null); // silent: skip, never call the API

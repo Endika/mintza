@@ -20,7 +20,9 @@ describe('HallucinationFilter', () => {
   });
 
   it('keeps real speech that merely mentions a blocklisted common word', () => {
-    expect(filter.clean('The background music was too loud.')).toBe('The background music was too loud.');
+    expect(filter.clean('The background music was too loud.')).toBe(
+      'The background music was too loud.',
+    );
   });
 
   it('still drops standalone music/applause tags', () => {

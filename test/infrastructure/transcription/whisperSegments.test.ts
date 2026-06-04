@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { textFromWhisperSegments, type WhisperSegment } from '../../../src/infrastructure/transcription/whisperSegments';
+import {
+  textFromWhisperSegments,
+  type WhisperSegment,
+} from '../../../src/infrastructure/transcription/whisperSegments';
 
 const seg = (text: string, no_speech_prob: number, avg_logprob: number): WhisperSegment => ({
   text,

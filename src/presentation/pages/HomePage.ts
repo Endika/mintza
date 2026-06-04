@@ -68,7 +68,13 @@ export class HomePage implements Page {
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
-  private progress: ChunkProgress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
+  private progress: ChunkProgress = {
+    received: 0,
+    transcribed: 0,
+    skipped: 0,
+    failed: 0,
+    lastError: null,
+  };
   private templates: Template[] = [];
 
   constructor(private readonly deps: HomePageDeps) {}
@@ -582,7 +588,9 @@ export class HomePage implements Page {
     btn.className = 'btn-ghost';
     const paint = (): void => {
       const on = this.deps.config.keepScreenAwake();
-      btn.textContent = on ? `🔆 ${this.t.t('home.screen_on')}` : `🌙 ${this.t.t('home.screen_off')}`;
+      btn.textContent = on
+        ? `🔆 ${this.t.t('home.screen_on')}`
+        : `🌙 ${this.t.t('home.screen_off')}`;
     };
     btn.addEventListener('click', () => {
       void (async () => {

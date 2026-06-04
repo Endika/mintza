@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { AudioChunk } from '../../../src/domain/audio/value-objects/AudioChunk';
 
 const blob = (): Blob => new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/webm' });
-const base = { blob: new Blob(['x'], { type: 'audio/webm' }), startMs: 0, endMs: 1000, mimeType: 'audio/webm' };
+const base = {
+  blob: new Blob(['x'], { type: 'audio/webm' }),
+  startMs: 0,
+  endMs: 1000,
+  mimeType: 'audio/webm',
+};
 
 describe('AudioChunk', () => {
   it('exposes timing metadata', () => {
