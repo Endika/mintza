@@ -22,15 +22,21 @@ const BLOCKLIST = [
   'applause',
 ].map(normalize);
 
+const matchesHallucination = (normalizedLine: string): boolean =>
+  BLOCKLIST.some((b) =>
+    b.includes(' ') ? normalizedLine === b || normalizedLine.includes(b) : normalizedLine === b,
+  );
+
 export class HallucinationFilter {
   clean(text: string): string {
-    const kept = text
+    return text
       .split('\n')
       .filter((line) => {
         const n = normalize(line);
         if (n.length === 0) return false;
-        return !BLOCKLIST.some((b) => n === b || n.includes(b));
-      });
-    return kept.join('\n').trim();
+        return !matchesHallucination(n);
+      })
+      .join('\n')
+      .trim();
   }
 }
