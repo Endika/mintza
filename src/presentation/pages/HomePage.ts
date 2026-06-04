@@ -50,6 +50,7 @@ type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
 interface ChunkProgress {
   received: number;
   transcribed: number;
+  skipped: number;
   failed: number;
   lastError: string | null;
 }
@@ -67,7 +68,7 @@ export class HomePage implements Page {
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
-  private progress: ChunkProgress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+  private progress: ChunkProgress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
   private templates: Template[] = [];
 
   constructor(private readonly deps: HomePageDeps) {}
@@ -224,7 +225,7 @@ export class HomePage implements Page {
       return;
     }
     this.meeting = result.value.meeting;
-    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.startMeter();
@@ -319,7 +320,7 @@ export class HomePage implements Page {
   private handleNewMeeting(): void {
     if (!this.root) return;
     this.meeting = null;
-    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
     void this.render(this.root);
   }
@@ -377,6 +378,8 @@ export class HomePage implements Page {
       if (result.value !== null) {
         this.progress.transcribed += 1;
         this.appendSegment(result.value);
+      } else {
+        this.progress.skipped += 1;
       }
     } else {
       this.progress.failed += 1;
@@ -398,6 +401,7 @@ export class HomePage implements Page {
       .t('home.chunks_progress')
       .replace('{received}', String(p.received))
       .replace('{transcribed}', String(p.transcribed))
+      .replace('{skipped}', String(p.skipped))
       .replace('{failed}', String(p.failed));
   }
 
