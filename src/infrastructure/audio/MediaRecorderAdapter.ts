@@ -78,6 +78,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     if (this.status !== 'recording') return Promise.resolve();
     this.status = 'paused';
     this.clearTimer();
+    this.stopPeakSampling();
     const recorder = this.recorder;
     if (recorder && recorder.state !== 'inactive') {
       this.isRotating = false;
@@ -89,6 +90,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
   resume(): Promise<void> {
     if (this.status !== 'paused' || !this.stream) return Promise.resolve();
     this.status = 'recording';
+    this.startPeakSampling(this.stream);
     this.startCycle();
     return Promise.resolve();
   }
@@ -137,7 +139,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
         startMs,
         endMs,
         mimeType: this.mimeType ?? event.data.type,
-        peakLevel: this.chunkPeak,
+        ...(this.analyser !== null ? { peakLevel: this.chunkPeak } : {}),
       });
       this.chunkPeak = 0;
       this.handlers.forEach((handler) => handler(chunk));
