@@ -29,6 +29,10 @@ export class MediaRecorderAdapter implements AudioCapturePort {
   private isRotating = false;
   private readonly handlers: Set<AudioChunkHandler> = new Set();
   private readonly timesliceMs: number;
+  private audioCtx: AudioContext | null = null;
+  private analyser: AnalyserNode | null = null;
+  private peakSampler: number | null = null;
+  private chunkPeak = 0;
 
   constructor(options: MediaRecorderAdapterOptions = {}) {
     this.timesliceMs = options.timesliceMs ?? DEFAULT_TIMESLICE_MS;
@@ -64,6 +68,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
         autoGainControl: true,
       },
     });
+    this.startPeakSampling(this.stream);
     this.elapsedBeforeCycleMs = 0;
     this.status = 'recording';
     this.startCycle();
@@ -73,6 +78,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     if (this.status !== 'recording') return Promise.resolve();
     this.status = 'paused';
     this.clearTimer();
+    this.stopPeakSampling();
     const recorder = this.recorder;
     if (recorder && recorder.state !== 'inactive') {
       this.isRotating = false;
@@ -84,6 +90,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
   resume(): Promise<void> {
     if (this.status !== 'paused' || !this.stream) return Promise.resolve();
     this.status = 'recording';
+    this.startPeakSampling(this.stream);
     this.startCycle();
     return Promise.resolve();
   }
@@ -110,6 +117,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
       });
     }
     stream?.getTracks().forEach((track) => track.stop());
+    this.stopPeakSampling();
     this.stream = null;
     this.mimeType = null;
   }
@@ -131,7 +139,9 @@ export class MediaRecorderAdapter implements AudioCapturePort {
         startMs,
         endMs,
         mimeType: this.mimeType ?? event.data.type,
+        ...(this.analyser !== null ? { peakLevel: this.chunkPeak } : {}),
       });
+      this.chunkPeak = 0;
       this.handlers.forEach((handler) => handler(chunk));
     };
 
@@ -151,6 +161,43 @@ export class MediaRecorderAdapter implements AudioCapturePort {
         recorder.stop();
       }
     }, this.timesliceMs);
+  }
+
+  private startPeakSampling(stream: MediaStream): void {
+    try {
+      const Ctx =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      this.audioCtx = new Ctx();
+      const source = this.audioCtx.createMediaStreamSource(stream);
+      this.analyser = this.audioCtx.createAnalyser();
+      this.analyser.fftSize = 2048;
+      source.connect(this.analyser);
+      const buf = new Float32Array(this.analyser.fftSize);
+      this.peakSampler = window.setInterval(() => {
+        this.analyser?.getFloatTimeDomainData(buf);
+        let peak = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = Math.abs(buf[i] ?? 0);
+          if (v > peak) peak = v;
+        }
+        if (peak > this.chunkPeak) this.chunkPeak = peak;
+      }, 200);
+    } catch {
+      this.analyser = null;
+    }
+  }
+
+  private stopPeakSampling(): void {
+    if (this.peakSampler !== null) {
+      window.clearInterval(this.peakSampler);
+      this.peakSampler = null;
+    }
+    this.analyser = null;
+    void this.audioCtx?.close().catch(() => undefined);
+    this.audioCtx = null;
+    this.chunkPeak = 0;
   }
 
   private clearTimer(): void {

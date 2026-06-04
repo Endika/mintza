@@ -2,6 +2,7 @@ import type { Language } from '../../domain/language/value-objects/Language';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
 import type { HttpClient } from '../http/HttpClient';
+import { textFromWhisperSegments, type WhisperSegment } from './whisperSegments';
 
 const WHISPER_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const WHISPER_MODEL = 'whisper-1';
@@ -16,6 +17,7 @@ interface WhisperResponseBody {
   readonly text: string;
   readonly duration?: number;
   readonly language?: string;
+  readonly segments?: readonly WhisperSegment[];
 }
 
 export class WhisperClient {
@@ -49,7 +51,7 @@ export class WhisperClient {
     try {
       const body = await response.value.json<WhisperResponseBody>();
       const result: WhisperTranscriptionResult = {
-        text: body.text,
+        text: textFromWhisperSegments(body.segments, body.text),
         ...(body.duration !== undefined ? { durationSeconds: body.duration } : {}),
         ...(body.language !== undefined ? { language: body.language } : {}),
       };

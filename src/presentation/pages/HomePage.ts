@@ -7,6 +7,7 @@ import type { StopRecordingUseCase } from '../../application/use-cases/StopRecor
 import type { TranscribeChunkUseCase } from '../../application/use-cases/TranscribeChunkUseCase';
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { AudioCapturePort } from '../../domain/audio/ports/AudioCapturePort';
+import type { ScreenWakePort } from '../../domain/system/ports/ScreenWakePort';
 import type { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { Language, type LanguageCode } from '../../domain/language/value-objects/Language';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
@@ -32,6 +33,7 @@ import { renderMarkdown } from '../util/renderMarkdown';
 export interface HomePageDeps {
   readonly config: ConfigStore;
   readonly audio: AudioCapturePort;
+  readonly screenWake: ScreenWakePort;
   readonly startRecording: StartRecordingUseCase;
   readonly stopRecording: StopRecordingUseCase;
   readonly transcribeChunk: TranscribeChunkUseCase;
@@ -48,6 +50,7 @@ type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
 interface ChunkProgress {
   received: number;
   transcribed: number;
+  skipped: number;
   failed: number;
   lastError: string | null;
 }
@@ -65,7 +68,13 @@ export class HomePage implements Page {
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
-  private progress: ChunkProgress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+  private progress: ChunkProgress = {
+    received: 0,
+    transcribed: 0,
+    skipped: 0,
+    failed: 0,
+    lastError: null,
+  };
   private templates: Template[] = [];
 
   constructor(private readonly deps: HomePageDeps) {}
@@ -106,7 +115,7 @@ export class HomePage implements Page {
                 <span id="rec-badge-label">${t('home.rec')}</span>
               </span>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div id="rec-controls" class="flex flex-wrap items-center gap-2">
               <button id="btn-record" class="btn-primary" aria-label="${t('home.btn_record')}" title="${t('home.btn_record')}">
                 ${ICON_RECORD}
                 <span>${t('home.btn_record')}</span>
@@ -180,6 +189,12 @@ export class HomePage implements Page {
     this.unsubChunks = null;
     this.counter.stop();
     this.meter.stop();
+    void this.deps.screenWake.release();
+  }
+
+  private syncWakeLock(active: boolean): void {
+    if (active && this.deps.config.keepScreenAwake()) void this.deps.screenWake.request();
+    else void this.deps.screenWake.release();
   }
 
   private bind(): void {
@@ -197,6 +212,7 @@ export class HomePage implements Page {
       () => void this.handleSummarizeNow(),
     );
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
+    this.renderWakeToggle(this.qs<HTMLElement>('#rec-controls'));
   }
 
   private async handleStart(): Promise<void> {
@@ -216,7 +232,7 @@ export class HomePage implements Page {
       return;
     }
     this.meeting = result.value.meeting;
-    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.startMeter();
@@ -227,6 +243,7 @@ export class HomePage implements Page {
       void p.finally(() => this.pendingChunks.delete(p));
     });
     this.setScreenState('recording');
+    this.syncWakeLock(true);
   }
 
   private async handlePauseResume(): Promise<void> {
@@ -238,18 +255,21 @@ export class HomePage implements Page {
       this.qs<HTMLElement>('#meter').classList.add('hidden');
       this.setScreenState('paused');
       this.setStatus(this.t.t('home.paused'));
+      this.syncWakeLock(false);
     } else if (this.screenState === 'paused') {
       this.meeting?.resume();
       await this.deps.audio.resume();
       this.startMeter();
       this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
       this.setScreenState('recording');
+      this.syncWakeLock(true);
     }
   }
 
   private async handleStop(): Promise<void> {
     if (!this.meeting) return;
     this.setScreenState('processing');
+    this.syncWakeLock(false);
     this.setStatus(this.t.t('home.stopping'));
     this.meter.stop();
     this.qs<HTMLElement>('#meter').classList.add('hidden');
@@ -307,7 +327,7 @@ export class HomePage implements Page {
   private handleNewMeeting(): void {
     if (!this.root) return;
     this.meeting = null;
-    this.progress = { received: 0, transcribed: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
     void this.render(this.root);
   }
@@ -362,8 +382,12 @@ export class HomePage implements Page {
     this.updateProgress();
     const result = await this.deps.transcribeChunk.execute({ meeting: this.meeting, chunk });
     if (result.ok) {
-      this.progress.transcribed += 1;
-      this.appendSegment(result.value);
+      if (result.value !== null) {
+        this.progress.transcribed += 1;
+        this.appendSegment(result.value);
+      } else {
+        this.progress.skipped += 1;
+      }
     } else {
       this.progress.failed += 1;
       this.progress.lastError = result.error.message;
@@ -384,6 +408,7 @@ export class HomePage implements Page {
       .t('home.chunks_progress')
       .replace('{received}', String(p.received))
       .replace('{transcribed}', String(p.transcribed))
+      .replace('{skipped}', String(p.skipped))
       .replace('{failed}', String(p.failed));
   }
 
@@ -555,6 +580,28 @@ export class HomePage implements Page {
           </article>`;
       })
       .join('');
+  }
+
+  private renderWakeToggle(container: HTMLElement): void {
+    if (!this.deps.screenWake.isSupported()) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-ghost';
+    const paint = (): void => {
+      const on = this.deps.config.keepScreenAwake();
+      btn.textContent = on
+        ? `🔆 ${this.t.t('home.screen_on')}`
+        : `🌙 ${this.t.t('home.screen_off')}`;
+    };
+    btn.addEventListener('click', () => {
+      void (async () => {
+        const next = !this.deps.config.keepScreenAwake();
+        await this.deps.config.update({ ...this.deps.config.get(), keepScreenAwake: next });
+        paint();
+        this.syncWakeLock(this.screenState === 'recording');
+      })();
+    });
+    paint();
+    container.appendChild(btn);
   }
 
   private readTemplate(): TemplateKind {

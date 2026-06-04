@@ -3,6 +3,7 @@ export interface AudioChunkProps {
   readonly startMs: number;
   readonly endMs: number;
   readonly mimeType: string;
+  readonly peakLevel?: number;
 }
 
 export class AudioChunk {
@@ -26,6 +27,10 @@ export class AudioChunk {
 
   get mimeType(): string {
     return this.props.mimeType;
+  }
+
+  get peakLevel(): number | undefined {
+    return this.props.peakLevel;
   }
 
   get durationMs(): number {

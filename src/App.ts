@@ -33,6 +33,7 @@ export class App {
     return new HomePage({
       config: this.deps.configStore,
       audio: this.deps.audio,
+      screenWake: this.deps.screenWake,
       startRecording: this.deps.startRecording,
       stopRecording: this.deps.stopRecording,
       transcribeChunk: this.deps.transcribeChunk,
