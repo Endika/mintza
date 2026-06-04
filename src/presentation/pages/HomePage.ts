@@ -374,8 +374,10 @@ export class HomePage implements Page {
     this.updateProgress();
     const result = await this.deps.transcribeChunk.execute({ meeting: this.meeting, chunk });
     if (result.ok) {
-      this.progress.transcribed += 1;
-      this.appendSegment(result.value);
+      if (result.value !== null) {
+        this.progress.transcribed += 1;
+        this.appendSegment(result.value);
+      }
     } else {
       this.progress.failed += 1;
       this.progress.lastError = result.error.message;
