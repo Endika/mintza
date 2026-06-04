@@ -45,11 +45,14 @@ import {
 } from '../infrastructure/transcription/TranscriptionChainAdapter';
 import { WhisperClient } from '../infrastructure/transcription/WhisperClient';
 import { WhisperTranscriptionAdapter } from '../infrastructure/transcription/WhisperTranscriptionAdapter';
+import { WakeLockAdapter } from '../infrastructure/system/WakeLockAdapter';
+import type { ScreenWakePort } from '../domain/system/ports/ScreenWakePort';
 import { ConfigStore } from '../presentation/state/ConfigStore';
 
 export interface AppDeps {
   readonly configStore: ConfigStore;
   readonly audio: MediaRecorderAdapter;
+  readonly screenWake: ScreenWakePort;
   readonly startRecording: StartRecordingUseCase;
   readonly stopRecording: StopRecordingUseCase;
   readonly transcribeChunk: TranscribeChunkUseCase;
@@ -143,10 +146,12 @@ export const buildAppDeps = (): AppDeps => {
   const sentimentParser = new SentimentScoreParser();
 
   const audio = new MediaRecorderAdapter();
+  const screenWake = new WakeLockAdapter();
 
   return {
     configStore,
     audio,
+    screenWake,
     startRecording: new StartRecordingUseCase(audio),
     stopRecording: new StopRecordingUseCase(audio),
     transcribeChunk: new TranscribeChunkUseCase(transcription),

@@ -46,6 +46,8 @@ export type TranslationKey =
   | 'home.field_template'
   | 'home.field_language'
   | 'home.configure_key'
+  | 'home.screen_on'
+  | 'home.screen_off'
   | 'template.work'
   | 'template.interview'
   | 'template.generic'
@@ -164,6 +166,8 @@ const EN: Translations = {
   'home.field_template': 'Template',
   'home.field_language': 'Spoken language',
   'home.configure_key': 'Configure your OpenAI key before recording.',
+  'home.screen_on': 'Keep screen on',
+  'home.screen_off': 'Allow screen off',
   'template.work': 'Work',
   'template.interview': 'Interview',
   'template.generic': 'Generic',
@@ -281,6 +285,8 @@ const ES: Translations = {
   'home.field_template': 'Plantilla',
   'home.field_language': 'Idioma hablado',
   'home.configure_key': 'Configura tu clave de OpenAI antes de grabar.',
+  'home.screen_on': 'Mantener pantalla encendida',
+  'home.screen_off': 'Permitir apagar pantalla',
   'template.work': 'Trabajo',
   'template.interview': 'Entrevista',
   'template.generic': 'Genérica',
@@ -399,6 +405,8 @@ const EU: Translations = {
   'home.field_template': 'Txantiloia',
   'home.field_language': 'Hizkuntza',
   'home.configure_key': 'Konfiguratu zure OpenAI gakoa grabatu aurretik.',
+  'home.screen_on': 'Mantendu pantaila piztuta',
+  'home.screen_off': 'Utzi pantaila itzaltzen',
   'template.work': 'Lana',
   'template.interview': 'Elkarrizketa',
   'template.generic': 'Orokorra',
