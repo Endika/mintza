@@ -1,4 +1,4 @@
-name: Release & Deploy
+name: Release Please
 
 on:
   push:
@@ -9,8 +9,6 @@ permissions:
   actions: write
   contents: write
   pull-requests: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -18,11 +16,7 @@ concurrency:
 
 jobs:
   release-please:
-    name: Release Please
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v5
@@ -55,38 +49,12 @@ jobs:
           gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" 2>/dev/null || true
           gh workflow run "$WORKFLOW" -R "$REPO" --ref main
 
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v5
+      # When a release is actually published, redeploy from main so the live
+      # build carries the bumped version. release-please's own version-bump
+      # commit is pushed by GITHUB_TOKEN and does NOT trigger the on:push deploy,
+      # so the site would otherwise stay one release behind.
+      - if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: gh workflow run deploy.yml -R "$REPO" --ref main
