@@ -3,7 +3,9 @@ import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import type { TranscriptionPort } from '../../domain/transcription/ports/TranscriptionPort';
 import type { AppError } from '../../shared/errors/AppError';
 import { ok, type Result } from '../../shared/result/Result';
-import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
+import { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
+import { TranscriptText } from '../../domain/transcription/value-objects/TranscriptText';
+import { HallucinationFilter } from '../../domain/transcription/services/HallucinationFilter';
 
 const SILENCE_PEAK_THRESHOLD = 0.012;
 
@@ -13,7 +15,10 @@ export interface TranscribeChunkInput {
 }
 
 export class TranscribeChunkUseCase {
-  constructor(private readonly transcription: TranscriptionPort) {}
+  constructor(
+    private readonly transcription: TranscriptionPort,
+    private readonly hallucinations: HallucinationFilter = new HallucinationFilter(),
+  ) {}
 
   async execute(
     input: TranscribeChunkInput,
@@ -27,7 +32,19 @@ export class TranscribeChunkUseCase {
       language: input.meeting.language,
     });
     if (!result.ok) return result;
-    input.meeting.appendSegment(result.value);
-    return ok(result.value);
+    const cleaned = this.hallucinations.clean(result.value.text.value);
+    if (cleaned.length === 0) return ok(null); // pure hallucination / no speech
+    const segment =
+      cleaned === result.value.text.value
+        ? result.value
+        : new TranscriptSegment({
+            id: result.value.id,
+            startMs: result.value.startMs,
+            endMs: result.value.endMs,
+            text: TranscriptText.of(cleaned),
+            provider: result.value.provider,
+          });
+    input.meeting.appendSegment(segment);
+    return ok(segment);
   }
 }

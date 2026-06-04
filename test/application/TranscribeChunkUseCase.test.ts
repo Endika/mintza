@@ -54,4 +54,12 @@ describe('TranscribeChunkUseCase silence skipping', () => {
     expect(result.ok && result.value?.text.value).toBe('real speech');
     expect(m.segments).toHaveLength(1);
   });
+
+  it('skips a chunk whose transcription is a pure hallucination', async () => {
+    const port = new SpyTranscription('Subtitles by the Amara.org community');
+    const m = meeting();
+    const result = await new TranscribeChunkUseCase(port).execute({ meeting: m, chunk: chunk(0.3) });
+    expect(result.ok && result.value).toBeNull();
+    expect(m.segments).toHaveLength(0);
+  });
 });
