@@ -19,6 +19,7 @@ export interface AppConfig {
   readonly summaryQuality: QualityProfile;
   readonly apiKeys: ApiKeys;
   readonly azureRegion: string;
+  readonly keepScreenAwake?: boolean;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -28,6 +29,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   summaryQuality: 'balanced',
   apiKeys: {},
   azureRegion: 'westeurope',
+  keepScreenAwake: true,
 };
 
 export interface ConfigRepository {
