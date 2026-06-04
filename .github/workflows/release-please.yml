@@ -21,12 +21,13 @@ jobs:
       - id: release
         uses: googleapis/release-please-action@v5
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
       - if: ${{ steps.release.outputs.pr }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           REPO: ${{ github.repository }}
           WORKFLOW: ${{ github.workflow }}
           PR_JSON: ${{ steps.release.outputs.pr }}
@@ -55,6 +56,6 @@ jobs:
       # so the site would otherwise stay one release behind.
       - if: ${{ steps.release.outputs.release_created }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           REPO: ${{ github.repository }}
         run: gh workflow run deploy.yml -R "$REPO" --ref main
