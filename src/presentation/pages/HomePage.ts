@@ -183,6 +183,7 @@ export class HomePage implements Page {
     this.unsubChunks = null;
     this.counter.stop();
     this.meter.stop();
+    void this.deps.screenWake.release();
   }
 
   private syncWakeLock(active: boolean): void {
