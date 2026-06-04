@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.0](https://github.com/Endika/mintza/compare/v1.18.8...v1.19.0) (2026-06-04)
+
+
+### Features
+
+* reliable mobile recording (wake lock + Whisper anti-hallucination) ([#18](https://github.com/Endika/mintza/issues/18)) ([2b550ab](https://github.com/Endika/mintza/commit/2b550aba5a2cbc4e1c80079211429a5c75a96771))
+
 ## [1.18.8](https://github.com/Endika/mintza/compare/v1.18.7...v1.18.8) (2026-05-22)
 
 
