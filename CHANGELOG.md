@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.1](https://github.com/Endika/mintza/compare/v1.19.0...v1.19.1) (2026-06-09)
+
+
+### Chores
+
+* **deps-dev:** bump the dev-dependencies group with 2 updates ([ccc4f5f](https://github.com/Endika/mintza/commit/ccc4f5f7b258b1f4ca9fcfa04f7a10d22f2cc371))
+
 ## [1.19.0](https://github.com/Endika/mintza/compare/v1.18.8...v1.19.0) (2026-06-04)
 
 
