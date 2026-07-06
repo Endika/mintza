@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.4](https://github.com/Endika/mintza/compare/v1.19.3...v1.19.4) (2026-07-06)
+
+
+### Chores
+
+* **ci:** drop redundant deploy dispatch from release flow ([35a2361](https://github.com/Endika/mintza/commit/35a2361e5606a9a49878790edf1b8ad563de619a))
+* **deps-dev:** bump the dev-dependencies group with 3 updates ([a9bf285](https://github.com/Endika/mintza/commit/a9bf285a4e26143bec3164d60b3bc3a68b06d74f))
+
 ## [1.19.3](https://github.com/Endika/mintza/compare/v1.19.2...v1.19.3) (2026-07-06)
 
 
