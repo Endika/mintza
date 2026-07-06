@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: write
   pull-requests: write
 
@@ -26,21 +25,12 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       # Enable native auto-merge and stop; GitHub rebase-merges once the required
-      # checks pass, and that PAT-authored merge re-triggers this workflow to cut
-      # the tag/release.
+      # checks pass, and that PAT-authored merge is a push to main that both
+      # re-triggers this workflow to cut the tag/release and triggers the deploy
+      # (on: push), so no explicit deploy dispatch is needed here.
       - if: ${{ steps.release.outputs.pr }}
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           REPO: ${{ github.repository }}
           PR_JSON: ${{ steps.release.outputs.pr }}
         run: gh pr merge --rebase --auto -R "$REPO" "$(echo "$PR_JSON" | jq -r .number)"
-
-      # When a release is actually published, redeploy from main so the live
-      # build carries the bumped version. release-please's own version-bump
-      # commit is pushed by GITHUB_TOKEN and does NOT trigger the on:push deploy,
-      # so the site would otherwise stay one release behind.
-      - if: ${{ steps.release.outputs.release_created }}
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          REPO: ${{ github.repository }}
-        run: gh workflow run deploy.yml -R "$REPO" --ref main
