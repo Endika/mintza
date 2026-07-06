@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.2](https://github.com/Endika/mintza/compare/v1.19.1...v1.19.2) (2026-07-06)
+
+
+### Chores
+
+* **deps-dev:** bump happy-dom in the dev-dependencies group ([fa8154f](https://github.com/Endika/mintza/commit/fa8154fdb48acbcfa01bb48d4e7524d106469c33))
+* **deps-dev:** bump the dev-dependencies group with 3 updates ([f43900b](https://github.com/Endika/mintza/commit/f43900bbdaf6c640516c48b82417d79d7454aa1b))
+
 ## [1.19.1](https://github.com/Endika/mintza/compare/v1.19.0...v1.19.1) (2026-06-09)
 
 
