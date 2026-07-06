@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.3](https://github.com/Endika/mintza/compare/v1.19.2...v1.19.3) (2026-07-06)
+
+
+### Bug Fixes
+
+* **ci:** stop release-please auto-merge loop ([0879ef1](https://github.com/Endika/mintza/commit/0879ef1ac88f8d5c745c2f8143be38848ba4db6f))
+
 ## [1.19.2](https://github.com/Endika/mintza/compare/v1.19.1...v1.19.2) (2026-07-06)
 
 
