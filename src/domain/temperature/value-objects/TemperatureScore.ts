@@ -1,9 +1,5 @@
 export type TemperatureBand =
-  | 'very_negative'
-  | 'negative'
-  | 'neutral'
-  | 'positive'
-  | 'very_positive';
+  'very_negative' | 'negative' | 'neutral' | 'positive' | 'very_positive';
 
 export class TemperatureScore {
   private constructor(public readonly value: number) {}
