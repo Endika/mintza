@@ -5,6 +5,18 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.5](https://github.com/Endika/mintza/compare/v1.19.4...v1.19.5) (2026-07-13)
+
+
+### Bug Fixes
+
+* prevent accidental pinch and double-tap zoom on mobile ([ee79aee](https://github.com/Endika/mintza/commit/ee79aeef0f52fe70d92537bdaa9bb3658d617e16))
+
+
+### Chores
+
+* **deps-dev:** bump the dev-dependencies group with 2 updates ([6b88cea](https://github.com/Endika/mintza/commit/6b88cea6dc884616a4b7eb31a9a8588c83016f3c))
+
 ## [1.19.4](https://github.com/Endika/mintza/compare/v1.19.3...v1.19.4) (2026-07-06)
 
 
