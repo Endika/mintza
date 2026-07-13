@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#00B380" />
     <meta name="description" content="From talk to insight. AI-powered meeting transcription and summaries." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,6 +19,18 @@
     <meta name="twitter:description" content="From talk to insight." />
     <link rel="manifest" href="/manifest.json" />
     <title>MINTZA — From talk to insight</title>
+    <style>
+      /* Prevent accidental zoom on mobile: block double-tap zoom, keep scroll/tap. */
+      html {
+        touch-action: manipulation;
+      }
+    </style>
+    <script>
+      // iOS Safari ignores user-scalable=no, so block pinch-zoom explicitly.
+      document.addEventListener('gesturestart', function (e) {
+        e.preventDefault()
+      })
+    </script>
   </head>
   <body class="bg-white text-ink font-sans antialiased">
     <div id="app" class="min-h-screen"></div>
