@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.9](https://github.com/Endika/mintza/compare/v1.19.8...v1.19.9) (2026-08-04)
+
+
+### Chores
+
+* **deps-dev:** bump vite, @vitest/coverage-v8 and vitest ([adb5e90](https://github.com/Endika/mintza/commit/adb5e90ca551bdc1543db3590606300175a75e1f))
+
 ## [1.19.8](https://github.com/Endika/mintza/compare/v1.19.7...v1.19.8) (2026-08-04)
 
 
