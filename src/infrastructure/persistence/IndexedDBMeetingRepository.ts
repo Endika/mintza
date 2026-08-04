@@ -90,7 +90,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         }
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
     });
     return this.dbPromise;
   }
@@ -103,7 +103,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         const tx = db.transaction(STORE, 'readwrite');
         tx.objectStore(STORE).put(persisted);
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
       });
       return ok(undefined);
     } catch (cause) {
@@ -118,7 +118,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         const tx = db.transaction(STORE, 'readonly');
         const request = tx.objectStore(STORE).get(id.value);
         request.onsuccess = () => resolve(request.result as PersistedMeeting | undefined);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
       });
       if (!persisted) return ok(null);
       const template = await this.resolveTemplate(persisted.template);
@@ -135,7 +135,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         const tx = db.transaction(STORE, 'readonly');
         const request = tx.objectStore(STORE).getAll();
         request.onsuccess = () => resolve(request.result as PersistedMeeting[]);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
       });
       const items: MeetingListItem[] = records
         .map((r) => ({
@@ -162,7 +162,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         const tx = db.transaction(STORE, 'readwrite');
         tx.objectStore(STORE).delete(id.value);
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
       });
       return ok(undefined);
     } catch (cause) {
@@ -177,7 +177,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         const tx = db.transaction(STORE, 'readwrite');
         tx.objectStore(STORE).clear();
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
       });
       return ok(undefined);
     } catch (cause) {

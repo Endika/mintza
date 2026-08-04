@@ -23,6 +23,6 @@ describe('Template', () => {
   });
 
   it('rejects unknown kinds', () => {
-    expect(() => Template.of('unknown' as 'work')).toThrow();
+    expect(() => Template.of('unknown')).toThrow();
   });
 });

@@ -125,6 +125,6 @@ const toPersisted = (def: TemplateDefinition): PersistedTemplate => ({
   mindMapStructure: def.mindMapStructure,
   summaryKinds: [...def.summaryKinds],
   featuredOrder: [...def.featuredOrder],
-  kindLabels: { ...def.kindLabels } as Record<string, string>,
-  promptOverrides: { ...def.promptOverrides } as Record<string, string>,
+  kindLabels: { ...def.kindLabels },
+  promptOverrides: { ...def.promptOverrides },
 });

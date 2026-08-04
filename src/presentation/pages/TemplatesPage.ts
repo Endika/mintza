@@ -227,9 +227,9 @@ export class TemplatesPage implements Page {
     if (!this.editing) return;
     const form = this.qs<HTMLFormElement>('#tpl-form');
     const data = new FormData(form);
-    const name = String(data.get('name') ?? '').trim();
-    const systemRole = String(data.get('systemRole') ?? '').trim();
-    const mindMapStructure = String(data.get('mindMapStructure') ?? '').trim();
+    const name = field(data, 'name');
+    const systemRole = field(data, 'systemRole');
+    const mindMapStructure = field(data, 'mindMapStructure');
     if (!name || !systemRole || !mindMapStructure) return;
 
     const kinds: SummaryKind[] = SUMMARY_KINDS.filter((k) => data.get(`kind_${k}`) === 'on');
@@ -241,9 +241,9 @@ export class TemplatesPage implements Page {
     const kindLabels: Partial<Record<SummaryKind, string>> = {};
     const promptOverrides: Partial<Record<SummaryKind, string>> = {};
     for (const k of SUMMARY_KINDS) {
-      const label = String(data.get(`label_${k}`) ?? '').trim();
+      const label = field(data, `label_${k}`);
       if (label.length > 0) kindLabels[k] = label;
-      const prompt = String(data.get(`prompt_${k}`) ?? '').trim();
+      const prompt = field(data, `prompt_${k}`);
       if (prompt.length > 0) promptOverrides[k] = prompt;
     }
 
@@ -311,3 +311,8 @@ const escape = (raw: string): string =>
   );
 
 const escapeAttr = (raw: string): string => raw.replace(/"/g, '&quot;');
+
+const field = (data: FormData, key: string): string => {
+  const value = data.get(key);
+  return typeof value === 'string' ? value.trim() : '';
+};

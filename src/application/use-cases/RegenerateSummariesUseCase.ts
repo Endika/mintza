@@ -2,7 +2,6 @@ import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import type { MeetingRepository } from '../../domain/meeting/ports/MeetingRepository';
 import type { Template } from '../../domain/meeting/value-objects/Template';
 import type { SummarizationPort } from '../../domain/summary/ports/SummarizationPort';
-import type { AppError } from '../../shared/errors/AppError';
 import { GenerateSummariesUseCase, type GenerateSummariesOutput } from './GenerateSummariesUseCase';
 
 export interface RegenerateSummariesInput {
@@ -31,7 +30,7 @@ export class RegenerateSummariesUseCase {
         attempts: output.attempts,
         successCount: output.successCount,
         failureCount: output.failureCount + 1,
-      } as GenerateSummariesOutput & { saveError?: AppError };
+      };
     }
     return output;
   }
