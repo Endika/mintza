@@ -10,11 +10,11 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-major
     groups:
+      security-npm:
+        applies-to: security-updates
+        patterns:
+          - "*"
       dev-dependencies:
         dependency-type: development
         update-types:
@@ -34,3 +34,8 @@ updates:
     commit-message:
       prefix: ci
       include: scope
+    groups:
+      security-actions:
+        applies-to: security-updates
+        patterns:
+          - "*"
