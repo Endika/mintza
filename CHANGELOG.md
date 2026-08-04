@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.10](https://github.com/Endika/mintza/compare/v1.19.9...v1.19.10) (2026-08-04)
+
+
+### Chores
+
+* move to eslint 10 and typescript-eslint 8 with flat config ([5a729c3](https://github.com/Endika/mintza/commit/5a729c34c8710b723ffdc52bcf2b2ec983cb4d61))
+
 ## [1.19.9](https://github.com/Endika/mintza/compare/v1.19.8...v1.19.9) (2026-08-04)
 
 
