@@ -5,6 +5,16 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.7](https://github.com/Endika/mintza/compare/v1.19.6...v1.19.7) (2026-08-04)
+
+
+### Chores
+
+* **deps-dev:** bump js-yaml from 4.1.1 to 4.3.1 ([6d35774](https://github.com/Endika/mintza/commit/6d357740f55faa4ba8507eff53499348e75ad99a))
+* **deps-dev:** bump postcss in the dev-dependencies group ([bb13b39](https://github.com/Endika/mintza/commit/bb13b3959acdd612207df011410ce9f1fe61b9a6))
+* **deps:** bump brace-expansion ([5655735](https://github.com/Endika/mintza/commit/56557350d1b6c43d1f010cd37b07abea4206059e))
+* **deps:** bump dompurify from 3.4.5 to 3.4.13 ([9918571](https://github.com/Endika/mintza/commit/99185711fc7317013875a0d84e9218b00edb98f3))
+
 ## [1.19.6](https://github.com/Endika/mintza/compare/v1.19.5...v1.19.6) (2026-08-01)
 
 
