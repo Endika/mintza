@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.11](https://github.com/Endika/mintza/compare/v1.19.10...v1.19.11) (2026-08-12)
+
+
+### Chores
+
+* **deps-dev:** bump fake-indexeddb from 5.0.2 to 6.2.5 ([#63](https://github.com/Endika/mintza/issues/63)) ([9d2bf3e](https://github.com/Endika/mintza/commit/9d2bf3e7038b9a2a0042b17095eaeed64c37bdb3))
+* **deps-dev:** bump the dev-dependencies group with 2 updates ([f17fb74](https://github.com/Endika/mintza/commit/f17fb7475d6cfb2067003b4f3a7215e7913e764d))
+
 ## [1.19.10](https://github.com/Endika/mintza/compare/v1.19.9...v1.19.10) (2026-08-04)
 
 
