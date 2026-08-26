@@ -9,15 +9,24 @@ const pkg = JSON.parse(
   readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'),
 ) as { version: string };
 
-const injectVersionInServiceWorker = (version: string): Plugin => ({
-  name: 'mintza-sw-version',
-  apply: 'build',
-  closeBundle() {
-    const swPath = resolve('dist/sw.js');
-    const original = readFileSync(swPath, 'utf-8');
-    writeFileSync(swPath, original.replace(/__APP_VERSION__/g, version));
-  },
-});
+const injectVersionInServiceWorker = (version: string): Plugin => {
+  // closeBundle also runs when the build failed, and reading a dist/ that was never
+  // written masked the real error with an ENOENT.
+  let written = false;
+  return {
+    name: 'mintza-sw-version',
+    apply: 'build',
+    writeBundle() {
+      written = true;
+    },
+    closeBundle() {
+      if (!written) return;
+      const swPath = resolve('dist/sw.js');
+      const original = readFileSync(swPath, 'utf-8');
+      writeFileSync(swPath, original.replace(/__APP_VERSION__/g, version));
+    },
+  };
+};
 
 export default defineConfig({
   base: '/mintza/',
