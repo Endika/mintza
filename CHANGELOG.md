@@ -5,6 +5,15 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.12](https://github.com/Endika/mintza/compare/v1.19.11...v1.19.12) (2026-08-26)
+
+
+### Chores
+
+* **deps-dev:** bump the dev-dependencies group with 4 updates ([23b7761](https://github.com/Endika/mintza/commit/23b7761f8801b9db8a57a322315888e48f40a380))
+* **deps-dev:** bump the dev-dependencies group with 7 updates ([d717bdb](https://github.com/Endika/mintza/commit/d717bdb1e5ae03ec6fe7cc54d6741ee69ca288c9))
+* **deps:** migrate to tailwindcss 4 ([74b768e](https://github.com/Endika/mintza/commit/74b768ec459ea6ccd3457677c26de461880aef05))
+
 ## [1.19.11](https://github.com/Endika/mintza/compare/v1.19.10...v1.19.11) (2026-08-12)
 
 
