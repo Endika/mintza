@@ -182,7 +182,7 @@ export class TemplatesPage implements Page {
               <label class="flex items-center gap-3 text-sm">
                 <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
                 <span class="w-32 text-ink-400">${defaultLabelFor(k)}</span>
-                <input name="label_${k}" placeholder="${escapeAttr(defaultLabelFor(k))}" value="${escape(labelValue)}" class="flex-1 rounded border border-ink-100 px-2 py-1.5 text-sm" />
+                <input name="label_${k}" placeholder="${escapeAttr(defaultLabelFor(k))}" value="${escape(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
               </label>`;
             }).join('')}
           </div>
@@ -196,7 +196,7 @@ export class TemplatesPage implements Page {
               <details${promptValue ? ' open' : ''} class="rounded-lg border border-ink-100">
                 <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${defaultLabelFor(k)}</summary>
                 <div class="px-3 pb-3">
-                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeAttr(defaultInstructionFor(k))}" class="block w-full rounded border border-ink-100 px-3 py-2 text-sm font-mono">${escape(promptValue)}</textarea>
+                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeAttr(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-ink-100 px-3 py-2 text-sm font-mono">${escape(promptValue)}</textarea>
                 </div>
               </details>`;
             }).join('')}

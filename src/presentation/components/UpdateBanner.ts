@@ -10,7 +10,7 @@ export class UpdateBanner {
     node.setAttribute('aria-live', 'polite');
     node.className =
       'fixed top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-full ' +
-      'border border-ink-100 bg-white/95 px-4 py-2 shadow-lg text-sm backdrop-blur';
+      'border border-ink-100 bg-white/95 px-4 py-2 shadow-lg text-sm backdrop-blur-sm';
     node.style.setProperty('color', '#1f2937');
     node.innerHTML = `
       <span class="inline-flex items-center gap-2">
