@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -33,7 +34,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
-  plugins: [injectVersionInServiceWorker(pkg.version)],
+  plugins: [tailwindcss(), injectVersionInServiceWorker(pkg.version)],
   resolve: {
     alias: {
       '@domain': r('./src/domain'),

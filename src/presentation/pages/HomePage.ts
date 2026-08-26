@@ -90,7 +90,7 @@ export class HomePage implements Page {
     const templatesResult = await this.deps.listTemplates.execute();
     this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
     root.innerHTML = `
-      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">${t('home.skip')}</a>
+      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded-sm focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">${t('home.skip')}</a>
       <main id="main" class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
           <div>
