@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.16](https://github.com/Endika/mintza/compare/v1.19.15...v1.19.16) (2026-09-05)
+
+
+### Chores
+
+* run the four CI gates in pre-commit ([00dcabe](https://github.com/Endika/mintza/commit/00dcabe2291a2c4b95f95c6e500adf81d84b8a0a))
+
 ## [1.19.15](https://github.com/Endika/mintza/compare/v1.19.14...v1.19.15) (2026-09-05)
 
 
