@@ -59,9 +59,10 @@ src/
 npm install
 npm run dev          # dev server
 npm run build        # production build
+npm run format:check
 npm run lint
-npm run typecheck
+npm run type:check
 npm run test:run     # tests
 ```
 
-CI runs lint, typecheck, tests and the production build on every PR.
+CI runs format:check, lint, type:check, tests and the production build on every PR.
