@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.15](https://github.com/Endika/mintza/compare/v1.19.14...v1.19.15) (2026-09-05)
+
+
+### Chores
+
+* lint the service worker and configs instead of excluding them ([2c3e6a9](https://github.com/Endika/mintza/commit/2c3e6a9c930db8094dba85ca8440fe2e88cb5e6a))
+
 ## [1.19.14](https://github.com/Endika/mintza/compare/v1.19.13...v1.19.14) (2026-09-05)
 
 
