@@ -12,8 +12,8 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "type:check": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --max-warnings 0",
-    "lint:fix": "eslint --fix \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,css}\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,css}\" \"test/**/*.ts\""
   },
