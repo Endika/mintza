@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.13](https://github.com/Endika/mintza/compare/v1.19.12...v1.19.13) (2026-09-05)
+
+
+### Chores
+
+* **deps-dev:** bump the dev-dependencies group with 6 updates ([e804814](https://github.com/Endika/mintza/commit/e804814178d5a5510c528ee0a606fed611699614))
+* order CI gates and rename typecheck to type:check ([95c3f15](https://github.com/Endika/mintza/commit/95c3f15c9817d8b623e7e4eb523f5984467d57b7))
+
 ## [1.19.12](https://github.com/Endika/mintza/compare/v1.19.11...v1.19.12) (2026-08-26)
 
 
