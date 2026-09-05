@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.19.14](https://github.com/Endika/mintza/compare/v1.19.13...v1.19.14) (2026-09-05)
+
+
+### Chores
+
+* fail the lint gate on warnings ([c7b20c0](https://github.com/Endika/mintza/commit/c7b20c06d24ba92df4deff48a642ee4559843ebc))
+
 ## [1.19.13](https://github.com/Endika/mintza/compare/v1.19.12...v1.19.13) (2026-09-05)
 
 
