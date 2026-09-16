@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.20.0](https://github.com/Endika/mintza/compare/v1.19.17...v1.20.0) (2026-09-16)
+
+
+### Features
+
+* **ci:** block PRs that introduce high-severity dependency advisories ([7763ef2](https://github.com/Endika/mintza/commit/7763ef2f93c13d0322ddbf28cd73521563147c49))
+
 ## [1.19.17](https://github.com/Endika/mintza/compare/v1.19.16...v1.19.17) (2026-09-07)
 
 
