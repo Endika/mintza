@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.21.0](https://github.com/Endika/mintza/compare/v1.20.0...v1.21.0) (2026-09-16)
+
+
+### Features
+
+* **ci:** add CodeQL static analysis ([572e06d](https://github.com/Endika/mintza/commit/572e06dddd2f7a1088b22a718d2743bc65d1e64f))
+
 ## [1.20.0](https://github.com/Endika/mintza/compare/v1.19.17...v1.20.0) (2026-09-16)
 
 
