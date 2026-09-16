@@ -34,12 +34,6 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  const isApiCall =
-    url.host.includes('openai.com') ||
-    url.host.includes('googleapis.com') ||
-    url.host.includes('anthropic.com') ||
-    url.host.includes('cognitiveservices.azure.com');
-  if (isApiCall) return;
   if (url.origin !== self.location.origin) return;
 
   const isNavigation = request.mode === 'navigate' || request.destination === 'document';
