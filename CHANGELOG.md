@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.21.1](https://github.com/Endika/mintza/compare/v1.21.0...v1.21.1) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sw:** drop the unreachable API-host check before the origin guard ([9712787](https://github.com/Endika/mintza/commit/97127878582f606b650907fa6f444b3043d38505))
+
 ## [1.21.0](https://github.com/Endika/mintza/compare/v1.20.0...v1.21.0) (2026-09-16)
 
 
