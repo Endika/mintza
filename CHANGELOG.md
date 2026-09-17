@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.21.2](https://github.com/Endika/mintza/compare/v1.21.1...v1.21.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **sw:** reject cross-origin messages before skipWaiting ([6578cca](https://github.com/Endika/mintza/commit/6578cca797048d7185c9e9b9e08c461ad28ba709))
+
 ## [1.21.1](https://github.com/Endika/mintza/compare/v1.21.0...v1.21.1) (2026-09-16)
 
 
