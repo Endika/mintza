@@ -1,4 +1,3 @@
-import type { UpdateConfigUseCase } from '../../application/use-cases/UpdateConfigUseCase';
 import type { ValidateApiKeyUseCase } from '../../application/use-cases/ValidateApiKeyUseCase';
 import type { ApiKeyProviderName } from '../../domain/meeting/ports/ApiKeyValidator';
 import type {
@@ -12,7 +11,6 @@ import type { Page } from '../router/Router';
 
 export interface SettingsPageDeps {
   readonly config: ConfigStore;
-  readonly updateConfig: UpdateConfigUseCase;
   readonly validateApiKey: ValidateApiKeyUseCase;
 }
 
@@ -208,8 +206,11 @@ export class SettingsPage implements Page {
       return;
     }
     const languageChanged = current.language !== next.language;
-    await this.deps.updateConfig.execute({ config: next });
-    await this.deps.config.update(next);
+    const result = await this.deps.config.update(next);
+    if (!result.ok) {
+      this.setStatus(`${tr.t('settings.save_failed')} ${result.error.message}`);
+      return;
+    }
     if (languageChanged && this.root) {
       this.render(this.root);
     } else {
@@ -226,8 +227,11 @@ export class SettingsPage implements Page {
     );
     if (!hasAnyKey) return;
     const cleared: AppConfig = { ...current, apiKeys: {} };
-    await this.deps.updateConfig.execute({ config: cleared });
-    await this.deps.config.update(cleared);
+    const result = await this.deps.config.update(cleared);
+    if (!result.ok) {
+      this.setStatus(`${tr.t('settings.clear_failed')} ${result.error.message}`);
+      return;
+    }
     this.qs<HTMLFormElement>('#settings-form').reset();
     this.refreshButtonStates();
     this.setStatus(tr.t('settings.cleared'));

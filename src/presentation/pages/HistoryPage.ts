@@ -61,6 +61,7 @@ export class HistoryPage implements Page {
             </select>
           </label>
         </div>
+        <p id="history-status" class="mb-4 text-sm text-red-600 hidden" role="status"></p>
         <div id="list" class="space-y-3">
           <em class="text-ink-400">${t.t('history.loading')}</em>
         </div>
@@ -173,6 +174,10 @@ export class HistoryPage implements Page {
       if (result.ok) {
         this.all = this.all.filter((m) => m.id.value !== idValue);
         this.renderList();
+      } else {
+        this.setStatus(
+          `${this.deps.translator.t('history.delete_failed')} ${result.error.message}`,
+        );
       }
     } catch {
       // invalid id; ignore
@@ -185,7 +190,15 @@ export class HistoryPage implements Page {
     if (result.ok) {
       this.all = [];
       this.renderList();
+    } else {
+      this.setStatus(`${this.deps.translator.t('history.clear_failed')} ${result.error.message}`);
     }
+  }
+
+  private setStatus(message: string): void {
+    const el = this.qs<HTMLElement>('#history-status');
+    el.textContent = message;
+    el.classList.remove('hidden');
   }
 
   private qs<T extends HTMLElement>(selector: string): T {
