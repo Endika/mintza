@@ -182,6 +182,9 @@ export class HomePage implements Page {
 
     this.bind();
     this.applyScreenState();
+    if (!templatesResult.ok) {
+      this.showLastError(t('home.templates_failed'));
+    }
   }
 
   dispose(): void {
@@ -511,7 +514,10 @@ export class HomePage implements Page {
   private async generateAndRenderMindMap(): Promise<void> {
     if (!this.meeting) return;
     const result = await this.deps.generateMindMap.execute({ meeting: this.meeting });
-    if (!result.ok) return;
+    if (!result.ok) {
+      this.showLastError(result.error.message, result.error.attempts);
+      return;
+    }
     this.renderMindMap(result.value);
   }
 

@@ -60,6 +60,7 @@ export class MeetingDetailPage implements Page {
           <a href="#/history" class="btn-ghost">${t.t('nav.back')}</a>
           <button id="btn-delete" class="btn-ghost text-red-600 text-sm">Delete</button>
         </header>
+        <p id="delete-status" class="mb-4 text-sm text-red-600 hidden" role="status"></p>
         <div id="detail-body"><em class="text-ink-400">${t.t('history.loading')}</em></div>
       </main>
     `;
@@ -90,7 +91,15 @@ export class MeetingDetailPage implements Page {
   private async handleDelete(id: MeetingId): Promise<void> {
     if (!window.confirm('Delete this meeting? This cannot be undone.')) return;
     const result = await this.deps.deleteMeeting.execute({ id });
-    if (result.ok) Router.navigate('/history');
+    if (result.ok) {
+      Router.navigate('/history');
+      return;
+    }
+    const status = this.root?.querySelector<HTMLElement>('#delete-status');
+    if (status) {
+      status.textContent = `${this.deps.translator.t('meeting.delete_failed')} ${result.error.message}`;
+      status.classList.remove('hidden');
+    }
   }
 
   private renderMeeting(target: HTMLElement, meeting: Meeting): void {

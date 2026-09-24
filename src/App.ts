@@ -50,7 +50,6 @@ export class App {
     const { SettingsPage } = await import('./presentation/pages/SettingsPage');
     return new SettingsPage({
       config: this.deps.configStore,
-      updateConfig: this.deps.updateConfig,
       validateApiKey: this.deps.validateApiKey,
     });
   }

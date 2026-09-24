@@ -48,6 +48,7 @@ export type TranslationKey =
   | 'home.configure_key'
   | 'home.screen_on'
   | 'home.screen_off'
+  | 'home.templates_failed'
   | 'template.work'
   | 'template.interview'
   | 'template.generic'
@@ -80,6 +81,8 @@ export type TranslationKey =
   | 'settings.unsaved'
   | 'settings.interface_language'
   | 'settings.default_template'
+  | 'settings.save_failed'
+  | 'settings.clear_failed'
   | 'history.title'
   | 'history.loading'
   | 'history.empty'
@@ -90,6 +93,8 @@ export type TranslationKey =
   | 'history.sort_longest'
   | 'history.sort_title'
   | 'history.no_results'
+  | 'history.delete_failed'
+  | 'history.clear_failed'
   | 'templates.title'
   | 'templates.manage'
   | 'templates.new'
@@ -110,6 +115,7 @@ export type TranslationKey =
   | 'templates.used_in'
   | 'meeting.regenerate'
   | 'meeting.regenerating'
+  | 'meeting.delete_failed'
   | 'export.label'
   | 'export.markdown'
   | 'export.json'
@@ -168,6 +174,7 @@ const EN: Translations = {
   'home.configure_key': 'Configure your OpenAI key before recording.',
   'home.screen_on': 'Keep screen on',
   'home.screen_off': 'Allow screen off',
+  'home.templates_failed': "Couldn't load your custom templates. Using the built-in ones.",
   'template.work': 'Work',
   'template.interview': 'Interview',
   'template.generic': 'Generic',
@@ -201,6 +208,8 @@ const EN: Translations = {
   'settings.unsaved': 'Unsaved changes',
   'settings.interface_language': 'Interface language',
   'settings.default_template': 'Default template',
+  'settings.save_failed': "Couldn't save your settings.",
+  'settings.clear_failed': "Couldn't clear your keys.",
   'history.title': 'History',
   'history.loading': 'Loading…',
   'history.empty': 'No meetings saved yet.',
@@ -211,6 +220,8 @@ const EN: Translations = {
   'history.sort_longest': 'Longest first',
   'history.sort_title': 'Title (A–Z)',
   'history.no_results': 'No meetings match the search.',
+  'history.delete_failed': "Couldn't delete that meeting.",
+  'history.clear_failed': "Couldn't delete all meetings.",
   'templates.title': 'Templates',
   'templates.manage': 'Manage templates',
   'templates.new': 'New template',
@@ -231,6 +242,7 @@ const EN: Translations = {
   'templates.used_in': 'Used in {count} meeting(s)',
   'meeting.regenerate': 'Regenerate with',
   'meeting.regenerating': 'Regenerating summaries…',
+  'meeting.delete_failed': "Couldn't delete this meeting.",
   'export.label': 'Export:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -287,6 +299,8 @@ const ES: Translations = {
   'home.configure_key': 'Configura tu clave de OpenAI antes de grabar.',
   'home.screen_on': 'Mantener pantalla encendida',
   'home.screen_off': 'Permitir apagar pantalla',
+  'home.templates_failed':
+    'No se pudieron cargar tus plantillas personalizadas. Se usan las integradas.',
   'template.work': 'Trabajo',
   'template.interview': 'Entrevista',
   'template.generic': 'Genérica',
@@ -320,6 +334,8 @@ const ES: Translations = {
   'settings.unsaved': 'Cambios sin guardar',
   'settings.interface_language': 'Idioma de la interfaz',
   'settings.default_template': 'Plantilla por defecto',
+  'settings.save_failed': 'No se pudieron guardar los ajustes.',
+  'settings.clear_failed': 'No se pudieron borrar las claves.',
   'history.title': 'Historial',
   'history.loading': 'Cargando…',
   'history.empty': 'Aún no hay reuniones guardadas.',
@@ -330,6 +346,8 @@ const ES: Translations = {
   'history.sort_longest': 'Más largas primero',
   'history.sort_title': 'Título (A–Z)',
   'history.no_results': 'Ninguna reunión coincide con la búsqueda.',
+  'history.delete_failed': 'No se pudo borrar esa reunión.',
+  'history.clear_failed': 'No se pudieron borrar todas las reuniones.',
   'templates.title': 'Plantillas',
   'templates.manage': 'Gestionar plantillas',
   'templates.new': 'Nueva plantilla',
@@ -350,6 +368,7 @@ const ES: Translations = {
   'templates.used_in': 'Usada en {count} reunión(es)',
   'meeting.regenerate': 'Regenerar con',
   'meeting.regenerating': 'Regenerando resúmenes…',
+  'meeting.delete_failed': 'No se pudo borrar esta reunión.',
   'export.label': 'Exportar:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
@@ -407,6 +426,8 @@ const EU: Translations = {
   'home.configure_key': 'Konfiguratu zure OpenAI gakoa grabatu aurretik.',
   'home.screen_on': 'Mantendu pantaila piztuta',
   'home.screen_off': 'Utzi pantaila itzaltzen',
+  'home.templates_failed':
+    'Ezin izan dira zure txantiloi pertsonalizatuak kargatu. Integratuak erabiliko dira.',
   'template.work': 'Lana',
   'template.interview': 'Elkarrizketa',
   'template.generic': 'Orokorra',
@@ -440,6 +461,8 @@ const EU: Translations = {
   'settings.unsaved': 'Gorde gabeko aldaketak',
   'settings.interface_language': 'Interfazearen hizkuntza',
   'settings.default_template': 'Txantiloi lehenetsia',
+  'settings.save_failed': 'Ezin izan dira ezarpenak gorde.',
+  'settings.clear_failed': 'Ezin izan dira gakoak garbitu.',
   'history.title': 'Historia',
   'history.loading': 'Kargatzen…',
   'history.empty': 'Oraindik ez dago gordetako bilerarik.',
@@ -450,6 +473,8 @@ const EU: Translations = {
   'history.sort_longest': 'Luzeenak lehenengo',
   'history.sort_title': 'Izenburua (A–Z)',
   'history.no_results': 'Ez dago bat datorren bilerarik.',
+  'history.delete_failed': 'Ezin izan da bilera hori ezabatu.',
+  'history.clear_failed': 'Ezin izan dira bilera guztiak ezabatu.',
   'templates.title': 'Txantiloiak',
   'templates.manage': 'Kudeatu txantiloiak',
   'templates.new': 'Txantiloi berria',
@@ -470,6 +495,7 @@ const EU: Translations = {
   'templates.used_in': '{count} bileratan erabilia',
   'meeting.regenerate': 'Birsortu honekin',
   'meeting.regenerating': 'Laburpenak birsortzen…',
+  'meeting.delete_failed': 'Ezin izan da bilera hau ezabatu.',
   'export.label': 'Esportatu:',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
