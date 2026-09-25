@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.21.3](https://github.com/Endika/mintza/compare/v1.21.2...v1.21.3) (2026-09-25)
+
+
+### Bug Fixes
+
+* report failed saves and never overwrite stored keys with defaults ([a075af2](https://github.com/Endika/mintza/commit/a075af2b08950fce55885bd5d909444eecf30f5f))
+
 ## [1.21.2](https://github.com/Endika/mintza/compare/v1.21.1...v1.21.2) (2026-09-17)
 
 
