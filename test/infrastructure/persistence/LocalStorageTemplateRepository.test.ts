@@ -26,7 +26,6 @@ class FakeStorage implements Storage {
   }
 }
 
-/** setItem must never be called while just reading; this fails the test if it is. */
 class NoWriteStorage extends FakeStorage {
   seed(key: string, value: string): void {
     super.setItem(key, value);
@@ -120,8 +119,6 @@ describe('LocalStorageTemplateRepository', () => {
   });
 
   it('loads a literal snapshot of the current on-disk format back complete (format guard)', async () => {
-    // Pinned to today's on-disk shape: renaming a field in both save and load without a
-    // migration must break this test, not just round-trip clean.
     const storage = new FakeStorage();
     const snapshotJson =
       '[{"id":"standup","name":"Daily standup","systemRole":"a daily standup",' +
