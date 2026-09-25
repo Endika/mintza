@@ -118,4 +118,23 @@ describe('LocalStorageTemplateRepository', () => {
     if (!loaded.ok) return;
     expect(loaded.value).toEqual([customTemplate]);
   });
+
+  it('loads a literal snapshot of the current on-disk format back complete (format guard)', async () => {
+    // Pinned to today's on-disk shape: renaming a field in both save and load without a
+    // migration must break this test, not just round-trip clean.
+    const storage = new FakeStorage();
+    const snapshotJson =
+      '[{"id":"standup","name":"Daily standup","systemRole":"a daily standup",' +
+      '"mindMapStructure":"Yesterday \\u2192 Today \\u2192 Blockers",' +
+      '"summaryKinds":["bullet_points","action_items"],' +
+      '"featuredOrder":["action_items","bullet_points"],' +
+      '"kindLabels":{"bullet_points":"Highlights"},' +
+      '"promptOverrides":{"action_items":"List concrete action items."}}]';
+    storage.setItem(STORAGE_KEY, snapshotJson);
+
+    const loaded = await new LocalStorageTemplateRepository(storage).load();
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    expect(loaded.value).toEqual([customTemplate]);
+  });
 });
