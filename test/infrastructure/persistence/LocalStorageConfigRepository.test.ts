@@ -118,6 +118,22 @@ describe('LocalStorageConfigRepository', () => {
     expect(loaded.value).toEqual(config);
   });
 
+  it('loads a literal snapshot of the current on-disk format back complete (format guard)', async () => {
+    // Pinned to today's on-disk shape: renaming a field in both save and load without a
+    // migration must break this test, not just round-trip clean.
+    const storage = new FakeStorage();
+    const snapshotJson =
+      '{"language":"es","defaultTemplate":"interview","transcriptionQuality":"premium",' +
+      '"summaryQuality":"cheap","apiKeys":{"openai":"sk-openai","anthropic":"sk-anthropic",' +
+      '"google":"sk-google","azure":"sk-azure"},"azureRegion":"francecentral","keepScreenAwake":false}';
+    storage.setItem('mintza:config:v1', snapshotJson);
+
+    const loaded = await new LocalStorageConfigRepository(storage).load();
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    expect(loaded.value).toEqual(JSON.parse(snapshotJson) as AppConfig);
+  });
+
   it('reports a failed save instead of throwing or claiming success', async () => {
     const repo = new LocalStorageConfigRepository(new ThrowingSetStorage());
     const result = await repo.save(DEFAULT_CONFIG);
