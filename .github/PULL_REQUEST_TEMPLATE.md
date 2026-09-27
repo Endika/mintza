@@ -15,4 +15,4 @@
 
 ## Conventional Commits
 
-This PR uses Conventional Commits (`feat:`, `fix:`, `chore:`, ...). The merged commit triggers semantic-release on `main`.
+This PR uses Conventional Commits (`feat:`, `fix:`, `chore:`, ...). Once merged, release-please on `main` reads them to cut the next release.
