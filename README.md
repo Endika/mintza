@@ -16,7 +16,7 @@ Mintza is a client-only PWA that records meetings from your microphone, transcri
 
 - **Record and transcribe.** Hit the mic, talk, stop. Mintza streams the audio to your transcription provider of choice and stitches the result.
 - **Eight summary flavors.** Pick the one that fits the meeting and Mintza generates it from the transcript.
-- **Sentiment and mind map.** A temperature score for the conversation and an auto-generated mind map you can export.
+- **Sentiment and mind map.** A temperature score for the conversation and an auto-generated mind map.
 - **Local history.** Every meeting stays searchable in IndexedDB. The audio itself is never persisted — only the transcript and its derivatives.
 - **Bring your own keys.** OpenAI is required; Google, Azure and Anthropic work as optional fallbacks.
 - **Take it offline.** Installable PWA. Pin it to your phone or desktop and revisit your meetings without signal.
@@ -41,7 +41,7 @@ There is no Mintza server. Your API keys, transcripts and summaries live in your
 
 Open-source, MIT licensed. PRs welcome.
 
-**Stack** — TypeScript 5 (strict), vanilla DOM with no framework runtime, Vite, Tailwind CSS v3, Vitest, ESLint + Prettier, release-please for automatic versioning from Conventional Commits.
+**Stack** — TypeScript 5 (strict), vanilla DOM with no framework runtime, Vite, Tailwind CSS v4, Vitest, ESLint + Prettier, release-please for automatic versioning from Conventional Commits.
 
 **Architecture** — Domain-Driven Design across four layers:
 
