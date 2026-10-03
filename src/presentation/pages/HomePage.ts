@@ -152,7 +152,7 @@ export class HomePage implements Page {
     const hasKey = Boolean(this.deps.config.openAIKey());
 
     root.innerHTML = `
-      <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
+      <div id="home-wrap" class="home-wrap mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <header id="home-header" class="mb-5 sm:mb-6">
           <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">${t('home.new_meeting')}</h1>
         </header>
@@ -328,11 +328,12 @@ export class HomePage implements Page {
           <span class="text-sm font-medium text-fg-muted">${t('home.field_language')}</span>
           ${languageSelect(this.deps.config.spokenLanguage())}
         </label>
-        <div class="flex flex-col gap-3" data-slot="idle">
+        <div id="record-dock" class="record-dock">
           <button id="btn-record" type="button" class="btn-action btn-lg w-full">
             ${ICON_RECORD}<span>${t('home.btn_record')}</span>
           </button>
         </div>
+        <div class="idle-notes flex flex-col gap-3" data-slot="idle"></div>
       </div>
 
       <div id="panel-live" class="flex flex-1 flex-col" hidden>
@@ -797,6 +798,10 @@ export class HomePage implements Page {
     }
 
     const card = this.qsOptional('#rec-card');
+    this.qsOptional('#home-wrap')?.toggleAttribute(
+      'data-docked',
+      state === 'idle' && !!card?.querySelector('#record-dock'),
+    );
     if (!card?.querySelector('#panel-idle')) return;
     card.classList.toggle('rec-card-live', live);
 
