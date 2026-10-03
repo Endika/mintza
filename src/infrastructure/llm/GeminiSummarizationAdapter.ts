@@ -41,6 +41,7 @@ export class GeminiSummarizationAdapter implements SummarizationPort {
       tokensIn: TokenCount.of(response.value.promptTokens),
       tokensOut: TokenCount.of(response.value.completionTokens),
       provider: 'gemini',
+      model: this.model,
       generatedAt: new Date(),
     });
     return ok(summary);

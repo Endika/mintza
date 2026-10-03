@@ -41,6 +41,7 @@ export class OpenAISummarizationAdapter implements SummarizationPort {
       tokensIn: TokenCount.of(response.value.promptTokens),
       tokensOut: TokenCount.of(response.value.completionTokens),
       provider: 'openai',
+      model: this.model,
       generatedAt: new Date(),
     });
     return ok(summary);

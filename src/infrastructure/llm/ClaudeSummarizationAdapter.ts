@@ -41,6 +41,7 @@ export class ClaudeSummarizationAdapter implements SummarizationPort {
       tokensIn: TokenCount.of(response.value.promptTokens),
       tokensOut: TokenCount.of(response.value.completionTokens),
       provider: 'anthropic',
+      model: this.model,
       generatedAt: new Date(),
     });
     return ok(summary);
