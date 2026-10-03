@@ -116,8 +116,7 @@ export class HomePage implements Page {
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
-  /** Task 12 swaps this for the chosen template's kinds; every list below derives from it. */
-  private readonly kinds: readonly SummaryKind[] = SUMMARY_KINDS;
+  private kinds: readonly SummaryKind[] = SUMMARY_KINDS;
   private progress: ChunkProgress = {
     received: 0,
     transcribed: 0,
@@ -478,6 +477,7 @@ export class HomePage implements Page {
     }
     const meeting = result.value.meeting;
     this.meeting = meeting;
+    this.kinds = template.summaryKinds;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
@@ -613,6 +613,7 @@ export class HomePage implements Page {
     this.meeting = null;
     this.transcriptSaved = null;
     this.persisted = false;
+    this.kinds = SUMMARY_KINDS;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
     void this.render(this.root);

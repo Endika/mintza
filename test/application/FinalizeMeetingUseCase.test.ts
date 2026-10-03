@@ -57,6 +57,27 @@ describe('FinalizeMeetingUseCase', () => {
     expect(stored.ok && stored.value?.mindMap?.root.label).toBe('topic');
   });
 
+  it('asks the summarizer only for the kinds it was given', async () => {
+    const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
+    const useCase = new FinalizeMeetingUseCase(
+      summarization,
+      new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' }),
+      new InMemoryMeetingRepository(),
+      new SentimentScoreParser(),
+    );
+
+    await useCase.execute({
+      meeting: meetingWith('hello team'),
+      kinds: ['decisions', 'action_items', 'next_steps'],
+    });
+
+    expect(summarization.requestedKinds().sort()).toEqual([
+      'action_items',
+      'decisions',
+      'next_steps',
+    ]);
+  });
+
   it('reports each summary as it settles', async () => {
     const useCase = new FinalizeMeetingUseCase(
       new FakeSummarizationPort({
