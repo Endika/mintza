@@ -193,6 +193,41 @@ describe('HomePage states', () => {
     );
   });
 
+  it('docks Record above the tab bar only while idle with a key', async () => {
+    const { root, audio } = await mount('sk-test');
+    const docked = (): boolean => root.querySelector('#home-wrap')!.hasAttribute('data-docked');
+
+    const dock = root.querySelector<HTMLElement>('#record-dock')!;
+    expect(dock.classList.contains('record-dock')).toBe(true);
+    expect(dock.contains(root.querySelector('#btn-record'))).toBe(true);
+    expect(visible(root, '#record-dock')).toBe(true);
+    expect(docked()).toBe(true);
+    const language = root.querySelector('#panel-idle select')!;
+    expect(language.compareDocumentPosition(dock)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(root.querySelector('#rec-card')!.contains(dock)).toBe(true);
+
+    root.querySelector<HTMLButtonElement>('#btn-record')!.click();
+    await settle();
+    expect(visible(root, '#record-dock')).toBe(false);
+    expect(docked()).toBe(false);
+
+    audio.emit(
+      new AudioChunk({ blob: new Blob(['a']), startMs: 0, endMs: 1000, mimeType: 'audio/webm' }),
+    );
+    await settle();
+    root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
+    await settle();
+    expect(visible(root, '#record-dock')).toBe(false);
+    expect(docked()).toBe(false);
+  });
+
+  it('docks nothing while OpenAI is not connected', async () => {
+    const { root } = await mount(undefined);
+
+    expect(root.querySelector('#record-dock')).toBeNull();
+    expect(root.querySelector('#home-wrap')!.hasAttribute('data-docked')).toBe(false);
+  });
+
   it('leads with the chosen template’s main result and folds the rest away', async () => {
     const { root, audio } = await mount('sk-test');
     root.querySelector<HTMLButtonElement>('[data-template="work"]')!.click();

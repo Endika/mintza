@@ -204,6 +204,17 @@
   .tab[aria-current='page'] .tab-icon {
     @apply bg-raised md:bg-transparent;
   }
+  /* On phones Record sits in the thumb zone, right on the tab bar's top edge. */
+  .record-dock {
+    @apply max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))] max-md:z-30 max-md:border-t max-md:border-line max-md:bg-ground max-md:px-4 max-md:py-3;
+  }
+  /* Without a visible note the slot would still add a flex gap under the language field. */
+  .idle-notes:not(:has(#card-notes > :not(:empty, .hidden, [hidden]))) {
+    display: none;
+  }
+  .home-wrap[data-docked] {
+    @apply max-md:pb-28;
+  }
   .shell-main {
     @apply block pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0;
   }
