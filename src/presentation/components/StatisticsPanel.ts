@@ -16,15 +16,15 @@ export class StatisticsPanel {
         ${stat(translator.t('stats.providers'), stats.providersUsed.join(', ') || '—')}
       </dl>
       <div class="mt-4">
-        <h4 class="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${translator.t('stats.top_keywords')}</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('stats.top_keywords')}</h4>
         <div class="flex flex-wrap gap-2">
           ${
             stats.topKeywords.length === 0
-              ? `<em class="text-sm text-ink-400">${translator.t('stats.no_keywords')}</em>`
+              ? `<em class="text-sm text-fg-muted">${translator.t('stats.no_keywords')}</em>`
               : stats.topKeywords
                   .map(
                     (k) =>
-                      `<span class="rounded-full bg-ink-50 px-3 py-0.5 text-xs">${escapeHtml(k.term)} · ${k.count}</span>`,
+                      `<span class="rounded-full bg-raised px-3 py-0.5 text-xs">${escapeHtml(k.term)} · ${k.count}</span>`,
                   )
                   .join('')
           }
@@ -36,7 +36,7 @@ export class StatisticsPanel {
 
 const stat = (label: string, value: string): string => `
   <div>
-    <dt class="text-xs font-semibold uppercase tracking-wide text-ink-400">${label}</dt>
+    <dt class="text-xs font-semibold uppercase tracking-wide text-fg-muted">${label}</dt>
     <dd class="mt-1 text-lg font-medium">${value}</dd>
   </div>
 `;

@@ -46,12 +46,12 @@ export class MindMapView {
 
   private renderLeaf(node: MindMapNode): string {
     if (node.isLeaf()) {
-      return `<li class="text-sm text-ink-600">${escapeHtml(node.label)}</li>`;
+      return `<li class="text-sm text-fg">${escapeHtml(node.label)}</li>`;
     }
     return `
       <li>
         <div class="text-sm font-medium">${escapeHtml(node.label)}</div>
-        <ul class="ml-4 list-disc space-y-0.5 text-sm text-ink-600">
+        <ul class="ml-4 list-disc space-y-0.5 text-sm text-fg">
           ${node.children.map((c) => `<li>${escapeHtml(c.label)}</li>`).join('')}
         </ul>
       </li>

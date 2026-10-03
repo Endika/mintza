@@ -42,7 +42,7 @@ export class HistoryPage implements Page {
         <header class="mb-6 flex items-center justify-between gap-4">
           <h1 class="text-3xl font-bold tracking-tight">${t.t('history.title')}</h1>
           <div class="flex gap-2">
-            <button id="btn-clear" class="btn-ghost text-red-600 text-sm hidden">${t.t('history.clear_all')}</button>
+            <button id="btn-clear" class="btn-ghost text-danger text-sm hidden">${t.t('history.clear_all')}</button>
             <a href="#/" class="btn-ghost">${t.t('nav.back')}</a>
           </div>
         </header>
@@ -51,12 +51,12 @@ export class HistoryPage implements Page {
             type="search"
             id="search"
             placeholder="${t.t('history.search_placeholder')}"
-            class="rounded-lg border border-ink-100 px-3 py-2 text-sm"
+            class="rounded-lg border border-line px-3 py-2 text-sm"
             autocomplete="off"
           />
           <label class="flex items-center gap-2 text-sm">
-            <span class="text-ink-400">${t.t('history.sort_label')}</span>
-            <select id="sort" class="rounded-lg border border-ink-100 px-2 py-2 text-sm">
+            <span class="text-fg-muted">${t.t('history.sort_label')}</span>
+            <select id="sort" class="rounded-lg border border-line px-2 py-2 text-sm">
               ${SORT_OPTIONS.map(
                 (o) =>
                   `<option value="${o.value}" ${o.value === this.sort ? 'selected' : ''}>${t.t(o.labelKey)}</option>`,
@@ -64,9 +64,9 @@ export class HistoryPage implements Page {
             </select>
           </label>
         </div>
-        <p id="history-status" class="mb-4 text-sm text-red-600 hidden" role="status"></p>
+        <p id="history-status" class="mb-4 text-sm text-danger hidden" role="status"></p>
         <div id="list" class="space-y-3">
-          <em class="text-ink-400">${t.t('history.loading')}</em>
+          <em class="text-fg-muted">${t.t('history.loading')}</em>
         </div>
       </main>
     `;
@@ -88,7 +88,7 @@ export class HistoryPage implements Page {
     const result = await this.deps.listMeetings.execute();
     if (!result.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">${this.deps.translator.t('history.load_failed')} ${escapeHtml(result.error.message)}</p>`;
+        `<p class="text-danger">${this.deps.translator.t('history.load_failed')} ${escapeHtml(result.error.message)}</p>`;
       this.qs<HTMLButtonElement>('#btn-clear').classList.add('hidden');
       this.qs<HTMLElement>('#filters').classList.add('hidden');
       return;
@@ -104,7 +104,7 @@ export class HistoryPage implements Page {
     const t = this.deps.translator;
 
     if (this.all.length === 0) {
-      list.innerHTML = `<em class="text-ink-400">${t.t('history.empty')}</em>`;
+      list.innerHTML = `<em class="text-fg-muted">${t.t('history.empty')}</em>`;
       clearBtn.classList.add('hidden');
       filters.classList.add('hidden');
       return;
@@ -116,7 +116,7 @@ export class HistoryPage implements Page {
     const sorted = this.applySort(filtered);
 
     if (sorted.length === 0) {
-      list.innerHTML = `<em class="text-ink-400">${t.t('history.no_results')}</em>`;
+      list.innerHTML = `<em class="text-fg-muted">${t.t('history.no_results')}</em>`;
       return;
     }
 
@@ -124,15 +124,15 @@ export class HistoryPage implements Page {
       .map(
         (m) => `
         <article class="card flex items-center justify-between gap-3">
-          <a href="#/meeting?id=${escapeHtml(m.id.value)}" class="flex-1 -m-2 p-2 rounded-md hover:bg-ink-50 transition-colors">
+          <a href="#/meeting?id=${escapeHtml(m.id.value)}" class="flex-1 -m-2 p-2 rounded-md hover:bg-raised transition-colors">
             <h3 class="font-semibold">${escapeHtml(m.title)}</h3>
-            <p class="text-sm text-ink-400">
+            <p class="text-sm text-fg-muted">
               ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${escapeHtml(this.templateLabel(m.templateKind))}
             </p>
           </a>
           <div class="flex items-center gap-2 shrink-0">
             ${m.starred ? `<span title="${t.t('history.starred')}">★</span>` : ''}
-            <button type="button" data-delete="${escapeHtml(m.id.value)}" class="btn-ghost text-red-600 text-xs" aria-label="${escapeHtml(t.t('history.delete_named', { title: m.title }))}">✕</button>
+            <button type="button" data-delete="${escapeHtml(m.id.value)}" class="btn-ghost text-danger text-xs" aria-label="${escapeHtml(t.t('history.delete_named', { title: m.title }))}">✕</button>
           </div>
         </article>`,
       )

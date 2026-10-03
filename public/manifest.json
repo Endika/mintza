@@ -5,8 +5,8 @@
   "start_url": "/mintza/",
   "scope": "/mintza/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#00B380",
+  "background_color": "#fbf6f0",
+  "theme_color": "#fbf6f0",
   "lang": "en",
   "orientation": "portrait",
   "icons": [

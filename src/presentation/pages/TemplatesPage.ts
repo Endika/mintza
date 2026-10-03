@@ -39,7 +39,7 @@ export class TemplatesPage implements Page {
         <header class="mb-6 flex items-center justify-between gap-4">
           <h1 class="text-3xl font-bold tracking-tight">${t.t('templates.title')}</h1>
           <div class="flex gap-2">
-            <button id="btn-new" class="btn-primary text-sm">${t.t('templates.new')}</button>
+            <button id="btn-new" class="btn-action text-sm">${t.t('templates.new')}</button>
             <a href="#/settings" class="btn-ghost">${t.t('nav.back')}</a>
           </div>
         </header>
@@ -58,7 +58,7 @@ export class TemplatesPage implements Page {
     ]);
     if (!templatesResult.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">${this.deps.translator.t('templates.load_failed')} ${escapeHtml(templatesResult.error.message)}</p>`;
+        `<p class="text-danger">${this.deps.translator.t('templates.load_failed')} ${escapeHtml(templatesResult.error.message)}</p>`;
       return;
     }
     this.templates = templatesResult.value;
@@ -79,7 +79,7 @@ export class TemplatesPage implements Page {
         const usage = this.usageById.get(tpl.id) ?? 0;
         const usageLine =
           usage > 0
-            ? `<p class="text-xs text-ink-400 mt-0.5">${t.t('templates.used_in', { count: usage })}</p>`
+            ? `<p class="text-xs text-fg-muted mt-0.5">${t.t('templates.used_in', { count: usage })}</p>`
             : '';
         const deleteDisabled = usage > 0;
         const deleteTitle = deleteDisabled ? t.t('templates.in_use_block', { count: usage }) : '';
@@ -88,10 +88,10 @@ export class TemplatesPage implements Page {
             <div>
               <h3 class="font-semibold">${escapeHtml(templateDisplayName(tpl, t))}${
                 tpl.builtIn
-                  ? ` <span class="ml-2 text-xs uppercase tracking-wide text-ink-400">${t.t('templates.builtin')}</span>`
+                  ? ` <span class="ml-2 text-xs uppercase tracking-wide text-fg-muted">${t.t('templates.builtin')}</span>`
                   : ''
               }</h3>
-              <p class="text-sm text-ink-400">${escapeHtml(tpl.systemRole)} · ${t.t('templates.section_count', { count: tpl.summaryKinds.length })}</p>
+              <p class="text-sm text-fg-muted">${escapeHtml(tpl.systemRole)} · ${t.t('templates.section_count', { count: tpl.summaryKinds.length })}</p>
               ${usageLine}
             </div>
             <div class="flex gap-2 shrink-0 text-sm">
@@ -100,7 +100,7 @@ export class TemplatesPage implements Page {
                 tpl.builtIn
                   ? ''
                   : `<button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-ghost">${t.t('templates.edit')}</button>
-                     <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-red-600" ${deleteDisabled ? 'disabled' : ''} title="${escapeHtml(deleteTitle)}">${t.t('templates.delete')}</button>`
+                     <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-danger" ${deleteDisabled ? 'disabled' : ''} title="${escapeHtml(deleteTitle)}">${t.t('templates.delete')}</button>`
               }
             </div>
           </article>`;
@@ -159,16 +159,16 @@ export class TemplatesPage implements Page {
       <form id="tpl-form" class="card space-y-5">
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_name')}</span>
-          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
+          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base" />
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_meeting_type')}</span>
-          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
-          <span class="mt-1 block text-xs text-ink-400">${t.t('templates.field_meeting_type_hint')}</span>
+          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base" />
+          <span class="mt-1 block text-xs text-fg-muted">${t.t('templates.field_meeting_type_hint')}</span>
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
-          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
+          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
         </label>
         <fieldset>
           <legend class="text-sm font-medium mb-2">${t.t('templates.field_kinds')}</legend>
@@ -180,8 +180,8 @@ export class TemplatesPage implements Page {
               return `
               <label class="flex items-center gap-3 text-sm">
                 <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
-                <span class="w-32 text-ink-400">${defaultLabel}</span>
-                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
+                <span class="w-32 text-fg-muted">${defaultLabel}</span>
+                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-line px-2 py-1.5 text-sm" />
               </label>`;
             }).join('')}
           </div>
@@ -192,10 +192,10 @@ export class TemplatesPage implements Page {
             ${SUMMARY_KINDS.map((k) => {
               const promptValue = def.promptOverrides[k] ?? (isNew ? '' : defaultInstructionFor(k));
               return `
-              <details${promptValue ? ' open' : ''} class="rounded-lg border border-ink-100">
-                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${t.t(SUMMARY_LABEL_KEYS[k])}</summary>
+              <details${promptValue ? ' open' : ''} class="rounded-lg border border-line">
+                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-fg">${t.t(SUMMARY_LABEL_KEYS[k])}</summary>
                 <div class="px-3 pb-3">
-                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-ink-100 px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
+                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-line px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
                 </div>
               </details>`;
             }).join('')}
@@ -203,9 +203,9 @@ export class TemplatesPage implements Page {
         </fieldset>
         <div class="flex justify-end gap-2">
           <button type="button" id="btn-cancel" class="btn-ghost">${t.t('templates.cancel')}</button>
-          <button type="submit" class="btn-primary">${t.t('templates.save')}</button>
+          <button type="submit" class="btn-action">${t.t('templates.save')}</button>
         </div>
-        <p id="form-error" class="text-sm text-red-600 hidden"></p>
+        <p id="form-error" class="text-sm text-danger hidden"></p>
       </form>
     `;
     this.qs<HTMLFormElement>('#tpl-form').addEventListener('submit', (e) => {

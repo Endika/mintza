@@ -5,6 +5,7 @@ const PRECACHE = [
   '/mintza/index.html',
   '/mintza/manifest.json',
   '/mintza/favicon.svg',
+  '/mintza/fonts/Figtree-Variable.woff2',
 ];
 
 self.addEventListener('install', (event) => {

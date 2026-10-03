@@ -103,7 +103,7 @@ export class HomePage implements Page {
         <header class="mb-8 flex items-center justify-between">
           <div>
             <h1 class="text-4xl font-bold tracking-tight">MINTZA</h1>
-            <p class="mt-1 text-sm text-ink-400">${t('app.tagline')}</p>
+            <p class="mt-1 text-sm text-fg-muted">${t('app.tagline')}</p>
           </div>
           <nav class="flex gap-2 text-sm">
             <a href="#/history" class="btn-ghost">${t('nav.history')}</a>
@@ -124,7 +124,7 @@ export class HomePage implements Page {
               </span>
             </div>
             <div id="rec-controls" class="flex flex-wrap items-center gap-2">
-              <button id="btn-record" class="btn-primary" aria-label="${t('home.btn_record')}" title="${t('home.btn_record')}">
+              <button id="btn-record" class="btn-action" aria-label="${t('home.btn_record')}" title="${t('home.btn_record')}">
                 ${ICON_RECORD}
                 <span>${t('home.btn_record')}</span>
               </button>
@@ -145,40 +145,40 @@ export class HomePage implements Page {
                 <span>${t('home.btn_new')}</span>
               </button>
             </div>
-            <p id="status" role="status" aria-live="polite" class="text-sm text-ink-400">${t('home.ready')}</p>
+            <p id="status" role="status" aria-live="polite" class="text-sm text-fg-muted">${t('home.ready')}</p>
             <div id="meter" class="hidden"></div>
-            <div id="progress" class="text-xs text-ink-400 hidden"></div>
-            <div id="last-error" class="text-xs text-red-600 hidden"></div>
-            <div id="counter" aria-live="polite" class="text-sm text-ink-400"></div>
+            <div id="progress" class="text-xs text-fg-muted hidden"></div>
+            <div id="last-error" class="text-xs text-danger hidden"></div>
+            <div id="counter" aria-live="polite" class="text-sm text-fg-muted"></div>
           </div>
         </section>
 
         <section id="temperature-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t('home.sentiment')}</h3>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.sentiment')}</h3>
           <div id="temperature"></div>
         </section>
 
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t('home.transcript')}</h3>
-          <div id="transcription" class="min-h-[120px] whitespace-pre-wrap text-ink-600">
-            <em class="text-ink-400">${t('home.transcript_placeholder')}</em>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.transcript')}</h3>
+          <div id="transcription" class="min-h-[120px] whitespace-pre-wrap text-fg">
+            <em class="text-fg-muted">${t('home.transcript_placeholder')}</em>
           </div>
         </section>
 
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t('home.summary')}</h3>
-          <div id="summaries" class="text-ink-600">
-            <em class="text-ink-400">${t('home.summary_placeholder')}</em>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.summary')}</h3>
+          <div id="summaries" class="text-fg">
+            <em class="text-fg-muted">${t('home.summary_placeholder')}</em>
           </div>
         </section>
 
         <section id="mindmap-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t('home.mind_map')}</h3>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.mind_map')}</h3>
           <div id="mindmap"></div>
         </section>
 
         <section id="stats-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t('home.statistics')}</h3>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.statistics')}</h3>
           <div id="stats-body"></div>
         </section>
 
@@ -357,7 +357,7 @@ export class HomePage implements Page {
     else this.showSaveError(transcriptSaved.error.message);
 
     const pendingSummaries = this.qsOptional('#summaries');
-    if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-ink-400">…</em>';
+    if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-fg-muted">…</em>';
 
     const result = await this.deps.finalizeMeeting.execute({ meeting, kinds: SUMMARY_KINDS });
     if (!result.saveError) this.persisted = true;
@@ -385,7 +385,7 @@ export class HomePage implements Page {
     const status = this.qsOptional('#status');
     if (!status) return;
     status.textContent = `${this.t.t('home.save_failed')} ${message}`;
-    status.classList.add('text-rose-500');
+    status.classList.add('text-danger');
   }
 
   private handleNewMeeting(): void {
@@ -660,7 +660,7 @@ export class HomePage implements Page {
     if (!this.meeting) return;
     const summaries = this.meeting.summaries;
     if (summaries.size === 0) {
-      target.innerHTML = `<em class="text-ink-400">${this.t.t('home.summary_placeholder')}</em>`;
+      target.innerHTML = `<em class="text-fg-muted">${this.t.t('home.summary_placeholder')}</em>`;
       return;
     }
     const order = this.meeting.template.featuredSummaryOrder();
@@ -669,7 +669,7 @@ export class HomePage implements Page {
         const summary = summaries.get(kind);
         if (!summary) return '';
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h4>
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h4>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
@@ -741,8 +741,8 @@ const templateSelect = (
   const effective = hasCurrent ? currentId : 'generic';
   return `
   <label class="block">
-    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${translator.t('home.field_template')}</span>
-    <select id="template-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
+    <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('home.field_template')}</span>
+    <select id="template-select" class="rounded-lg border border-line px-2 py-1 text-sm">
       ${templates
         .map(
           (tpl) =>
@@ -756,8 +756,8 @@ const templateSelect = (
 
 const languageSelect = (current: LanguageCode, t: (key: TranslationKey) => string): string => `
   <label class="block">
-    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${t('home.field_language')}</span>
-    <select id="lang-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
+    <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${t('home.field_language')}</span>
+    <select id="lang-select" class="rounded-lg border border-line px-2 py-1 text-sm">
       <option value="en" ${current === 'en' ? 'selected' : ''}>English</option>
       <option value="es" ${current === 'es' ? 'selected' : ''}>Español</option>
       <option value="eu" ${current === 'eu' ? 'selected' : ''}>Euskara</option>

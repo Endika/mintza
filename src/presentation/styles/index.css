@@ -1,38 +1,81 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Figtree';
+  src: url('/mintza/fonts/Figtree-Variable.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --color-primary: #00b380;
-  --color-primary-50: #e6f8f2;
-  --color-primary-100: #ccf0e5;
-  --color-primary-500: #00b380;
-  --color-primary-600: #009a6e;
-  --color-primary-700: #00805b;
+  --color-ground: #fbf6f0;
+  --color-surface: #ffffff;
+  --color-raised: #f4ece3;
+  --color-line: #ebe1d6;
+  --color-edge: #8a7f74;
+  --color-fg: #221f1c;
+  --color-fg-muted: #655d55;
+  --color-action: #0b6b4f;
+  --color-action-hover: #08573f;
+  --color-on-action: #ffffff;
+  --color-live: #c4271d;
+  --color-on-live: #ffffff;
+  --color-danger: #b42318;
+  --color-warning: #8a5300;
+  --color-success: #1d7348;
+  --color-focus: #0b6b4f;
 
-  --color-secondary: #6366f1;
-  --color-secondary-50: #eef0ff;
-  --color-secondary-500: #6366f1;
-  --color-secondary-600: #4f52e0;
-
-  --color-ink: #000000;
-  --color-ink-50: #f5f5f5;
-  --color-ink-100: #e5e5e5;
-  --color-ink-400: #737373;
-  --color-ink-600: #404040;
-
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --font-mono: Menlo, Monaco, 'Courier New', monospace;
 
+  --radius-card: 1.25rem;
+  --radius-control: 0.875rem;
+
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --animate-rec-pulse: rec-pulse 1.4s ease-in-out infinite;
+
+  @keyframes rec-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-ground: #181614;
+    --color-surface: #221f1c;
+    --color-raised: #2c2825;
+    --color-line: #3a3530;
+    --color-edge: #8c837a;
+    --color-fg: #f4efe9;
+    --color-fg-muted: #b8aea4;
+    --color-action: #4cc79a;
+    --color-action-hover: #6fd6b0;
+    --color-on-action: #0b1f17;
+    --color-live: #ff6b5e;
+    --color-on-live: #1f0705;
+    --color-danger: #ff8a80;
+    --color-warning: #f0b45a;
+    --color-success: #62d39c;
+    --color-focus: #4cc79a;
+  }
 }
 
 /* A utility rather than a component class so `@apply btn` keeps working in v4. */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors duration-200 ease-smooth;
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 font-semibold transition-[background-color,transform] duration-150 ease-smooth active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-100;
 }
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: light dark;
   }
 
   html,
@@ -42,14 +85,15 @@
   }
 
   body {
+    background: var(--color-ground);
+    color: var(--color-fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   *:focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
-    border-radius: 4px;
   }
 
   /* v4 preflight sets buttons to cursor: default. */
@@ -57,44 +101,79 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
-}
 
-@layer base {
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-  .focus\:not-sr-only:focus {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 0;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+    }
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-600;
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn-action {
+    @apply btn bg-action text-on-action hover:bg-action-hover disabled:bg-raised disabled:text-fg-muted;
+  }
+  .btn-secondary {
+    @apply btn border border-edge bg-surface text-fg hover:bg-raised;
   }
   .btn-ghost {
-    @apply btn text-ink hover:bg-ink-50;
+    @apply btn text-fg hover:bg-raised;
   }
+  .btn-danger {
+    @apply btn bg-live text-on-live hover:brightness-92;
+  }
+  .btn-lg {
+    @apply min-h-14 px-7 text-lg;
+  }
+
   .card {
-    @apply rounded-xl border border-ink-100 bg-white p-6 shadow-xs;
+    @apply rounded-[var(--radius-card)] bg-surface p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.10)] sm:p-6 dark:border dark:border-line dark:shadow-none;
   }
+
+  .chip {
+    @apply inline-flex min-h-11 items-center justify-center rounded-full border border-edge px-4 text-sm font-medium text-fg;
+  }
+  .chip[aria-pressed='true'] {
+    @apply border-fg bg-fg text-ground;
+  }
+
+  .field {
+    @apply min-h-11 w-full rounded-[var(--radius-control)] border border-edge bg-surface px-3 text-fg;
+  }
+
+  .rec-dot {
+    @apply inline-block size-3 shrink-0 animate-rec-pulse rounded-full bg-live motion-reduce:animate-none;
+  }
+  .rec-badge {
+    @apply inline-flex items-center gap-2 rounded-full bg-live/12 px-3 py-1 text-sm font-semibold text-live;
+  }
+  .rec-badge-paused {
+    @apply bg-raised text-fg-muted;
+  }
+  .rec-badge-paused .rec-dot {
+    @apply animate-none bg-fg-muted;
+  }
+
+  .tabbar {
+    @apply flex min-h-16 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)];
+  }
+  .tab {
+    @apply flex min-h-11 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-fg-muted transition-colors duration-150 hover:text-fg;
+  }
+  .tab[aria-current='page'] {
+    @apply font-semibold text-fg;
+  }
+
   .meter-bar-track {
-    @apply h-2 overflow-hidden rounded-full bg-ink-100;
+    @apply h-2 overflow-hidden rounded-full bg-line;
   }
   .meter-bar-fill {
     @apply h-full rounded-full transition-[width] duration-150 ease-out;
@@ -112,7 +191,7 @@
     @apply text-sm font-semibold;
   }
   .prose-summary h4 {
-    @apply text-sm font-semibold text-ink-400;
+    @apply text-sm font-semibold text-fg-muted;
   }
   .prose-summary p {
     @apply leading-relaxed;
@@ -127,7 +206,7 @@
     @apply mt-1;
   }
   .prose-summary code {
-    @apply rounded-sm bg-ink-50 px-1 py-0.5 font-mono text-[0.85em];
+    @apply rounded-sm bg-raised px-1 py-0.5 font-mono text-[0.85em];
   }
   .prose-summary strong {
     @apply font-semibold;
