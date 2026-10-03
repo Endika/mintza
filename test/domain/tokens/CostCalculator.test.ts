@@ -33,4 +33,9 @@ describe('CostCalculator', () => {
     const cost = calc.llmCost('gpt-4o-mini', TokenCount.of(1_000_000), TokenCount.of(500_000));
     expect(cost.toUsd()).toBeCloseTo(0.15 + 0.5 * 0.6, 6);
   });
+
+  it('prices gpt-4o at $2.50 in and $10 out per million tokens', () => {
+    const cost = calc.llmCost('gpt-4o', TokenCount.of(1_000_000), TokenCount.of(1_000_000));
+    expect(cost.toUsd()).toBeCloseTo(2.5 + 10, 6);
+  });
 });

@@ -47,7 +47,7 @@ const pricedMeeting = (): Meeting => {
 
 describe('meetingCost', () => {
   it('prices a premium summary at gpt-4o rates and an old one at the fallback', () => {
-    expect(meetingCost(pricedMeeting()).llm.get('openai')!.toUsd()).toBeCloseTo(5 + 0.15, 6);
+    expect(meetingCost(pricedMeeting()).llm.get('openai')!.toUsd()).toBeCloseTo(2.5 + 0.15, 6);
   });
 
   it('counts the mind map call', () => {
@@ -67,7 +67,7 @@ describe('meetingCost', () => {
     );
     const cost = meetingCost(meeting);
     expect(cost.transcription.get('whisper')!.toUsd()).toBeCloseTo(0.006, 6);
-    expect(cost.total.toUsd()).toBeCloseTo(0.006 + 5 + 0.15 + 0.15, 6);
+    expect(cost.total.toUsd()).toBeCloseTo(0.006 + 2.5 + 0.15 + 0.15, 6);
   });
 
   it('charges nothing for a mind map saved without usage', () => {

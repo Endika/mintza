@@ -161,9 +161,9 @@ describe('MeetingDetailPage', () => {
       row.querySelector('dd')?.textContent,
     ]);
     expect(rows).toEqual([
-      ['GPT', '$5.000'],
+      ['GPT', '$2.500'],
       ['Mind map', '$0.150'],
-      ['Total', '$5.150'],
+      ['Total', '$2.650'],
     ]);
   });
 
