@@ -75,7 +75,8 @@ export class CostCounter {
   private liveNodes(target: HTMLElement): { elapsed: Text; cost: Text } {
     if (!this.live || !target.contains(this.live.elapsed)) {
       const elapsedEl = document.createElement('p');
-      elapsedEl.className = 'text-6xl font-semibold tracking-tight tabular sm:text-7xl';
+      elapsedEl.className =
+        'text-[length:clamp(4rem,20vw,4.5rem)] leading-none font-semibold tracking-tight tabular';
       const costEl = document.createElement('p');
       costEl.className = 'mt-2 text-base text-fg-muted tabular';
       const elapsed = document.createTextNode('');

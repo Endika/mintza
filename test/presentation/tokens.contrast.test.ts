@@ -38,6 +38,7 @@ const TEXT: [string, string][] = [
   ['fg', 'surface'],
   ['fg-muted', 'ground'],
   ['fg-muted', 'surface'],
+  ['fg-muted', 'raised'],
   ['on-action', 'action'],
   ['on-action', 'action-hover'],
   ['on-live', 'live'],

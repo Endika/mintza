@@ -239,6 +239,7 @@ export class HomePage implements Page {
     }
     this.counter.stop();
     this.meter.stop();
+    this.exportMenu.dispose();
     void this.deps.screenWake.release();
   }
 
@@ -261,7 +262,12 @@ export class HomePage implements Page {
 
   private connectMarkup(): string {
     const t = (key: TranslationKey, vars?: Record<string, string>): string => this.t.t(key, vars);
-    const cost = estimateOpenAiHourlyCost(this.deps.config.get().summaryQuality).format(2);
+    const template =
+      this.templates.find((tpl) => tpl.id === this.selectedTemplate) ?? Template.generic();
+    const cost = estimateOpenAiHourlyCost(
+      this.deps.config.get().summaryQuality,
+      template.summaryKinds.length,
+    ).format(2);
     const steps: TranslationKey[] = [
       'home.connect_step_account',
       'home.connect_step_key',
