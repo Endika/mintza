@@ -82,6 +82,7 @@ export class HomePage implements Page {
   private templates: Template[] = [];
   private readonly guard = new LeaveGuard();
   private alive = true;
+  private transcriptSaved: Promise<boolean> | null = null;
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -94,6 +95,7 @@ export class HomePage implements Page {
     const cfg = this.deps.config.get();
     const t = (key: TranslationKey): string => this.t.t(key);
     const templatesResult = await this.deps.listTemplates.execute();
+    if (!this.alive) return;
     this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
     root.innerHTML = `
       <main id="main" class="mx-auto max-w-3xl px-6 py-12">
@@ -199,8 +201,8 @@ export class HomePage implements Page {
         ? this.t.t('home.leave_processing')
         : this.t.t('home.leave_recording');
     if (!this.guard.confirmLeave(message, (m) => window.confirm(m))) return false;
-    if (this.screenState === 'recording' || this.screenState === 'paused') await this.stop();
-    return true;
+    if (this.screenState === 'recording' || this.screenState === 'paused') return this.stop();
+    return (await this.transcriptSaved) ?? true;
   }
 
   dispose(): void {
@@ -219,11 +221,15 @@ export class HomePage implements Page {
     void this.deps.screenWake.release();
   }
 
-  /** Resolves once the transcript is saved; summaries keep finalizing in the background. */
-  private stop(): Promise<void> {
-    return new Promise((resolve) => {
-      void this.handleStop(resolve).finally(resolve);
+  /** Resolves with whether the transcript reached the repository; summaries keep finalizing after. */
+  private stop(): Promise<boolean> {
+    this.transcriptSaved ??= new Promise<boolean>((resolve) => {
+      this.handleStop(resolve).catch((error: unknown) => {
+        this.showSaveError(error instanceof Error ? error.message : String(error));
+        resolve(false);
+      });
     });
+    return this.transcriptSaved;
   }
 
   private syncWakeLock(active: boolean): void {
@@ -240,7 +246,7 @@ export class HomePage implements Page {
       'click',
       () => void this.handlePauseResume(),
     );
-    this.qs<HTMLButtonElement>('#btn-stop').addEventListener('click', () => void this.handleStop());
+    this.qs<HTMLButtonElement>('#btn-stop').addEventListener('click', () => void this.stop());
     this.qs<HTMLButtonElement>('#btn-summarize').addEventListener(
       'click',
       () => void this.handleSummarizeNow(),
@@ -256,11 +262,10 @@ export class HomePage implements Page {
       return;
     }
     this.setStatus(this.t.t('home.requesting_mic'));
+    const language = Language.of(this.readLanguage());
     const template = await this.deps.templateRegistry.resolveOrFallback(this.readTemplate());
-    const result = await this.deps.startRecording.execute({
-      template,
-      language: Language.of(this.readLanguage()),
-    });
+    if (!this.alive) return;
+    const result = await this.deps.startRecording.execute({ template, language });
     if (!this.alive) {
       if (result.ok) void this.deps.audio.stop();
       return;
@@ -269,14 +274,16 @@ export class HomePage implements Page {
       this.setStatus(this.t.t('home.start_failed'));
       return;
     }
-    this.meeting = result.value.meeting;
+    const meeting = result.value.meeting;
+    this.meeting = meeting;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => {
-      const p = this.handleChunk(chunk);
+      if (meeting.isFinished) return;
+      const p = this.handleChunk(meeting, chunk);
       this.pendingChunks.add(p);
       void p.finally(() => this.pendingChunks.delete(p));
     });
@@ -306,8 +313,11 @@ export class HomePage implements Page {
     }
   }
 
-  private async handleStop(onTranscriptSaved: () => void = () => undefined): Promise<void> {
-    if (!this.meeting) return;
+  private async handleStop(onTranscriptSaved: (saved: boolean) => void): Promise<void> {
+    if (!this.meeting) {
+      onTranscriptSaved(true);
+      return;
+    }
     this.setScreenState('processing');
     this.syncWakeLock(false);
     this.setStatus(this.t.t('home.stopping'));
@@ -315,26 +325,28 @@ export class HomePage implements Page {
     this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
     const meeting = this.meeting;
-    await this.deps.stopRecording.execute({
-      meeting,
-      flushPending: () => Promise.allSettled([...this.pendingChunks]),
-    });
-    this.unsubChunks?.();
-    this.unsubChunks = null;
+    try {
+      await this.deps.stopRecording.execute({
+        meeting,
+        flushPending: () => Promise.allSettled([...this.pendingChunks]),
+      });
+    } finally {
+      this.unsubChunks?.();
+      this.unsubChunks = null;
+    }
 
     if (meeting.segments.length === 0) {
+      onTranscriptSaved(true);
       this.setStatus(this.t.t('home.no_audio'));
       this.setScreenState('done');
       return;
     }
 
     const transcriptSaved = await this.deps.saveMeeting.execute({ meeting });
-    onTranscriptSaved();
-    if (!transcriptSaved.ok) {
-      this.showSaveError(transcriptSaved.error.message);
-    }
+    onTranscriptSaved(transcriptSaved.ok);
+    if (transcriptSaved.ok) this.setStatus(this.t.t('home.generating'));
+    else this.showSaveError(transcriptSaved.error.message);
 
-    this.setStatus(this.t.t('home.generating'));
     const pendingSummaries = this.qsOptional('#summaries');
     if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-ink-400">…</em>';
 
@@ -369,6 +381,7 @@ export class HomePage implements Page {
   private handleNewMeeting(): void {
     if (!this.root) return;
     this.meeting = null;
+    this.transcriptSaved = null;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
     void this.render(this.root);
@@ -420,11 +433,10 @@ export class HomePage implements Page {
     this.meter.start(meterEl, stream, this.t);
   }
 
-  private async handleChunk(chunk: AudioChunk): Promise<void> {
-    if (!this.meeting) return;
+  private async handleChunk(meeting: Meeting, chunk: AudioChunk): Promise<void> {
     this.progress.received += 1;
     this.updateProgress();
-    const result = await this.deps.transcribeChunk.execute({ meeting: this.meeting, chunk });
+    const result = await this.deps.transcribeChunk.execute({ meeting, chunk });
     if (result.ok) {
       if (result.value !== null) {
         this.progress.transcribed += 1;
