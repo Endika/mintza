@@ -192,7 +192,7 @@ export class MeetingDetailPage implements Page {
     return `
       <div class="flex items-center gap-2 text-sm">
         <span class="text-fg-muted">${t.t('meeting.regenerate')}</span>
-        <select id="regen-template" class="rounded-lg border border-line px-2 py-1 text-xs">
+        <select id="regen-template" class="rounded-lg border border-edge px-2 py-1 text-xs">
           ${this.templates
             .map(
               (tpl) =>

@@ -71,7 +71,7 @@ export class SettingsPage implements Page {
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="text-sm font-medium">${t('settings.interface_language')}</span>
-                <select name="language" class="mt-1 block w-full rounded-lg border border-line px-3 py-2">
+                <select name="language" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2">
                   <option value="en" ${cfg.language === 'en' ? 'selected' : ''}>English</option>
                   <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Español</option>
                   <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Euskara</option>
@@ -79,7 +79,7 @@ export class SettingsPage implements Page {
               </label>
               <label class="block">
                 <span class="text-sm font-medium">${t('settings.default_template')}</span>
-                <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-line px-3 py-2">
+                <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2">
                   <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>${t('template.builtin.generic')}</option>
                   <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>${t('template.builtin.work')}</option>
                   <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.builtin.interview')}</option>
@@ -92,7 +92,7 @@ export class SettingsPage implements Page {
                   name="azureRegion"
                   value="${escapeHtml(cfg.azureRegion)}"
                   placeholder="${t('settings.azure_region_placeholder')}"
-                  class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-sm"
+                  class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-sm"
                 />
               </label>
             </div>
@@ -179,7 +179,7 @@ export class SettingsPage implements Page {
     const anyOk = checks.some((c) => c.ok);
     const allOk = checks.every((c) => c.ok);
     indicator.className = allOk
-      ? 'text-xs text-action'
+      ? 'text-xs text-success'
       : anyOk
         ? 'text-xs text-fg'
         : 'text-xs text-danger';
@@ -293,7 +293,7 @@ const apiKeyInput = (
           autocomplete="off"
           value="${value ? escapeHtml(value) : ''}"
           placeholder="${value ? '••••••••••' : t('settings.key_placeholder')}"
-          class="flex-1 rounded-lg border border-line px-3 py-2 font-mono text-sm"
+          class="flex-1 rounded-lg border border-edge px-3 py-2 font-mono text-sm"
         />
         <button type="button" data-test-key="${escapeHtml(name)}" class="btn-ghost text-sm">${t('settings.btn_test')}</button>
       </div>

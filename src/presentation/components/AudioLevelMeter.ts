@@ -45,10 +45,10 @@ export class AudioLevelMeter {
       if (percent < 4) {
         this.silentTicks += 1;
         bar.classList.remove('bg-action');
-        bar.classList.add('bg-live');
+        bar.classList.add('bg-warning');
       } else {
         this.silentTicks = 0;
-        bar.classList.remove('bg-live');
+        bar.classList.remove('bg-warning');
         bar.classList.add('bg-action');
       }
       hint.textContent =

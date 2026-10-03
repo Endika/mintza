@@ -38,3 +38,5 @@ export const TOKENS: Record<Theme, Record<string, string>> = {
     focus: '#4cc79a',
   },
 };
+
+export const BADGE_TINT = 0.1;
