@@ -3,6 +3,7 @@ import {
   type AppConfig,
   type ConfigRepository,
 } from '../../domain/meeting/ports/ConfigRepository';
+import type { LanguageCode } from '../../domain/language/value-objects/Language';
 import type { AppError } from '../../shared/errors/AppError';
 import { err, type Result } from '../../shared/result/Result';
 import { Translator } from '../i18n/Translator';
@@ -55,6 +56,10 @@ export class ConfigStore {
 
   azureRegion(): string {
     return this.current.azureRegion;
+  }
+
+  spokenLanguage(): LanguageCode {
+    return this.current.spokenLanguage ?? this.current.language;
   }
 
   keepScreenAwake(): boolean {

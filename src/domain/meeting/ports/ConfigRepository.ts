@@ -14,6 +14,7 @@ export interface ApiKeys {
 
 export interface AppConfig {
   readonly language: LanguageCode;
+  readonly spokenLanguage?: LanguageCode;
   readonly defaultTemplate: TemplateKind;
   readonly transcriptionQuality: QualityProfile;
   readonly summaryQuality: QualityProfile;
