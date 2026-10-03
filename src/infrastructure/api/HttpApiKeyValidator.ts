@@ -1,19 +1,20 @@
 import type {
   ApiKeyProviderName,
   ApiKeyValidator,
+  CheckFailureReason,
   ServiceCheck,
   ValidationOutcome,
 } from '../../domain/meeting/ports/ApiKeyValidator';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
-import type { HttpClient, HttpRequest } from '../http/HttpClient';
+import { httpFailureOf, type HttpClient, type HttpRequest } from '../http/HttpClient';
 
 const TIMEOUT_MS = 6_000;
 
 interface Probe {
   readonly service: string;
   readonly request: HttpRequest;
-  readonly hint?: (errorMessage: string) => string;
+  readonly google?: true;
 }
 
 export class HttpApiKeyValidator implements ApiKeyValidator {
@@ -38,8 +39,8 @@ export class HttpApiKeyValidator implements ApiKeyValidator {
       if (response.ok) {
         checks.push({ service: probe.service, ok: true });
       } else {
-        const message = probe.hint ? probe.hint(response.error.message) : response.error.message;
-        checks.push({ service: probe.service, ok: false, message });
+        const reason = failureReason(response.error, probe.google === true);
+        checks.push({ service: probe.service, ok: false, reason });
       }
     }
     return ok({ checks });
@@ -100,8 +101,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
             method: 'GET',
             headers: { 'x-goog-api-key': key },
           },
-          hint: () =>
-            'Generative Language API not enabled. Visit console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
+          google: true,
         },
       ];
     case 'googleSpeech':
@@ -113,9 +113,49 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
             method: 'GET',
             headers: { 'x-goog-api-key': key },
           },
-          hint: () =>
-            'Cloud Speech-to-Text API not enabled. Visit console.cloud.google.com/apis/library/speech.googleapis.com',
+          google: true,
         },
       ];
   }
 };
+
+const failureReason = (error: AppError, google: boolean): CheckFailureReason => {
+  const failure = httpFailureOf(error);
+  if (!failure) return error.code === 'NETWORK_ERROR' ? 'network' : 'unknown';
+  if (!google) return failure.status === 401 ? 'invalid_key' : 'unknown';
+  const markers = googleErrorMarkers(failure.body);
+  if (markers.has('API_KEY_SERVICE_BLOCKED')) return 'api_blocked';
+  if (markers.has('SERVICE_DISABLED') || markers.has('accessNotConfigured')) return 'api_disabled';
+  if (markers.has('API_KEY_INVALID') || markers.has('UNAUTHENTICATED')) return 'invalid_key';
+  return 'unknown';
+};
+
+interface GoogleErrorBody {
+  readonly error?: {
+    readonly status?: unknown;
+    readonly details?: unknown;
+    readonly errors?: unknown;
+  };
+}
+
+/** The reasons and status Google puts in an error body, e.g. API_KEY_SERVICE_BLOCKED. */
+const googleErrorMarkers = (body: string): ReadonlySet<string> => {
+  let parsed: GoogleErrorBody | null;
+  try {
+    parsed = JSON.parse(body) as GoogleErrorBody | null;
+  } catch {
+    return new Set();
+  }
+  const error = parsed?.error;
+  const entries: unknown[] = [
+    error?.status,
+    ...reasonsOf(error?.details),
+    ...reasonsOf(error?.errors),
+  ];
+  return new Set(entries.filter((e): e is string => typeof e === 'string'));
+};
+
+const reasonsOf = (list: unknown): unknown[] =>
+  Array.isArray(list)
+    ? list.map((item: unknown) => (item as { readonly reason?: unknown } | null)?.reason)
+    : [];

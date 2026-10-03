@@ -235,6 +235,13 @@ export type TranslationKey =
   | 'settings.use_google_speech'
   | 'settings.source_google'
   | 'settings.source_google_speech'
+  | 'settings.reason_invalid_key'
+  | 'settings.reason_api_blocked'
+  | 'settings.reason_api_disabled'
+  | 'settings.reason_network'
+  | 'settings.reason_unknown'
+  | 'settings.link_enable_api'
+  | 'settings.link_key_restrictions'
   | 'settings.confirm_clear'
   | 'settings.leave_unsaved'
   | 'settings.quality_hint'
@@ -496,6 +503,13 @@ const EN: Translations = {
   'settings.source_google': 'Where to get it: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Where to get it: Google Cloud → Credentials → API key with Cloud Speech-to-Text',
+  'settings.reason_invalid_key': "The key isn't valid.",
+  'settings.reason_api_blocked': "This key's restrictions don't allow this API.",
+  'settings.reason_api_disabled': "This API isn't turned on in your Google Cloud project.",
+  'settings.reason_network': "Couldn't reach the service. Check your connection.",
+  'settings.reason_unknown': "The service didn't accept the key.",
+  'settings.link_enable_api': 'Turn on the API',
+  'settings.link_key_restrictions': "Edit the key's restrictions",
   'settings.confirm_clear':
     "Remove all your keys from this browser? You'll need to paste them again to record.",
   'settings.leave_unsaved': 'You have unsaved changes. Leave without saving?',
@@ -758,6 +772,13 @@ const ES: Translations = {
   'settings.source_google': 'Dónde conseguirla: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Dónde conseguirla: Google Cloud → Credenciales → clave de API con Cloud Speech-to-Text',
+  'settings.reason_invalid_key': 'La clave no es válida.',
+  'settings.reason_api_blocked': 'Las restricciones de esta clave no permiten usar esta API.',
+  'settings.reason_api_disabled': 'Esta API no está activada en tu proyecto de Google Cloud.',
+  'settings.reason_network': 'No se ha podido conectar con el servicio. Revisa la conexión.',
+  'settings.reason_unknown': 'El servicio no ha aceptado la clave.',
+  'settings.link_enable_api': 'Activar la API',
+  'settings.link_key_restrictions': 'Editar las restricciones de la clave',
   'settings.confirm_clear':
     '¿Quitar todas tus claves de este navegador? Tendrás que pegarlas de nuevo para grabar.',
   'settings.leave_unsaved': 'Tienes cambios sin guardar. ¿Salir sin guardar?',
@@ -1024,6 +1045,13 @@ const EU: Translations = {
   'settings.source_google': 'Non lortu: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Non lortu: Google Cloud → Credentials → Cloud Speech-to-Text duen API gakoa',
+  'settings.reason_invalid_key': 'Gakoa ez da baliozkoa.',
+  'settings.reason_api_blocked': 'Gako honen murrizketek ez dute API hau erabiltzen uzten.',
+  'settings.reason_api_disabled': 'API hau ez dago aktibatuta zure Google Cloud proiektuan.',
+  'settings.reason_network': 'Ezin izan da zerbitzura konektatu. Begiratu konexioa.',
+  'settings.reason_unknown': 'Zerbitzuak ez du gakoa onartu.',
+  'settings.link_enable_api': 'Aktibatu APIa',
+  'settings.link_key_restrictions': 'Editatu gakoaren murrizketak',
   'settings.confirm_clear':
     'Gako guztiak nabigatzaile honetatik kendu? Grabatzeko berriro itsatsi beharko dituzu.',
   'settings.leave_unsaved': 'Gorde gabeko aldaketak dituzu. Gorde gabe irten?',
