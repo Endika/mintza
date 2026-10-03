@@ -25,6 +25,8 @@ export interface FinalizeMeetingOutput {
   readonly summaryFailureCount: number;
   readonly mindMap?: MindMap;
   readonly mindMapError?: AppError;
+  /** Whether the meeting with its summaries reached the repository; a later mind-map save may still fail. */
+  readonly summariesSaved: boolean;
   readonly saveError?: AppError;
 }
 
@@ -68,6 +70,7 @@ export class FinalizeMeetingUseCase {
         summaryAttempts,
         summarySuccessCount,
         summaryFailureCount,
+        summariesSaved: false,
         saveError: savedAfterSummaries.error,
       };
     }
@@ -82,6 +85,7 @@ export class FinalizeMeetingUseCase {
         summaryAttempts,
         summarySuccessCount,
         summaryFailureCount,
+        summariesSaved: true,
         mindMapError: mindMapResult.error,
       };
     }
@@ -93,6 +97,7 @@ export class FinalizeMeetingUseCase {
         summaryAttempts,
         summarySuccessCount,
         summaryFailureCount,
+        summariesSaved: true,
         mindMap: mindMapResult.value,
         saveError: savedAfterMindMap.error,
       };
@@ -102,6 +107,7 @@ export class FinalizeMeetingUseCase {
       summaryAttempts,
       summarySuccessCount,
       summaryFailureCount,
+      summariesSaved: true,
       mindMap: mindMapResult.value,
     };
   }

@@ -316,6 +316,7 @@ export class HomePage implements Page {
         <p id="status" role="status" aria-live="polite" class="text-sm text-fg-muted empty:hidden"></p>
         <p id="progress" class="hidden text-sm text-fg-muted tabular"></p>
         <div id="last-error" class="hidden text-sm text-danger"></div>
+        <p id="stop-note" class="hidden text-sm text-fg-muted"></p>
       </div>`;
     return `
       <div id="panel-idle" class="flex flex-col gap-6">
@@ -545,10 +546,11 @@ export class HomePage implements Page {
     this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
     try {
-      await this.deps.stopRecording.execute({
+      const stopped = await this.deps.stopRecording.execute({
         meeting,
         flushPending: () => Promise.allSettled([...this.pendingChunks]),
       });
+      if (stopped.ok && stopped.value.stopTimedOut) this.showStopNote();
     } finally {
       this.unsubChunks?.();
       this.unsubChunks = null;
@@ -576,7 +578,7 @@ export class HomePage implements Page {
           ? this.setStep(attempt.kind, 'ready')
           : this.setStep(attempt.kind, 'failed', attempt.result.error.message),
     });
-    if (!result.saveError) this.persisted = true;
+    this.persisted = result.summariesSaved;
 
     this.renderDone(meeting);
     this.renderTemperature();
@@ -584,18 +586,64 @@ export class HomePage implements Page {
     this.renderExportMenu();
     if (result.mindMap) this.renderMindMap(result.mindMap);
 
+    const detail = this.t.t('home.summaries_result', {
+      ok: result.summarySuccessCount,
+      failed: result.summaryFailureCount,
+    });
     if (result.saveError) {
-      this.showSaveError(result.saveError.message);
+      const what: TranslationKey = result.summariesSaved
+        ? 'home.mind_map_save_failed'
+        : transcriptSaved.ok
+          ? 'home.summaries_save_failed'
+          : 'home.save_failed';
+      this.showRetrySave(meeting, `${this.t.t(what)} ${result.saveError.message}`, detail);
     } else {
-      this.showSaved(
-        meeting,
-        this.t.t('home.summaries_result', {
-          ok: result.summarySuccessCount,
-          failed: result.summaryFailureCount,
-        }),
-      );
+      this.showSaved(meeting, detail);
     }
     this.setScreenState('done');
+  }
+
+  private showStopNote(): void {
+    const note = this.qsOptional('#stop-note');
+    if (!note) return;
+    note.textContent = this.t.t('home.stop_timed_out');
+    note.classList.remove('hidden');
+  }
+
+  /** Re-saving the whole meeting stores whatever the last save missed. */
+  private showRetrySave(meeting: Meeting, message: string, detail: string): void {
+    const status = this.qsOptional('#status');
+    if (!status) return;
+    status.classList.add('text-danger');
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.id = 'btn-retry-save';
+    retry.className =
+      'ml-1 inline-flex min-h-11 items-center font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg';
+    retry.textContent = this.t.t('home.retry_save');
+    retry.addEventListener('click', () => {
+      void (async () => {
+        retry.disabled = true;
+        const hadFocus = document.activeElement === retry;
+        const saved = await this.deps.saveMeeting.execute({ meeting });
+        if (!this.alive || this.meeting !== meeting) return;
+        if (saved.ok) {
+          this.persisted = true;
+          this.syncBusy();
+          this.showSaved(meeting, detail);
+          if (hadFocus) this.qsOptional('#status a')?.focus();
+          return;
+        }
+        this.showRetrySave(
+          meeting,
+          `${this.t.t('home.save_failed')} ${saved.error.message}`,
+          detail,
+        );
+        if (hadFocus) this.qsOptional('#btn-retry-save')?.focus();
+      })();
+    });
+    status.replaceChildren(document.createTextNode(`${message} `), retry);
+    this.paintStatus();
   }
 
   private showSaveError(message: string): void {

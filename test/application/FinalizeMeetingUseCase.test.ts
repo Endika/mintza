@@ -165,4 +165,28 @@ describe('FinalizeMeetingUseCase', () => {
     const stored = await repo.findById(meeting.id);
     expect(stored.ok && stored.value?.summaries.size).toBe(1);
   });
+
+  it('tells a failed summaries save apart from a failed mind-map save', async () => {
+    const run = async (failingSave: number): Promise<{ saved: boolean; error: boolean }> => {
+      const repo = new InMemoryMeetingRepository();
+      const original = repo.save.bind(repo);
+      let attempt = 0;
+      repo.save = (meeting) => {
+        attempt += 1;
+        if (attempt === failingSave) repo.failNextSave(new AppError('STORAGE_FAILED', 'quota'));
+        return original(meeting);
+      };
+      const output = await new FinalizeMeetingUseCase(
+        new FakeSummarizationPort({ kind: 'success', content: 'ok' }),
+        new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' }),
+        repo,
+        new SentimentScoreParser(),
+      ).execute({ meeting: meetingWith('hello team'), kinds: ['bullet_points'] });
+      return { saved: output.summariesSaved, error: output.saveError !== undefined };
+    };
+
+    expect(await run(1)).toEqual({ saved: false, error: true });
+    expect(await run(2)).toEqual({ saved: true, error: true });
+    expect(await run(0)).toEqual({ saved: true, error: false });
+  });
 });

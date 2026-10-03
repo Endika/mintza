@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StopRecordingUseCase } from '../../src/application/use-cases/StopRecordingUseCase';
 import type {
   AudioCapturePort,
@@ -110,5 +110,41 @@ describe('StopRecordingUseCase', () => {
 
     expect(result.ok).toBe(true);
     expect(meeting.isFinished).toBe(true);
+  });
+
+  describe('when the recorder never stops', () => {
+    class StuckAudio extends FakeAudio {
+      override stop(): Promise<void> {
+        return new Promise<void>(() => undefined);
+      }
+    }
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('gives up after five seconds and finishes with what was transcribed', async () => {
+      vi.useFakeTimers();
+      const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+      let flushed = false;
+      let settled = false;
+      const done = new StopRecordingUseCase(new StuckAudio())
+        .execute({
+          meeting,
+          flushPending: () => {
+            flushed = true;
+            return Promise.resolve();
+          },
+        })
+        .finally(() => (settled = true));
+
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      const result = await done;
+
+      expect(result.ok && result.value.stopTimedOut).toBe(true);
+      expect(flushed).toBe(true);
+      expect(meeting.isFinished).toBe(true);
+    });
   });
 });

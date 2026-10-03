@@ -23,6 +23,7 @@ import {
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
 import type { ScreenWakePort } from '../../src/domain/system/ports/ScreenWakePort';
 import { SentimentScoreParser } from '../../src/domain/temperature/services/SentimentScoreParser';
+import type { Meeting } from '../../src/domain/meeting/entities/Meeting';
 import type { TranscriptSegment } from '../../src/domain/transcription/entities/TranscriptSegment';
 import type {
   TranscriptionPort,
@@ -152,16 +153,38 @@ class BrokenMeetingRepository extends InMemoryMeetingRepository {
   }
 }
 
+/** Fails only the saves whose 1-based numbers it was given. */
+class FlakyMeetingRepository extends InMemoryMeetingRepository {
+  private attempt = 0;
+  constructor(private readonly failing: readonly number[]) {
+    super();
+  }
+  override save(meeting: Meeting): Promise<Result<void, AppError>> {
+    this.attempt += 1;
+    if (this.failing.includes(this.attempt)) {
+      return Promise.resolve(err(new AppError('STORAGE_FAILED', 'quota exceeded')));
+    }
+    return super.save(meeting);
+  }
+}
+
+class StuckAudio extends FakeAudio {
+  override stop(): Promise<void> {
+    return new Promise<void>(() => undefined);
+  }
+}
+
 const pages: HomePage[] = [];
 
 const setup = async (
   transcription: TranscriptionPort,
   meetings: InMemoryMeetingRepository = new InMemoryMeetingRepository(),
+  audio: FakeAudio = new FakeAudio(),
+  stopTimeoutMs?: number,
 ): Promise<Harness> => {
   window.localStorage.clear();
   const config = new ConfigStore(new KeyedConfigRepo());
   await config.hydrate();
-  const audio = new FakeAudio();
   const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
   const mindMap = new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' });
   const registry = new TemplateRegistry(new LocalStorageTemplateRepository(window.localStorage));
@@ -171,7 +194,7 @@ const setup = async (
     audio,
     screenWake: new NoScreenWake(),
     startRecording: new StartRecordingUseCase(audio),
-    stopRecording: new StopRecordingUseCase(audio),
+    stopRecording: new StopRecordingUseCase(audio, stopTimeoutMs),
     transcribeChunk: new TranscribeChunkUseCase(transcription),
     generateSummaries: new GenerateSummariesUseCase(summarization),
     generateMindMap: new GenerateMindMapUseCase(mindMap),
@@ -376,5 +399,79 @@ describe('HomePage leaving a recording', () => {
     await settle();
 
     expect(audio.state()).toBe('stopped');
+  });
+
+  it('leaves with what was transcribed when the microphone never stops', async () => {
+    const { page, root, audio, meetings } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      new InMemoryMeetingRepository(),
+      new StuckAudio(),
+      20,
+    );
+    audio.emit(chunk());
+    await settle();
+    window.confirm = () => true;
+
+    const left = await page.canLeave();
+    await settle();
+
+    expect(left).toBe(true);
+    expect(meetings.saves[0]!.fullText().value).toContain('hello team');
+    expect(root.querySelector('#stop-note')!.textContent).toBe(
+      'The microphone took too long to stop, so the last few seconds may be missing.',
+    );
+    expect(root.querySelector('#stop-note')!.classList.contains('hidden')).toBe(false);
+  });
+
+  it('lets a finished meeting go without asking when only the mind map failed to save', async () => {
+    const { page, root, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      new FlakyMeetingRepository([3]),
+    );
+    audio.emit(chunk());
+    await settle();
+    root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
+    await settle();
+    const asked: string[] = [];
+    window.confirm = (message?: string) => {
+      asked.push(message ?? '');
+      return false;
+    };
+
+    expect(await page.canLeave()).toBe(true);
+    expect(asked).toEqual([]);
+    expect(unload().defaultPrevented).toBe(false);
+    expect(root.querySelector('#status')!.textContent).toContain(
+      "The meeting is saved, but the mind map isn't.",
+    );
+  });
+
+  it('says the summaries were not saved and saves them again on request', async () => {
+    const meetings = new FlakyMeetingRepository([2]);
+    const { page, root, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      meetings,
+    );
+    audio.emit(chunk());
+    await settle();
+    root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
+    await settle();
+
+    const status = root.querySelector('#status')!;
+    expect(status.textContent).toContain("The transcript is saved, but the summaries aren't.");
+    expect(status.classList.contains('text-danger')).toBe(true);
+    expect(unload().defaultPrevented).toBe(true);
+    const retry = root.querySelector<HTMLButtonElement>('#btn-retry-save')!;
+    expect(retry.textContent).toBe('Try saving again');
+
+    retry.click();
+    await settle();
+
+    expect(status.textContent).toContain('Saved to History');
+    expect(root.querySelector('#btn-retry-save')).toBeNull();
+    const stored = await meetings.findById(meetings.saves.at(-1)!.id);
+    expect(stored.ok && stored.value?.summaries.size).toBeGreaterThan(0);
+    window.confirm = () => false;
+    expect(await page.canLeave()).toBe(true);
   });
 });
