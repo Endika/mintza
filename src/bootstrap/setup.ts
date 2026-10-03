@@ -43,8 +43,8 @@ import {
   TranscriptionChainAdapter,
   type NamedTranscriptionPort,
 } from '../infrastructure/transcription/TranscriptionChainAdapter';
-import { WhisperClient } from '../infrastructure/transcription/WhisperClient';
-import { WhisperTranscriptionAdapter } from '../infrastructure/transcription/WhisperTranscriptionAdapter';
+import { OpenAITranscriptionAdapter } from '../infrastructure/transcription/OpenAITranscriptionAdapter';
+import { OpenAITranscriptionClient } from '../infrastructure/transcription/OpenAITranscriptionClient';
 import { WakeLockAdapter } from '../infrastructure/system/WakeLockAdapter';
 import type { ScreenWakePort } from '../domain/system/ports/ScreenWakePort';
 import { ConfigStore } from '../presentation/state/ConfigStore';
@@ -84,10 +84,10 @@ export const buildAppDeps = (): AppDeps => {
     templateRegistry.resolveOrFallback(id),
   );
 
-  const whisper = new WhisperClient(http, () => configStore.openAIKey());
-  const whisperAdapter: NamedTranscriptionPort = {
-    name: 'Whisper',
-    port: new WhisperTranscriptionAdapter(whisper),
+  const openAITranscription = new OpenAITranscriptionClient(http, () => configStore.openAIKey());
+  const openAITranscriptionAdapter: NamedTranscriptionPort = {
+    name: 'GPT Transcribe',
+    port: new OpenAITranscriptionAdapter(openAITranscription),
   };
   const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleSpeechKey());
   const googleSpeechAdapter: NamedTranscriptionPort = {
@@ -106,9 +106,9 @@ export const buildAppDeps = (): AppDeps => {
 
   const transcription = new TranscriptionChainAdapter(() =>
     pickTranscriptionChain(configStore.get().transcriptionQuality, {
-      cheap: [googleSpeechAdapter, whisperAdapter],
-      balanced: [whisperAdapter, googleSpeechAdapter],
-      premium: [whisperAdapter, azureSpeechAdapter],
+      cheap: [googleSpeechAdapter, openAITranscriptionAdapter],
+      balanced: [openAITranscriptionAdapter, googleSpeechAdapter],
+      premium: [openAITranscriptionAdapter, azureSpeechAdapter],
     }),
   );
 

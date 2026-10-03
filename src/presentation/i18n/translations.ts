@@ -502,7 +502,7 @@ const EN: Translations = {
   'settings.keys_title': 'Your keys',
   'settings.required': 'Required',
   'settings.backups': 'Optional backup services (Google Gemini, Google Speech, Azure, Anthropic)',
-  'settings.use_openai': 'Transcription and summaries (Whisper and GPT)',
+  'settings.use_openai': 'Transcription and summaries (GPT Transcribe and GPT)',
   'settings.use_google': 'Summaries (Gemini)',
   'settings.use_azure': 'Transcription (Azure Speech)',
   'settings.use_anthropic': 'Summaries (Claude)',
@@ -783,7 +783,7 @@ const ES: Translations = {
   'settings.required': 'Obligatoria',
   'settings.backups':
     'Servicios de respaldo opcionales (Google Gemini, Google Speech, Azure, Anthropic)',
-  'settings.use_openai': 'Transcripción y resúmenes (Whisper y GPT)',
+  'settings.use_openai': 'Transcripción y resúmenes (GPT Transcribe y GPT)',
   'settings.use_google': 'Resúmenes (Gemini)',
   'settings.use_azure': 'Transcripción (Azure Speech)',
   'settings.use_anthropic': 'Resúmenes (Claude)',
@@ -1068,7 +1068,7 @@ const EU: Translations = {
   'settings.required': 'Derrigorrezkoa',
   'settings.backups':
     'Aukerako ordezko zerbitzuak (Google Gemini, Google Speech, Azure, Anthropic)',
-  'settings.use_openai': 'Transkripzioa eta laburpenak (Whisper eta GPT)',
+  'settings.use_openai': 'Transkripzioa eta laburpenak (GPT Transcribe eta GPT)',
   'settings.use_google': 'Laburpenak (Gemini)',
   'settings.use_azure': 'Transkripzioa (Azure Speech)',
   'settings.use_anthropic': 'Laburpenak (Claude)',

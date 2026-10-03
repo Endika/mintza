@@ -13,7 +13,7 @@ import { SummarizationChainAdapter } from '../../src/infrastructure/llm/Summariz
 import { AzureSpeechClient } from '../../src/infrastructure/transcription/AzureSpeechClient';
 import { GoogleSpeechClient } from '../../src/infrastructure/transcription/GoogleSpeechClient';
 import { TranscriptionChainAdapter } from '../../src/infrastructure/transcription/TranscriptionChainAdapter';
-import { WhisperClient } from '../../src/infrastructure/transcription/WhisperClient';
+import { OpenAITranscriptionClient } from '../../src/infrastructure/transcription/OpenAITranscriptionClient';
 import { AppError, type ErrorReason } from '../../src/shared/errors/AppError';
 import { err, type Result } from '../../src/shared/result/Result';
 
@@ -50,7 +50,9 @@ describe('provider errors carry a reason the interface can translate', () => {
 
   it('names a missing key for every provider', async () => {
     const http = new HttpClient();
-    expect(reasonOf(await new WhisperClient(http, none).transcribe(audio, en))).toBe('missing_key');
+    expect(reasonOf(await new OpenAITranscriptionClient(http, none).transcribe(audio, en))).toBe(
+      'missing_key',
+    );
     expect(reasonOf(await new OpenAIClient(http, none).chat(chat))).toBe('missing_key');
     expect(reasonOf(await new ClaudeClient(http, none).chat(chat))).toBe('missing_key');
     expect(reasonOf(await new GeminiClient(http, none).chat(chat))).toBe('missing_key');

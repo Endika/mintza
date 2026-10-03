@@ -14,6 +14,10 @@ describe('CostCalculator', () => {
     expect(calc.transcriptionCost('whisper', 60_000).format()).toBe('$0.0060');
   });
 
+  it('prices one minute of gpt-transcribe at its own rate', () => {
+    expect(calc.transcriptionCost('gpt-transcribe', 60_000).toUsd()).toBeCloseTo(0.0045, 6);
+  });
+
   it('prices Google Speech cheaper than Whisper', () => {
     const whisper = calc.transcriptionCost('whisper', 60_000).toUsd();
     const google = calc.transcriptionCost('google', 60_000).toUsd();

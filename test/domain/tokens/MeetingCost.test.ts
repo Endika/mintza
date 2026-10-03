@@ -70,6 +70,27 @@ describe('meetingCost', () => {
     expect(cost.total.toUsd()).toBeCloseTo(0.006 + 2.5 + 0.15 + 0.15, 6);
   });
 
+  it('keeps old Whisper parts at the Whisper rate and prices new parts at gpt-transcribe', () => {
+    const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+    const part = (id: string, startMs: number, provider: 'whisper' | 'gpt-transcribe'): void =>
+      meeting.appendSegment(
+        new TranscriptSegment({
+          id,
+          startMs,
+          endMs: startMs + 60_000,
+          text: TranscriptText.of('hello'),
+          provider,
+        }),
+      );
+    part('old', 0, 'whisper');
+    part('new', 60_000, 'gpt-transcribe');
+
+    const cost = meetingCost(meeting);
+    expect(cost.transcription.get('whisper')!.toUsd()).toBeCloseTo(0.006, 6);
+    expect(cost.transcription.get('gpt-transcribe')!.toUsd()).toBeCloseTo(0.0045, 6);
+    expect(cost.total.toUsd()).toBeCloseTo(0.0105, 6);
+  });
+
   it('charges nothing for a mind map saved without usage', () => {
     const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
     meeting.setMindMap(new MindMap(new MindMapNode('root', [])));

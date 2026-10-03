@@ -6,6 +6,7 @@ import { TranscriptSegment } from '../../src/domain/transcription/entities/Trans
 import type { TranscriptionProviderName } from '../../src/domain/transcription/value-objects/TranscriptionProvider';
 import { TranscriptText } from '../../src/domain/transcription/value-objects/TranscriptText';
 import { CostCounter } from '../../src/presentation/components/CostCounter';
+import { StatisticsPanel } from '../../src/presentation/components/StatisticsPanel';
 import { Translator } from '../../src/presentation/i18n/Translator';
 import { finishedMeeting } from './meetingFixtures';
 
@@ -97,5 +98,31 @@ describe('CostCounter live line', () => {
     counter.stop();
     expect(counted).toBe(2);
     expect(target.textContent).toContain('4 words');
+  });
+});
+
+describe('transcription labels name the model that ran', () => {
+  const breakdownLabels = (meeting: Meeting): string[] => {
+    const target = document.createElement('div');
+    new CostCounter().renderBreakdown(target, meeting, new Translator('en'));
+    return [...target.querySelectorAll('dt')].map((dt) => dt.textContent ?? '');
+  };
+
+  const providersStat = (meeting: Meeting): string => {
+    const target = document.createElement('div');
+    new StatisticsPanel().render(target, meeting, new Translator('en'));
+    return target.querySelectorAll('dd')[3]?.textContent ?? '';
+  };
+
+  it('keeps calling an old meeting Whisper', () => {
+    const meeting = recording('whisper', 60);
+    expect(breakdownLabels(meeting)).toEqual(['Whisper', 'Total']);
+    expect(providersStat(meeting)).toBe('Whisper');
+  });
+
+  it('calls a new meeting GPT Transcribe', () => {
+    const meeting = recording('gpt-transcribe', 60);
+    expect(breakdownLabels(meeting)).toEqual(['GPT Transcribe', 'Total']);
+    expect(providersStat(meeting)).toBe('GPT Transcribe');
   });
 });
