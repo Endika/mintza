@@ -32,7 +32,7 @@ export class Router {
       'hashchange',
       (e) => {
         if (e.oldURL && window.location.hash === this.lastTargetHash) return;
-        void this.handle();
+        void this.handle(!e.oldURL);
       },
       { signal: this.abort.signal },
     );
@@ -52,9 +52,13 @@ export class Router {
     }
   }
 
-  private async handle(): Promise<void> {
+  private async handle(force = true): Promise<void> {
     const target = window.location.hash;
     this.lastTargetHash = target;
+    if (!force && this.current && target === this.currentHash) {
+      this.generation++;
+      return;
+    }
     const initial = this.firstRender;
     this.firstRender = false;
     const generation = ++this.generation;
