@@ -72,7 +72,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'claude-sonnet-4-5',
+              model: 'claude-sonnet-5-5',
               max_tokens: 1,
               messages: [{ role: 'user', content: 'ping' }],
             }),

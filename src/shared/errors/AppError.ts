@@ -22,6 +22,7 @@ export type ErrorReason =
   | 'network'
   | 'no_speech'
   | 'bad_response'
+  | 'refused'
   | 'unknown';
 
 export interface ProviderAttempt {
