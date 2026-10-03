@@ -56,10 +56,8 @@ export type TranslationKey =
   | 'summary.decisions'
   | 'summary.next_steps'
   | 'settings.title'
-  | 'settings.api_keys'
   | 'settings.api_keys_warning'
   | 'settings.qualities'
-  | 'settings.preferences'
   | 'settings.summary_quality'
   | 'settings.transcription_quality'
   | 'settings.cheap'
@@ -101,7 +99,6 @@ export type TranslationKey =
   | 'templates.field_mindmap'
   | 'templates.field_kinds'
   | 'templates.field_label_overrides'
-  | 'templates.field_prompt_overrides'
   | 'templates.cancel'
   | 'templates.save'
   | 'templates.confirm_delete'
@@ -172,7 +169,6 @@ export type TranslationKey =
   | 'settings.azure_region_placeholder'
   | 'settings.key_placeholder'
   | 'templates.load_failed'
-  | 'templates.section_count'
   | 'templates.copy_name'
   | 'templates.delete_failed'
   | 'templates.field_meeting_type'
@@ -202,7 +198,36 @@ export type TranslationKey =
   | 'detail.delete_meeting'
   | 'sentiment.overall'
   | 'detail.cost'
-  | 'detail.cost_total';
+  | 'detail.cost_total'
+  | 'settings.language_title'
+  | 'settings.spoken_language'
+  | 'settings.spoken_language_hint'
+  | 'settings.keys_title'
+  | 'settings.required'
+  | 'settings.backups'
+  | 'settings.use_openai'
+  | 'settings.use_google'
+  | 'settings.use_azure'
+  | 'settings.use_anthropic'
+  | 'settings.check_ok'
+  | 'settings.check_failed'
+  | 'settings.test_failed'
+  | 'settings.confirm_clear'
+  | 'settings.leave_unsaved'
+  | 'settings.quality_hint'
+  | 'settings.default_template_hint'
+  | 'settings.about'
+  | 'settings.licence'
+  | 'templates.result_count'
+  | 'templates.result_count_one'
+  | 'templates.edit_title'
+  | 'templates.field_kinds_hint'
+  | 'templates.main_result'
+  | 'templates.make_main'
+  | 'templates.customise'
+  | 'templates.customise_hint'
+  | 'templates.field_label'
+  | 'templates.field_prompt';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -263,17 +288,15 @@ const EN: Translations = {
   'summary.decisions': 'Decisions',
   'summary.next_steps': 'Next steps',
   'settings.title': 'Settings',
-  'settings.api_keys': 'API keys',
   'settings.api_keys_warning':
     'Your keys stay in this browser. Mintza only sends each key to its own provider, when you record or summarize.',
-  'settings.qualities': 'Quality profiles',
-  'settings.preferences': 'Preferences',
-  'settings.summary_quality': 'Summary quality',
-  'settings.transcription_quality': 'Transcription quality',
+  'settings.qualities': 'Quality',
+  'settings.summary_quality': 'Summaries',
+  'settings.transcription_quality': 'Transcription',
   'settings.cheap': 'Cheap',
   'settings.balanced': 'Balanced',
   'settings.premium': 'Premium',
-  'settings.btn_save': 'Save',
+  'settings.btn_save': 'Save changes',
   'settings.btn_clear': 'Clear keys',
   'settings.btn_test': 'Test',
   'settings.testing': 'Testing…',
@@ -306,14 +329,13 @@ const EN: Translations = {
   'templates.delete': 'Delete',
   'templates.builtin': 'Built-in',
   'templates.field_name': 'Name',
-  'templates.field_mindmap': 'Mind map structure suggestion',
-  'templates.field_kinds': 'Summary sections (toggle to include)',
+  'templates.field_mindmap': 'Mind map outline',
+  'templates.field_kinds': 'Results',
   'templates.field_label_overrides': 'Custom labels (leave empty to keep default)',
-  'templates.field_prompt_overrides': 'Custom prompts (leave empty to keep default)',
   'templates.cancel': 'Cancel',
   'templates.save': 'Save template',
   'templates.confirm_delete': 'Delete this template?',
-  'templates.in_use_block': 'In use by {count} meeting(s) — cannot delete',
+  'templates.in_use_block': "Used in {count} meeting(s), so it can't be deleted",
   'templates.used_in': 'Used in {count} meeting(s)',
   'meeting.regenerate': 'Regenerate with',
   'meeting.regenerating': 'Regenerating summaries…',
@@ -371,10 +393,10 @@ const EN: Translations = {
   'detail.no_transcript': 'No transcript.',
   'detail.no_summaries': 'No summaries.',
   'detail.regenerate': 'Regenerate',
-  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
-  'settings.provider_google': 'Google (Gemini + Speech)',
-  'settings.provider_anthropic': 'Anthropic Claude',
-  'settings.provider_azure': 'Azure Speech',
+  'settings.provider_openai': 'OpenAI',
+  'settings.provider_google': 'Google',
+  'settings.provider_anthropic': 'Anthropic',
+  'settings.provider_azure': 'Azure',
   'settings.hint_cheap': 'Lowest cost; uses your cheapest connected service first.',
   'settings.hint_balanced': 'Good quality at low cost. Recommended.',
   'settings.hint_premium': 'Best quality, about 20× the cost.',
@@ -382,14 +404,13 @@ const EN: Translations = {
   'settings.azure_region_placeholder': 'e.g. westeurope',
   'settings.key_placeholder': 'Paste your key',
   'templates.load_failed': "Couldn't load your templates.",
-  'templates.section_count': '{count} sections',
   'templates.copy_name': '{name} copy',
   'templates.delete_failed': "Couldn't delete this template.",
   'templates.field_meeting_type': 'What kind of meeting is this?',
   'templates.field_meeting_type_hint':
     'Mintza tells the assistant this before reading the transcript.',
   'templates.meeting_type_placeholder': "a doctor's appointment, a brainstorm…",
-  'templates.kinds_required': 'Pick at least one summary section.',
+  'templates.kinds_required': 'Pick at least one result.',
   'cost.total': 'Total:',
   'cost.words': '{count} words',
   'cost.so_far': 'Cost so far: {amount}',
@@ -414,6 +435,38 @@ const EN: Translations = {
   'sentiment.overall': 'Overall tone',
   'detail.cost': 'Cost',
   'detail.cost_total': 'Total',
+  'settings.language_title': 'Language',
+  'settings.spoken_language': 'Language spoken in meetings',
+  'settings.spoken_language_hint':
+    'Mintza transcribes in this language. You can also change it before each meeting.',
+  'settings.keys_title': 'Your keys',
+  'settings.required': 'Required',
+  'settings.backups': 'Optional backup services (Google, Azure, Anthropic)',
+  'settings.use_openai': 'Transcription and summaries (Whisper and GPT)',
+  'settings.use_google': 'Transcription and summaries (Speech and Gemini)',
+  'settings.use_azure': 'Transcription (Azure Speech)',
+  'settings.use_anthropic': 'Summaries (Claude)',
+  'settings.check_ok': '{service} works',
+  'settings.check_failed': "{service} didn't work",
+  'settings.test_failed': "Couldn't test this key.",
+  'settings.confirm_clear':
+    "Remove all your keys from this browser? You'll need to paste them again to record.",
+  'settings.leave_unsaved': 'You have unsaved changes. Leave without saving?',
+  'settings.quality_hint': 'Higher quality costs more. You pay each provider directly.',
+  'settings.default_template_hint': 'New meetings start with this template.',
+  'settings.about': 'About Mintza',
+  'settings.licence': 'Open source under the MIT licence',
+  'templates.result_count': '{count} results',
+  'templates.result_count_one': '1 result',
+  'templates.edit_title': 'Edit template',
+  'templates.field_kinds_hint':
+    'Choose what Mintza prepares after each meeting. The main result is shown first.',
+  'templates.main_result': 'Main result',
+  'templates.make_main': 'Make main',
+  'templates.customise': 'Customise wording',
+  'templates.customise_hint': "Leave a box empty to keep Mintza's wording.",
+  'templates.field_label': 'Name shown',
+  'templates.field_prompt': 'Instructions for the assistant',
 };
 
 const ES: Translations = {
@@ -473,17 +526,15 @@ const ES: Translations = {
   'summary.decisions': 'Decisiones',
   'summary.next_steps': 'Próximos pasos',
   'settings.title': 'Ajustes',
-  'settings.api_keys': 'Claves API',
   'settings.api_keys_warning':
     'Tus claves se quedan en este navegador. Mintza solo envía cada clave a su proveedor cuando grabas o resumes.',
-  'settings.qualities': 'Perfiles de calidad',
-  'settings.preferences': 'Preferencias',
-  'settings.summary_quality': 'Calidad de resumen',
-  'settings.transcription_quality': 'Calidad de transcripción',
+  'settings.qualities': 'Calidad',
+  'settings.summary_quality': 'Resúmenes',
+  'settings.transcription_quality': 'Transcripción',
   'settings.cheap': 'Barato',
   'settings.balanced': 'Equilibrado',
   'settings.premium': 'Premium',
-  'settings.btn_save': 'Guardar',
+  'settings.btn_save': 'Guardar cambios',
   'settings.btn_clear': 'Borrar claves',
   'settings.btn_test': 'Probar',
   'settings.testing': 'Probando…',
@@ -516,14 +567,13 @@ const ES: Translations = {
   'templates.delete': 'Borrar',
   'templates.builtin': 'Integrada',
   'templates.field_name': 'Nombre',
-  'templates.field_mindmap': 'Estructura sugerida del mapa mental',
-  'templates.field_kinds': 'Secciones del resumen (activa/desactiva)',
+  'templates.field_mindmap': 'Esquema del mapa mental',
+  'templates.field_kinds': 'Resultados',
   'templates.field_label_overrides': 'Etiquetas personalizadas (vacío = por defecto)',
-  'templates.field_prompt_overrides': 'Prompts personalizados (vacío = por defecto)',
   'templates.cancel': 'Cancelar',
   'templates.save': 'Guardar plantilla',
   'templates.confirm_delete': '¿Borrar esta plantilla?',
-  'templates.in_use_block': 'Usada por {count} reunión(es) — no se puede borrar',
+  'templates.in_use_block': 'Se usa en {count} reunión(es), así que no se puede borrar',
   'templates.used_in': 'Usada en {count} reunión(es)',
   'meeting.regenerate': 'Regenerar con',
   'meeting.regenerating': 'Regenerando resúmenes…',
@@ -581,10 +631,10 @@ const ES: Translations = {
   'detail.no_transcript': 'Sin transcripción.',
   'detail.no_summaries': 'Sin resúmenes.',
   'detail.regenerate': 'Regenerar',
-  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
-  'settings.provider_google': 'Google (Gemini + Speech)',
-  'settings.provider_anthropic': 'Anthropic Claude',
-  'settings.provider_azure': 'Azure Speech',
+  'settings.provider_openai': 'OpenAI',
+  'settings.provider_google': 'Google',
+  'settings.provider_anthropic': 'Anthropic',
+  'settings.provider_azure': 'Azure',
   'settings.hint_cheap': 'El coste más bajo; usa primero tu servicio conectado más barato.',
   'settings.hint_balanced': 'Buena calidad a bajo coste. Recomendado.',
   'settings.hint_premium': 'La mejor calidad; cuesta unas 20 veces más.',
@@ -592,14 +642,13 @@ const ES: Translations = {
   'settings.azure_region_placeholder': 'p. ej., westeurope',
   'settings.key_placeholder': 'Pega tu clave',
   'templates.load_failed': 'No se pudieron cargar tus plantillas.',
-  'templates.section_count': '{count} secciones',
   'templates.copy_name': '{name} (copia)',
   'templates.delete_failed': 'No se pudo borrar esta plantilla.',
   'templates.field_meeting_type': '¿Qué tipo de reunión es?',
   'templates.field_meeting_type_hint':
     'Mintza se lo dice al asistente antes de que lea la transcripción.',
   'templates.meeting_type_placeholder': 'una cita médica, una lluvia de ideas…',
-  'templates.kinds_required': 'Elige al menos una sección del resumen.',
+  'templates.kinds_required': 'Elige al menos un resultado.',
   'cost.total': 'Total:',
   'cost.words': '{count} palabras',
   'cost.so_far': 'Coste hasta ahora: {amount}',
@@ -624,6 +673,38 @@ const ES: Translations = {
   'sentiment.overall': 'Tono general',
   'detail.cost': 'Coste',
   'detail.cost_total': 'Total',
+  'settings.language_title': 'Idioma',
+  'settings.spoken_language': 'Idioma que se habla en las reuniones',
+  'settings.spoken_language_hint':
+    'Mintza transcribe en este idioma. También puedes cambiarlo antes de cada reunión.',
+  'settings.keys_title': 'Tus claves',
+  'settings.required': 'Obligatoria',
+  'settings.backups': 'Servicios de respaldo opcionales (Google, Azure, Anthropic)',
+  'settings.use_openai': 'Transcripción y resúmenes (Whisper y GPT)',
+  'settings.use_google': 'Transcripción y resúmenes (Speech y Gemini)',
+  'settings.use_azure': 'Transcripción (Azure Speech)',
+  'settings.use_anthropic': 'Resúmenes (Claude)',
+  'settings.check_ok': '{service} funciona',
+  'settings.check_failed': '{service} no ha funcionado',
+  'settings.test_failed': 'No se ha podido probar esta clave.',
+  'settings.confirm_clear':
+    '¿Quitar todas tus claves de este navegador? Tendrás que pegarlas de nuevo para grabar.',
+  'settings.leave_unsaved': 'Tienes cambios sin guardar. ¿Salir sin guardar?',
+  'settings.quality_hint': 'Más calidad cuesta más. Pagas directamente a cada proveedor.',
+  'settings.default_template_hint': 'Las reuniones nuevas empiezan con esta plantilla.',
+  'settings.about': 'Acerca de Mintza',
+  'settings.licence': 'Código abierto con licencia MIT',
+  'templates.result_count': '{count} resultados',
+  'templates.result_count_one': '1 resultado',
+  'templates.edit_title': 'Editar plantilla',
+  'templates.field_kinds_hint':
+    'Elige qué prepara Mintza después de cada reunión. El resultado principal se muestra primero.',
+  'templates.main_result': 'Resultado principal',
+  'templates.make_main': 'Hacer principal',
+  'templates.customise': 'Personalizar el texto',
+  'templates.customise_hint': 'Deja un campo vacío para mantener el texto de Mintza.',
+  'templates.field_label': 'Nombre que se muestra',
+  'templates.field_prompt': 'Instrucciones para el asistente',
 };
 
 const EU: Translations = {
@@ -684,17 +765,15 @@ const EU: Translations = {
   'summary.decisions': 'Erabakiak',
   'summary.next_steps': 'Hurrengo urratsak',
   'settings.title': 'Ezarpenak',
-  'settings.api_keys': 'API gakoak',
   'settings.api_keys_warning':
     'Zure gakoak nabigatzaile honetan geratzen dira. Mintzak gako bakoitza bere hornitzaileari bakarrik bidaltzen dio, grabatzean edo laburtzean.',
-  'settings.qualities': 'Kalitate-profilak',
-  'settings.preferences': 'Lehentasunak',
-  'settings.summary_quality': 'Laburpenaren kalitatea',
-  'settings.transcription_quality': 'Transkripzioaren kalitatea',
+  'settings.qualities': 'Kalitatea',
+  'settings.summary_quality': 'Laburpenak',
+  'settings.transcription_quality': 'Transkripzioa',
   'settings.cheap': 'Merkea',
   'settings.balanced': 'Orekatua',
   'settings.premium': 'Premium',
-  'settings.btn_save': 'Gorde',
+  'settings.btn_save': 'Gorde aldaketak',
   'settings.btn_clear': 'Garbitu gakoak',
   'settings.btn_test': 'Probatu',
   'settings.testing': 'Probatzen…',
@@ -727,14 +806,13 @@ const EU: Translations = {
   'templates.delete': 'Ezabatu',
   'templates.builtin': 'Integratua',
   'templates.field_name': 'Izena',
-  'templates.field_mindmap': 'Buru-maparen iradokizun-egitura',
-  'templates.field_kinds': 'Laburpenaren atalak (aktibatu/desaktibatu)',
+  'templates.field_mindmap': 'Buru-maparen eskema',
+  'templates.field_kinds': 'Emaitzak',
   'templates.field_label_overrides': 'Etiketa pertsonalizatuak (hutsa = lehenetsia)',
-  'templates.field_prompt_overrides': 'Prompt pertsonalizatuak (hutsa = lehenetsia)',
   'templates.cancel': 'Utzi',
   'templates.save': 'Gorde txantiloia',
   'templates.confirm_delete': 'Txantiloi hau ezabatu?',
-  'templates.in_use_block': '{count} bilerak erabilia — ezin da ezabatu',
+  'templates.in_use_block': '{count} bileratan erabiltzen da; ezin da ezabatu',
   'templates.used_in': '{count} bileratan erabilia',
   'meeting.regenerate': 'Birsortu honekin',
   'meeting.regenerating': 'Laburpenak birsortzen…',
@@ -794,10 +872,10 @@ const EU: Translations = {
   'detail.no_transcript': 'Ez dago transkripziorik.',
   'detail.no_summaries': 'Ez dago laburpenik.',
   'detail.regenerate': 'Birsortu',
-  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
-  'settings.provider_google': 'Google (Gemini + Speech)',
-  'settings.provider_anthropic': 'Anthropic Claude',
-  'settings.provider_azure': 'Azure Speech',
+  'settings.provider_openai': 'OpenAI',
+  'settings.provider_google': 'Google',
+  'settings.provider_anthropic': 'Anthropic',
+  'settings.provider_azure': 'Azure',
   'settings.hint_cheap':
     'Kosturik txikiena; konektatutako zerbitzurik merkeena erabiltzen du lehenik.',
   'settings.hint_balanced': 'Kalitate ona kostu txikian. Gomendatua.',
@@ -806,14 +884,13 @@ const EU: Translations = {
   'settings.azure_region_placeholder': 'adib. westeurope',
   'settings.key_placeholder': 'Itsatsi zure gakoa',
   'templates.load_failed': 'Ezin izan dira zure txantiloiak kargatu.',
-  'templates.section_count': '{count} atal',
   'templates.copy_name': '{name} (kopia)',
   'templates.delete_failed': 'Ezin izan da txantiloi hau ezabatu.',
   'templates.field_meeting_type': 'Zer bilera mota da hau?',
   'templates.field_meeting_type_hint':
     'Mintzak hau esaten dio laguntzaileari transkripzioa irakurri aurretik.',
   'templates.meeting_type_placeholder': 'mediku-hitzordu bat, ideia-jasa bat…',
-  'templates.kinds_required': 'Aukeratu laburpen-atal bat gutxienez.',
+  'templates.kinds_required': 'Aukeratu emaitza bat gutxienez.',
   'cost.total': 'Guztira:',
   'cost.words': '{count} hitz',
   'cost.so_far': 'Orain arteko kostua: {amount}',
@@ -838,6 +915,39 @@ const EU: Translations = {
   'sentiment.overall': 'Tonu orokorra',
   'detail.cost': 'Kostua',
   'detail.cost_total': 'Guztira',
+  'settings.language_title': 'Hizkuntza',
+  'settings.spoken_language': 'Bileretan hitz egiten den hizkuntza',
+  'settings.spoken_language_hint':
+    'Mintzak hizkuntza honetan transkribatzen du. Bilera bakoitzaren aurretik ere alda dezakezu.',
+  'settings.keys_title': 'Zure gakoak',
+  'settings.required': 'Derrigorrezkoa',
+  'settings.backups': 'Aukerako ordezko zerbitzuak (Google, Azure, Anthropic)',
+  'settings.use_openai': 'Transkripzioa eta laburpenak (Whisper eta GPT)',
+  'settings.use_google': 'Transkripzioa eta laburpenak (Speech eta Gemini)',
+  'settings.use_azure': 'Transkripzioa (Azure Speech)',
+  'settings.use_anthropic': 'Laburpenak (Claude)',
+  'settings.check_ok': '{service}: badabil',
+  'settings.check_failed': '{service}: ez dabil',
+  'settings.test_failed': 'Ezin izan da gako hau probatu.',
+  'settings.confirm_clear':
+    'Gako guztiak nabigatzaile honetatik kendu? Grabatzeko berriro itsatsi beharko dituzu.',
+  'settings.leave_unsaved': 'Gorde gabeko aldaketak dituzu. Gorde gabe irten?',
+  'settings.quality_hint':
+    'Kalitate handiagoak gehiago balio du. Hornitzaile bakoitzari zuzenean ordaintzen diozu.',
+  'settings.default_template_hint': 'Bilera berriak txantiloi honekin hasten dira.',
+  'settings.about': 'Mintzari buruz',
+  'settings.licence': 'Kode irekia, MIT lizentziapean',
+  'templates.result_count': '{count} emaitza',
+  'templates.result_count_one': 'Emaitza 1',
+  'templates.edit_title': 'Editatu txantiloia',
+  'templates.field_kinds_hint':
+    'Aukeratu Mintzak bilera bakoitzaren ondoren zer prestatzen duen. Emaitza nagusia lehenengo erakusten da.',
+  'templates.main_result': 'Emaitza nagusia',
+  'templates.make_main': 'Nagusi bihurtu',
+  'templates.customise': 'Testua pertsonalizatu',
+  'templates.customise_hint': 'Utzi eremu bat hutsik Mintzaren testua mantentzeko.',
+  'templates.field_label': 'Erakusten den izena',
+  'templates.field_prompt': 'Laguntzailearentzako argibideak',
 };
 
 export const TRANSLATIONS: Record<LanguageCode, Translations> = {

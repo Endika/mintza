@@ -5,24 +5,12 @@ import { Money } from '../../domain/tokens/value-objects/Money';
 import type { TranscriptionProviderName } from '../../domain/transcription/value-objects/TranscriptionProvider';
 import type { Translator } from '../i18n/Translator';
 import { formatDuration } from '../util/formatDuration';
+import { LLM_LABEL, TRANSCRIPTION_LABEL } from './providerLabels';
 
 const LLM_DEFAULT_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
   anthropic: 'claude-sonnet-4-5',
   gemini: 'gemini-2.0-flash',
-};
-
-const TRANSCRIPTION_LABEL: Record<TranscriptionProviderName, string> = {
-  whisper: 'Whisper',
-  google: 'Google Speech',
-  azure: 'Azure Speech',
-  webspeech: 'Web Speech',
-};
-
-const LLM_LABEL: Record<LLMProviderName, string> = {
-  openai: 'GPT',
-  anthropic: 'Claude',
-  gemini: 'Gemini',
 };
 
 export class CostCounter {
