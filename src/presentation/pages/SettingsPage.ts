@@ -294,7 +294,7 @@ const apiKeyInput = (
       <div class="mt-1 flex gap-2">
         <input
           type="password"
-          name="${name}"
+          name="${escapeHtml(name)}"
           autocomplete="off"
           value="${value ? escapeHtml(value) : ''}"
           placeholder="${value ? '••••••••••' : 'sk-...'}"
@@ -320,7 +320,7 @@ const qualityFieldset = (
         .map(
           (opt) => `
         <label class="flex items-start gap-2 cursor-pointer rounded-lg border border-ink-100 px-3 py-2 hover:bg-ink-50">
-          <input type="radio" name="${name}" value="${opt.value}" class="mt-1" ${opt.value === current ? 'checked' : ''} />
+          <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(opt.value)}" class="mt-1" ${opt.value === current ? 'checked' : ''} />
           <span>
             <span class="block text-sm font-medium">${opt.label}</span>
             <span class="block text-xs text-ink-400">${opt.hint}</span>
