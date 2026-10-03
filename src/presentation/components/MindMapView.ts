@@ -7,7 +7,6 @@ const BRANCH_COLORS = [
   'var(--color-fg)',
   'var(--color-warning)',
   'var(--color-fg-muted)',
-  'var(--color-success)',
   'var(--color-edge)',
 ] as const;
 
