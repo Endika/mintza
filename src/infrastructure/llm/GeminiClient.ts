@@ -39,7 +39,7 @@ export class GeminiClient {
     if (!apiKey) {
       return err(new AppError('API_KEY_INVALID', 'Gemini: missing Google API key in Settings'));
     }
-    const url = `${GEMINI_BASE}/${request.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const url = `${GEMINI_BASE}/${request.model}:generateContent`;
     const body = JSON.stringify({
       systemInstruction: { parts: [{ text: request.system }] },
       contents: [{ role: 'user', parts: [{ text: request.user }] }],
@@ -51,7 +51,7 @@ export class GeminiClient {
     const response = await this.http.send({
       url,
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
       body,
     });
     if (!response.ok) return response;

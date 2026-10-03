@@ -48,11 +48,10 @@ export class GoogleSpeechClient {
       },
       audio: { content: base64 },
     });
-    const url = `${GOOGLE_URL}?key=${encodeURIComponent(apiKey)}`;
     const response = await this.http.send({
-      url,
+      url: GOOGLE_URL,
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
       body,
     });
     if (!response.ok) {
