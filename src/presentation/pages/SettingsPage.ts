@@ -66,7 +66,7 @@ export class SettingsPage implements Page {
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <h1 tabindex="-1" class="mb-5 text-3xl font-semibold tracking-tight sm:mb-6 sm:text-4xl">${t('settings.title')}</h1>
 
-        <form id="settings-form" class="flex flex-col gap-5" novalidate>
+        <form id="settings-form" class="flex flex-col gap-5 pb-24 md:pb-0" novalidate>
           <section class="card" aria-labelledby="settings-language">
             <h2 id="settings-language" class="mb-4 text-xl font-semibold tracking-tight">${t('settings.language_title')}</h2>
             <div class="grid gap-4 sm:grid-cols-2">
@@ -157,8 +157,8 @@ export class SettingsPage implements Page {
             <p class="mt-1"><a href="${LICENCE_URL}" target="_blank" rel="noopener" class="inline-block rounded-[var(--radius-control)] py-2.5 font-semibold text-fg underline-offset-4 hover:underline">${t('settings.licence')}<span class="ml-1.5 inline-block align-[-0.2em]">${ICON_EXTERNAL}</span></a></p>
           </section>
 
-          <div class="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 md:bottom-4">
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-3 shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]">
+          <div class="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-surface md:static md:mt-1 md:bg-transparent">
+            <div class="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:px-0 md:pt-5 md:pb-0">
               <div class="min-w-0 flex-1 text-sm">
                 <p id="dirty-indicator" hidden class="flex items-center gap-2 font-semibold text-warning">${ICON_ALERT}<span>${t('settings.unsaved')}</span></p>
                 <p id="settings-status" role="status" class="text-fg-muted empty:hidden"></p>
@@ -440,12 +440,12 @@ const qualityFieldset = (
   options: ReadonlyArray<QualityOption>,
 ): string => `
   <fieldset class="min-w-0">
-    <legend class="mb-3 font-semibold">${legend}</legend>
-    <div class="grid gap-2 sm:grid-cols-3">
+    <legend class="mb-2 font-semibold">${legend}</legend>
+    <div class="divide-y divide-line">
       ${options
         .map(
           (opt) => `
-        <label class="flex min-h-11 cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border border-line p-3 transition-colors duration-150 hover:bg-raised has-[:checked]:border-fg has-[:checked]:bg-raised">
+        <label class="flex min-h-11 cursor-pointer items-start gap-3 py-3">
           <input type="radio" name="${name}" value="${opt.value}" class="mt-1 size-4 shrink-0 accent-action" ${opt.value === current ? 'checked' : ''} />
           <span class="min-w-0">
             <span class="block font-semibold">${opt.label}</span>
