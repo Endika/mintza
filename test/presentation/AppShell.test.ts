@@ -1,8 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { AppShell } from '../../src/presentation/components/AppShell';
 import { Translator } from '../../src/presentation/i18n/Translator';
 
 describe('AppShell', () => {
+  afterEach(() => {
+    history.replaceState(null, '', window.location.pathname);
+  });
+
+  it('marks Record for unknown routes, which fall back to Home', () => {
+    document.body.innerHTML = '<div id="app"></div>';
+    const shell = new AppShell(document.getElementById('app') as HTMLElement, new Translator('en'));
+    shell.setActive('/nowhere');
+    const current = document.querySelector('[aria-current="page"]');
+    expect(current?.getAttribute('href')).toBe('#/');
+  });
+
   it('marks the tab for the current route, including child routes', () => {
     document.body.innerHTML = '<div id="app"></div>';
     const shell = new AppShell(document.getElementById('app') as HTMLElement, new Translator('es'));

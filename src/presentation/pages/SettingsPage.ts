@@ -206,6 +206,7 @@ export class SettingsPage implements Page {
       this.setStatus(`${tr.t('settings.save_failed')} ${result.error.message}`);
       return;
     }
+    if (languageChanged) this.deps.shell?.relabel();
     if (languageChanged && this.root) {
       this.render(this.root);
     } else {
