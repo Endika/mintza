@@ -83,6 +83,7 @@ export class HomePage implements Page {
   private readonly guard = new LeaveGuard();
   private alive = true;
   private transcriptSaved: Promise<boolean> | null = null;
+  private persisted = false;
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -196,13 +197,19 @@ export class HomePage implements Page {
 
   async canLeave(): Promise<boolean> {
     if (!this.guard.busy) return true;
-    const message =
-      this.screenState === 'processing'
-        ? this.t.t('home.leave_processing')
-        : this.t.t('home.leave_recording');
-    if (!this.guard.confirmLeave(message, (m) => window.confirm(m))) return false;
-    if (this.screenState === 'recording' || this.screenState === 'paused') return this.stop();
-    return (await this.transcriptSaved) ?? true;
+    const ask = (key: TranslationKey): boolean =>
+      this.guard.confirmLeave(this.t.t(key), (m) => window.confirm(m));
+    if (this.screenState === 'recording' || this.screenState === 'paused') {
+      return ask('home.leave_recording') && this.stop();
+    }
+    if (this.screenState === 'processing') {
+      return ask('home.leave_processing') && ((await this.transcriptSaved) ?? true);
+    }
+    return ask('home.leave_unsaved');
+  }
+
+  private get hasUnsavedMeeting(): boolean {
+    return this.meeting !== null && this.meeting.segments.length > 0 && !this.persisted;
   }
 
   dispose(): void {
@@ -226,6 +233,7 @@ export class HomePage implements Page {
     this.transcriptSaved ??= new Promise<boolean>((resolve) => {
       this.handleStop(resolve).catch((error: unknown) => {
         this.showSaveError(error instanceof Error ? error.message : String(error));
+        this.setScreenState('done');
         resolve(false);
       });
     });
@@ -343,6 +351,7 @@ export class HomePage implements Page {
     }
 
     const transcriptSaved = await this.deps.saveMeeting.execute({ meeting });
+    if (transcriptSaved.ok) this.persisted = true;
     onTranscriptSaved(transcriptSaved.ok);
     if (transcriptSaved.ok) this.setStatus(this.t.t('home.generating'));
     else this.showSaveError(transcriptSaved.error.message);
@@ -351,6 +360,7 @@ export class HomePage implements Page {
     if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-ink-400">…</em>';
 
     const result = await this.deps.finalizeMeeting.execute({ meeting, kinds: SUMMARY_KINDS });
+    if (!result.saveError) this.persisted = true;
 
     const summariesEl = this.qsOptional('#summaries');
     if (summariesEl) this.renderSummaries(summariesEl);
@@ -382,6 +392,7 @@ export class HomePage implements Page {
     if (!this.root) return;
     this.meeting = null;
     this.transcriptSaved = null;
+    this.persisted = false;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';
     void this.render(this.root);
@@ -492,7 +503,8 @@ export class HomePage implements Page {
     this.guard.setBusy(
       this.screenState === 'recording' ||
         this.screenState === 'paused' ||
-        this.screenState === 'processing',
+        this.screenState === 'processing' ||
+        this.hasUnsavedMeeting,
     );
     if (!this.root) return;
     const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
