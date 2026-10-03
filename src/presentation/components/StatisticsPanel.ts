@@ -1,5 +1,6 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { StatisticsCalculator } from '../../domain/statistics/services/StatisticsCalculator';
+import { escapeHtml } from '../util/escapeHtml';
 
 export class StatisticsPanel {
   private readonly calculator = new StatisticsCalculator();
@@ -22,7 +23,7 @@ export class StatisticsPanel {
               : stats.topKeywords
                   .map(
                     (k) =>
-                      `<span class="rounded-full bg-ink-50 px-3 py-0.5 text-xs">${escape(k.term)} · ${k.count}</span>`,
+                      `<span class="rounded-full bg-ink-50 px-3 py-0.5 text-xs">${escapeHtml(k.term)} · ${k.count}</span>`,
                   )
                   .join('')
           }
@@ -47,8 +48,3 @@ const formatDuration = (ms: number): string => {
   const pad = (n: number): string => String(n).padStart(2, '0');
   return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
 };
-
-const escape = (raw: string): string =>
-  raw.replace(/[&<>"]/g, (ch) =>
-    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;',
-  );

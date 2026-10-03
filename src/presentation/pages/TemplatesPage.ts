@@ -14,6 +14,7 @@ import {
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import type { Translator } from '../i18n/Translator';
 import type { Page } from '../router/Router';
+import { escapeHtml } from '../util/escapeHtml';
 
 export interface TemplatesPageDeps {
   readonly listTemplates: ListTemplatesUseCase;
@@ -90,21 +91,21 @@ export class TemplatesPage implements Page {
         return `
           <article class="card flex items-center justify-between gap-3">
             <div>
-              <h3 class="font-semibold">${escape(tpl.name)}${
+              <h3 class="font-semibold">${escapeHtml(tpl.name)}${
                 tpl.builtIn
                   ? ` <span class="ml-2 text-xs uppercase tracking-wide text-ink-400">${t.t('templates.builtin')}</span>`
                   : ''
               }</h3>
-              <p class="text-sm text-ink-400">${escape(tpl.systemRole)} · ${tpl.summaryKinds.length} sections</p>
+              <p class="text-sm text-ink-400">${escapeHtml(tpl.systemRole)} · ${tpl.summaryKinds.length} sections</p>
               ${usageLine}
             </div>
             <div class="flex gap-2 shrink-0 text-sm">
-              <button type="button" data-duplicate="${tpl.id}" class="btn-ghost">${t.t('templates.duplicate')}</button>
+              <button type="button" data-duplicate="${escapeHtml(tpl.id)}" class="btn-ghost">${t.t('templates.duplicate')}</button>
               ${
                 tpl.builtIn
                   ? ''
-                  : `<button type="button" data-edit="${tpl.id}" class="btn-ghost">${t.t('templates.edit')}</button>
-                     <button type="button" data-delete="${tpl.id}" class="btn-ghost text-red-600" ${deleteDisabled ? 'disabled' : ''} title="${escape(deleteTitle)}">${t.t('templates.delete')}</button>`
+                  : `<button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-ghost">${t.t('templates.edit')}</button>
+                     <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-red-600" ${deleteDisabled ? 'disabled' : ''} title="${escapeHtml(deleteTitle)}">${t.t('templates.delete')}</button>`
               }
             </div>
           </article>`;
@@ -161,16 +162,16 @@ export class TemplatesPage implements Page {
       <form id="tpl-form" class="card space-y-5">
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_name')}</span>
-          <input name="name" required value="${escape(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
+          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_system_role')}</span>
-          <input name="systemRole" required value="${escape(def.systemRole)}" placeholder="a doctor's appointment, a brainstorm…" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
+          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="a doctor's appointment, a brainstorm…" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
           <span class="mt-1 block text-xs text-ink-400">Text injected after "You are an expert assistant analyzing…"</span>
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
-          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base">${escape(def.mindMapStructure)}</textarea>
+          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
         </label>
         <fieldset>
           <legend class="text-sm font-medium mb-2">${t.t('templates.field_kinds')}</legend>
@@ -182,7 +183,7 @@ export class TemplatesPage implements Page {
               <label class="flex items-center gap-3 text-sm">
                 <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
                 <span class="w-32 text-ink-400">${defaultLabelFor(k)}</span>
-                <input name="label_${k}" placeholder="${escapeAttr(defaultLabelFor(k))}" value="${escape(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
+                <input name="label_${k}" placeholder="${escapeHtml(defaultLabelFor(k))}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
               </label>`;
             }).join('')}
           </div>
@@ -196,7 +197,7 @@ export class TemplatesPage implements Page {
               <details${promptValue ? ' open' : ''} class="rounded-lg border border-ink-100">
                 <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${defaultLabelFor(k)}</summary>
                 <div class="px-3 pb-3">
-                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeAttr(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-ink-100 px-3 py-2 text-sm font-mono">${escape(promptValue)}</textarea>
+                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-ink-100 px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
                 </div>
               </details>`;
             }).join('')}
@@ -304,13 +305,6 @@ const generateId = (seed: string): string => {
   const suffix = Math.random().toString(36).slice(2, 6);
   return slug ? `${slug}-${suffix}` : `tpl-${suffix}`;
 };
-
-const escape = (raw: string): string =>
-  raw.replace(/[&<>"]/g, (ch) =>
-    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;',
-  );
-
-const escapeAttr = (raw: string): string => raw.replace(/"/g, '&quot;');
 
 const field = (data: FormData, key: string): string => {
   const value = data.get(key);

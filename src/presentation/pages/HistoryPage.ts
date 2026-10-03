@@ -6,6 +6,7 @@ import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
 import type { Page } from '../router/Router';
+import { escapeHtml } from '../util/escapeHtml';
 
 export interface HistoryPageDeps {
   readonly listMeetings: ListMeetingsUseCase;
@@ -121,15 +122,15 @@ export class HistoryPage implements Page {
       .map(
         (m) => `
         <article class="card flex items-center justify-between gap-3">
-          <a href="#/meeting?id=${m.id.value}" class="flex-1 -m-2 p-2 rounded-md hover:bg-ink-50 transition-colors">
+          <a href="#/meeting?id=${escapeHtml(m.id.value)}" class="flex-1 -m-2 p-2 rounded-md hover:bg-ink-50 transition-colors">
             <h3 class="font-semibold">${escapeHtml(m.title)}</h3>
             <p class="text-sm text-ink-400">
-              ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${m.templateKind}
+              ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${escapeHtml(m.templateKind)}
             </p>
           </a>
           <div class="flex items-center gap-2 shrink-0">
             ${m.starred ? '<span title="Starred">★</span>' : ''}
-            <button type="button" data-delete="${m.id.value}" class="btn-ghost text-red-600 text-xs" aria-label="Delete meeting">✕</button>
+            <button type="button" data-delete="${escapeHtml(m.id.value)}" class="btn-ghost text-red-600 text-xs" aria-label="Delete meeting">✕</button>
           </div>
         </article>`,
       )
@@ -208,6 +209,3 @@ export class HistoryPage implements Page {
     return el;
   }
 }
-
-const escapeHtml = (raw: string): string =>
-  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

@@ -8,6 +8,7 @@ import type {
 import type { TemplateKind } from '../../domain/meeting/value-objects/Template';
 import type { ConfigStore } from '../state/ConfigStore';
 import type { Page } from '../router/Router';
+import { escapeHtml } from '../util/escapeHtml';
 
 export interface SettingsPageDeps {
   readonly config: ConfigStore;
@@ -94,7 +95,7 @@ export class SettingsPage implements Page {
                 <input
                   type="text"
                   name="azureRegion"
-                  value="${escapeAttr(cfg.azureRegion)}"
+                  value="${escapeHtml(cfg.azureRegion)}"
                   placeholder="westeurope"
                   class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm"
                 />
@@ -295,14 +296,14 @@ const apiKeyInput = (
           type="password"
           name="${name}"
           autocomplete="off"
-          value="${value ? escapeAttr(value) : ''}"
+          value="${value ? escapeHtml(value) : ''}"
           placeholder="${value ? '••••••••••' : 'sk-...'}"
           class="flex-1 rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
         />
-        <button type="button" data-test-key="${name}" class="btn-ghost text-sm">${testLabel}</button>
+        <button type="button" data-test-key="${escapeHtml(name)}" class="btn-ghost text-sm">${testLabel}</button>
       </div>
     </label>
-    <p data-status="${name}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>
+    <p data-status="${escapeHtml(name)}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>
   </div>
 `;
 
@@ -341,10 +342,3 @@ const buildApiKeys = (data: FormData): ApiKeys => {
   }
   return keys;
 };
-
-const escapeAttr = (raw: string): string => raw.replace(/"/g, '&quot;');
-
-const escapeHtml = (raw: string): string =>
-  raw.replace(/[&<>"]/g, (ch) =>
-    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;',
-  );
