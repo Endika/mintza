@@ -1,6 +1,11 @@
 import type { LanguageCode } from '../../domain/language/value-objects/Language';
 
 export type TranslationKey =
+  | 'sentiment.sentence_very_negative'
+  | 'sentiment.sentence_negative'
+  | 'sentiment.sentence_neutral'
+  | 'sentiment.sentence_positive'
+  | 'sentiment.sentence_very_positive'
   | 'app.tagline'
   | 'nav.history'
   | 'nav.settings'
@@ -232,6 +237,11 @@ export type TranslationKey =
 export type Translations = Record<TranslationKey, string>;
 
 const EN: Translations = {
+  'sentiment.sentence_very_negative': 'The tone was tense for most of the meeting.',
+  'sentiment.sentence_negative': 'The tone leaned negative.',
+  'sentiment.sentence_neutral': 'The tone stayed even, neither positive nor negative.',
+  'sentiment.sentence_positive': 'The tone leaned positive.',
+  'sentiment.sentence_very_positive': 'The tone was upbeat for most of the meeting.',
   'app.tagline': 'From talk to insight.',
   'nav.history': 'History',
   'nav.settings': 'Settings',
@@ -470,6 +480,11 @@ const EN: Translations = {
 };
 
 const ES: Translations = {
+  'sentiment.sentence_very_negative': 'El tono fue tenso durante casi toda la reunión.',
+  'sentiment.sentence_negative': 'El tono tiró más bien a negativo.',
+  'sentiment.sentence_neutral': 'El tono fue neutro, ni positivo ni negativo.',
+  'sentiment.sentence_positive': 'El tono tiró más bien a positivo.',
+  'sentiment.sentence_very_positive': 'El tono fue animado durante casi toda la reunión.',
   'app.tagline': 'De la conversación a la idea.',
   'nav.history': 'Historial',
   'nav.settings': 'Ajustes',
@@ -708,6 +723,11 @@ const ES: Translations = {
 };
 
 const EU: Translations = {
+  'sentiment.sentence_very_negative': 'Tonua tirabiratsua izan zen bileraren zatirik handienean.',
+  'sentiment.sentence_negative': 'Tonua negatiborantz jo zuen.',
+  'sentiment.sentence_neutral': 'Tonua orekatua izan zen, ez positiboa ez negatiboa.',
+  'sentiment.sentence_positive': 'Tonua positiborantz jo zuen.',
+  'sentiment.sentence_very_positive': 'Tonua baikorra izan zen bileraren zatirik handienean.',
   'app.tagline': 'Hizketatik ideiara.',
   'nav.history': 'Historia',
   'nav.settings': 'Ezarpenak',
