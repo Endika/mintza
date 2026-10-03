@@ -43,10 +43,19 @@ const expectKeyInHeaderOnly = (requests: readonly HttpRequest[]): void => {
 };
 
 describe('Google API keys travel in a header, never in the URL', () => {
-  it('validates both Google services with the key in x-goog-api-key', async () => {
+  it('tests the Gemini key against Gemini only, in x-goog-api-key', async () => {
     const http = new RecordingHttp();
     await new HttpApiKeyValidator(http).validate('google', KEY);
-    expect(http.requests).toHaveLength(2);
+    expect(http.requests.map((r) => new URL(r.url).host)).toEqual([
+      'generativelanguage.googleapis.com',
+    ]);
+    expectKeyInHeaderOnly(http.requests);
+  });
+
+  it('tests the Speech key against Speech only, in x-goog-api-key', async () => {
+    const http = new RecordingHttp();
+    await new HttpApiKeyValidator(http).validate('googleSpeech', KEY);
+    expect(http.requests.map((r) => new URL(r.url).host)).toEqual(['speech.googleapis.com']);
     expectKeyInHeaderOnly(http.requests);
   });
 

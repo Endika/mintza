@@ -89,7 +89,7 @@ export const buildAppDeps = (): AppDeps => {
     name: 'Whisper',
     port: new WhisperTranscriptionAdapter(whisper),
   };
-  const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleKey());
+  const googleSpeech = new GoogleSpeechClient(http, () => configStore.googleSpeechKey());
   const googleSpeechAdapter: NamedTranscriptionPort = {
     name: 'Google Speech',
     port: new GoogleSpeechTranscriptionAdapter(googleSpeech),

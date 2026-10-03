@@ -36,7 +36,7 @@ type T = (key: TranslationKey, vars?: Record<string, string | number>) => string
 
 const LICENCE_URL = 'https://github.com/Endika/mintza/blob/main/LICENSE';
 const OPENAI_KEYS_URL = 'https://platform.openai.com/api-keys';
-const KEY_FIELDS = ['openai', 'google', 'azure', 'anthropic'] as const;
+const KEY_FIELDS = ['openai', 'google', 'googleSpeech', 'azure', 'anthropic'] as const;
 
 export class SettingsPage implements Page {
   private root: HTMLElement | null = null;
@@ -56,7 +56,9 @@ export class SettingsPage implements Page {
     const templates = await this.loadTemplates();
     const tr = this.deps.config.translator;
     const t: T = (key, vars) => tr.t(key, vars);
-    const hasBackupKey = Boolean(cfg.apiKeys.google || cfg.apiKeys.azure || cfg.apiKeys.anthropic);
+    const hasBackupKey = Boolean(
+      cfg.apiKeys.google || cfg.apiKeys.googleSpeech || cfg.apiKeys.azure || cfg.apiKeys.anthropic,
+    );
     const qualityOptions: ReadonlyArray<QualityOption> = [
       { value: 'cheap', label: t('settings.cheap'), hint: t('settings.hint_cheap') },
       { value: 'balanced', label: t('settings.balanced'), hint: t('settings.hint_balanced') },
@@ -101,7 +103,8 @@ export class SettingsPage implements Page {
                   <span class="min-w-0">${t('settings.backups')}</span>
                 </summary>
                 <div class="flex flex-col gap-5 border-t border-line px-4 pt-4 pb-5">
-                  ${keyRow('google', t('settings.provider_google'), t('settings.use_google'), cfg.apiKeys.google, t)}
+                  ${keyRow('google', t('settings.provider_google'), t('settings.use_google'), cfg.apiKeys.google, t, { source: t('settings.source_google') })}
+                  ${keyRow('googleSpeech', t('settings.provider_google_speech'), t('settings.use_google_speech'), cfg.apiKeys.googleSpeech, t, { source: t('settings.source_google_speech') })}
                   ${keyRow('azure', t('settings.provider_azure'), t('settings.use_azure'), cfg.apiKeys.azure, t)}
                   <div class="flex flex-col gap-2">
                     <label for="azure-region" class="font-semibold">${t('settings.azure_region')}</label>
@@ -383,7 +386,7 @@ const keyRow = (
   use: string,
   value: string | undefined,
   t: T,
-  options: { required?: boolean; getKey?: boolean } = {},
+  options: { required?: boolean; getKey?: boolean; source?: string } = {},
 ): string => `
   <div class="flex min-w-0 flex-col gap-2">
     <div class="flex min-w-0 items-end gap-2">
@@ -398,7 +401,7 @@ const keyRow = (
           spellcheck="false"
           value="${value ? escapeHtml(value) : ''}"
           placeholder="${escapeHtml(t('settings.key_placeholder'))}"
-          aria-describedby="key-${name}-use key-${name}-result"
+          aria-describedby="key-${name}-use${options.source ? ` key-${name}-source` : ''} key-${name}-result"
           class="field min-w-0 w-full font-mono text-sm"
         />
       </label>
@@ -409,6 +412,7 @@ const keyRow = (
         ? `<span class="rounded-full bg-raised px-2.5 py-0.5 text-xs font-semibold text-fg">${t('settings.required')}</span>`
         : ''
     }<span>${use}</span></p>
+    ${options.source ? `<p id="key-${name}-source" class="text-sm text-fg-muted">${options.source}</p>` : ''}
     <div id="key-${name}-result" data-status="${name}" aria-live="polite" class="flex flex-col gap-1 text-sm empty:sr-only"></div>
     ${
       options.getKey
