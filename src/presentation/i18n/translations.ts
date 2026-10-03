@@ -231,6 +231,10 @@ export type TranslationKey =
   | 'settings.check_ok'
   | 'settings.check_failed'
   | 'settings.test_failed'
+  | 'settings.provider_google_speech'
+  | 'settings.use_google_speech'
+  | 'settings.source_google'
+  | 'settings.source_google_speech'
   | 'settings.confirm_clear'
   | 'settings.leave_unsaved'
   | 'settings.quality_hint'
@@ -430,7 +434,7 @@ const EN: Translations = {
   'detail.no_summaries': 'No summaries.',
   'detail.regenerate': 'Regenerate',
   'settings.provider_openai': 'OpenAI',
-  'settings.provider_google': 'Google',
+  'settings.provider_google': 'Google Gemini',
   'settings.provider_anthropic': 'Anthropic',
   'settings.provider_azure': 'Azure',
   'settings.hint_cheap': 'Lowest cost; uses your cheapest connected service first.',
@@ -481,12 +485,17 @@ const EN: Translations = {
   'settings.required': 'Required',
   'settings.backups': 'Optional backup services (Google, Azure, Anthropic)',
   'settings.use_openai': 'Transcription and summaries (Whisper and GPT)',
-  'settings.use_google': 'Transcription and summaries (Speech and Gemini)',
+  'settings.use_google': 'Summaries (Gemini)',
   'settings.use_azure': 'Transcription (Azure Speech)',
   'settings.use_anthropic': 'Summaries (Claude)',
   'settings.check_ok': '{service} works',
   'settings.check_failed': "{service} didn't work",
   'settings.test_failed': "Couldn't test this key.",
+  'settings.provider_google_speech': 'Google Speech',
+  'settings.use_google_speech': 'Transcription (Google Speech)',
+  'settings.source_google': 'Where to get it: Google AI Studio → Get API key',
+  'settings.source_google_speech':
+    'Where to get it: Google Cloud → Credentials → API key with Cloud Speech-to-Text',
   'settings.confirm_clear':
     "Remove all your keys from this browser? You'll need to paste them again to record.",
   'settings.leave_unsaved': 'You have unsaved changes. Leave without saving?',
@@ -687,7 +696,7 @@ const ES: Translations = {
   'detail.no_summaries': 'Sin resúmenes.',
   'detail.regenerate': 'Regenerar',
   'settings.provider_openai': 'OpenAI',
-  'settings.provider_google': 'Google',
+  'settings.provider_google': 'Google Gemini',
   'settings.provider_anthropic': 'Anthropic',
   'settings.provider_azure': 'Azure',
   'settings.hint_cheap': 'El coste más bajo; usa primero tu servicio conectado más barato.',
@@ -738,12 +747,17 @@ const ES: Translations = {
   'settings.required': 'Obligatoria',
   'settings.backups': 'Servicios de respaldo opcionales (Google, Azure, Anthropic)',
   'settings.use_openai': 'Transcripción y resúmenes (Whisper y GPT)',
-  'settings.use_google': 'Transcripción y resúmenes (Speech y Gemini)',
+  'settings.use_google': 'Resúmenes (Gemini)',
   'settings.use_azure': 'Transcripción (Azure Speech)',
   'settings.use_anthropic': 'Resúmenes (Claude)',
   'settings.check_ok': '{service} funciona',
   'settings.check_failed': '{service} no ha funcionado',
   'settings.test_failed': 'No se ha podido probar esta clave.',
+  'settings.provider_google_speech': 'Google Speech',
+  'settings.use_google_speech': 'Transcripción (Google Speech)',
+  'settings.source_google': 'Dónde conseguirla: Google AI Studio → Get API key',
+  'settings.source_google_speech':
+    'Dónde conseguirla: Google Cloud → Credenciales → clave de API con Cloud Speech-to-Text',
   'settings.confirm_clear':
     '¿Quitar todas tus claves de este navegador? Tendrás que pegarlas de nuevo para grabar.',
   'settings.leave_unsaved': 'Tienes cambios sin guardar. ¿Salir sin guardar?',
@@ -947,7 +961,7 @@ const EU: Translations = {
   'detail.no_summaries': 'Ez dago laburpenik.',
   'detail.regenerate': 'Birsortu',
   'settings.provider_openai': 'OpenAI',
-  'settings.provider_google': 'Google',
+  'settings.provider_google': 'Google Gemini',
   'settings.provider_anthropic': 'Anthropic',
   'settings.provider_azure': 'Azure',
   'settings.hint_cheap':
@@ -999,12 +1013,17 @@ const EU: Translations = {
   'settings.required': 'Derrigorrezkoa',
   'settings.backups': 'Aukerako ordezko zerbitzuak (Google, Azure, Anthropic)',
   'settings.use_openai': 'Transkripzioa eta laburpenak (Whisper eta GPT)',
-  'settings.use_google': 'Transkripzioa eta laburpenak (Speech eta Gemini)',
+  'settings.use_google': 'Laburpenak (Gemini)',
   'settings.use_azure': 'Transkripzioa (Azure Speech)',
   'settings.use_anthropic': 'Laburpenak (Claude)',
   'settings.check_ok': '{service}: badabil',
   'settings.check_failed': '{service}: ez dabil',
   'settings.test_failed': 'Ezin izan da gako hau probatu.',
+  'settings.provider_google_speech': 'Google Speech',
+  'settings.use_google_speech': 'Transkripzioa (Google Speech)',
+  'settings.source_google': 'Non lortu: Google AI Studio → Get API key',
+  'settings.source_google_speech':
+    'Non lortu: Google Cloud → Credentials → Cloud Speech-to-Text duen API gakoa',
   'settings.confirm_clear':
     'Gako guztiak nabigatzaile honetatik kendu? Grabatzeko berriro itsatsi beharko dituzu.',
   'settings.leave_unsaved': 'Gorde gabeko aldaketak dituzu. Gorde gabe irten?',

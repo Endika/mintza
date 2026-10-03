@@ -7,7 +7,9 @@ export type QualityProfile = 'cheap' | 'balanced' | 'premium';
 
 export interface ApiKeys {
   readonly openai?: string;
+  /** The Gemini key; it was the only Google key before Speech got its own. */
   readonly google?: string;
+  readonly googleSpeech?: string;
   readonly azure?: string;
   readonly anthropic?: string;
 }

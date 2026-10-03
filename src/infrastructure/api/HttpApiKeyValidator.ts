@@ -103,6 +103,9 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
           hint: () =>
             'Generative Language API not enabled. Visit console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
         },
+      ];
+    case 'googleSpeech':
+      return [
         {
           service: 'Google Speech',
           request: {

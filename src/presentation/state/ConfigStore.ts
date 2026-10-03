@@ -52,6 +52,11 @@ export class ConfigStore {
     return this.current.apiKeys.google;
   }
 
+  /** Falls back to the Gemini key, so a single legacy key that covers both keeps working. */
+  googleSpeechKey(): string | undefined {
+    return this.current.apiKeys.googleSpeech ?? this.current.apiKeys.google;
+  }
+
   azureKey(): string | undefined {
     return this.current.apiKeys.azure;
   }
