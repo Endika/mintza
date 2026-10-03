@@ -53,6 +53,8 @@ import { LANGUAGE_NAMES, languageName } from '../i18n/languageName';
 import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
+import { meetingTitle } from '../util/meetingTitle';
+import { metaLine } from '../util/metaLine';
 import { LeaveGuard } from '../lifecycle/LeaveGuard';
 
 export interface HomePageDeps {
@@ -481,8 +483,10 @@ export class HomePage implements Page {
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
-    this.qs<HTMLElement>('#live-context').textContent =
-      `${templateDisplayName(meeting.template, this.t)} · ${languageName(this.readLanguage())}`;
+    this.qs<HTMLElement>('#live-context').innerHTML = metaLine([
+      templateDisplayName(meeting.template, this.t),
+      languageName(this.readLanguage()),
+    ]);
     this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => {
@@ -599,7 +603,7 @@ export class HomePage implements Page {
     const status = this.qsOptional('#status');
     if (!status) return;
     status.classList.remove('text-danger');
-    status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a> · <span class="tabular">${escapeHtml(detail)}</span>`;
+    status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a> <span class="tabular">·&nbsp;${escapeHtml(detail)}</span>`;
   }
 
   private handleNewMeeting(): void {
@@ -685,10 +689,27 @@ export class HomePage implements Page {
       el.textContent = this.t.t('home.chunks_wait');
       return;
     }
-    const parts = [this.t.t('home.progress', { done: p.transcribed, total: p.received })];
-    if (p.skipped > 0) parts.push(this.t.t('home.progress_skipped', { count: p.skipped }));
-    if (p.failed > 0) parts.push(this.t.t('home.progress_failed', { count: p.failed }));
-    el.textContent = parts.join(' · ');
+    const parts = [
+      this.t.t(p.received === 1 ? 'home.progress_one' : 'home.progress', {
+        done: p.transcribed,
+        total: p.received,
+      }),
+    ];
+    if (p.skipped > 0) {
+      parts.push(
+        this.t.t(p.skipped === 1 ? 'home.progress_skipped_one' : 'home.progress_skipped', {
+          count: p.skipped,
+        }),
+      );
+    }
+    if (p.failed > 0) {
+      parts.push(
+        this.t.t(p.failed === 1 ? 'home.progress_failed_one' : 'home.progress_failed', {
+          count: p.failed,
+        }),
+      );
+    }
+    el.innerHTML = metaLine(parts);
   }
 
   private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
@@ -867,7 +888,7 @@ export class HomePage implements Page {
 
   private renderDone(meeting: Meeting): void {
     const title = this.qsOptional('#done-title');
-    if (title) title.textContent = meeting.title;
+    if (title) title.textContent = meetingTitle(meeting, this.t);
     const meta = this.qsOptional('#done-meta');
     if (meta) this.counter.renderSummaryLine(meta, meeting, this.t);
     const failed = this.root ? [...this.root.querySelectorAll('#steps [data-failed]')] : [];
@@ -935,8 +956,8 @@ export class HomePage implements Page {
       <a href="#/meeting?id=${escapeHtml(last.id.value)}" class="card flex items-center gap-4 transition-colors duration-150 hover:bg-raised sm:p-5">
         <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-raised text-fg">${ICON_HISTORY}</span>
         <span class="min-w-0 flex-1">
-          <span class="block truncate font-semibold">${escapeHtml(last.title)}</span>
-          <span class="block break-words text-sm text-fg-muted tabular">${escapeHtml(this.lastMeetingMeta(last))}</span>
+          <span class="block truncate font-semibold">${escapeHtml(meetingTitle(last, this.t))}</span>
+          <span class="block text-sm text-fg-muted tabular">${metaLine(this.lastMeetingMeta(last))}</span>
         </span>
         <span class="shrink-0 text-fg-muted">${ICON_CHEVRON}</span>
       </a>
@@ -944,7 +965,7 @@ export class HomePage implements Page {
     this.applyScreenState();
   }
 
-  private lastMeetingMeta(item: MeetingListItem): string {
+  private lastMeetingMeta(item: MeetingListItem): string[] {
     const when = new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
       dateStyle: 'medium',
       timeStyle: 'short',
@@ -952,7 +973,7 @@ export class HomePage implements Page {
     const template = this.templates.find((tpl) => tpl.id === item.templateKind);
     const parts = [when, formatDuration(item.durationMs / 1000, this.t.language)];
     if (template) parts.push(templateDisplayName(template, this.t));
-    return parts.join(' · ');
+    return parts;
   }
 
   private async generateAndRenderMindMap(): Promise<void> {

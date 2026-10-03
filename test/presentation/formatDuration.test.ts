@@ -8,6 +8,8 @@ describe('formatDuration', () => {
   it('keeps short recordings in seconds', () => expect(formatDuration(45, 'eu')).toBe('45 s'));
   it('pads seconds under a minute count', () =>
     expect(formatDuration(65, 'en')).toBe('1 min 05 s'));
+  it('drops the seconds on a whole minute', () =>
+    expect(formatDuration(2520, 'en')).toBe('42 min'));
   it('never shows a negative or fractional duration', () => {
     expect(formatDuration(-3, 'en')).toBe('0 s');
     expect(formatDuration(59.9, 'en')).toBe('59 s');

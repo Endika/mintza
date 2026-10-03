@@ -9,6 +9,7 @@ export const formatDuration = (seconds: number, lang: LanguageCode): string => {
   const minutes = Math.floor((total % 3600) / 60);
   const secs = total % 60;
   if (hours > 0) return `${plain.format(hours)} h ${padded.format(minutes)} min`;
+  if (minutes > 0 && secs === 0) return `${plain.format(minutes)} min`;
   if (minutes > 0) return `${plain.format(minutes)} min ${padded.format(secs)} s`;
   return `${plain.format(secs)} s`;
 };

@@ -66,6 +66,7 @@ export class App {
     const { HistoryPage } = await import('./presentation/pages/HistoryPage');
     return new HistoryPage({
       listMeetings: this.deps.listMeetings,
+      listTemplates: this.deps.listTemplates,
       getMeeting: this.deps.getMeeting,
       saveMeeting: this.deps.saveMeeting,
       deleteMeeting: this.deps.deleteMeeting,

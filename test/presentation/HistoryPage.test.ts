@@ -4,21 +4,54 @@ import { DeleteMeetingUseCase } from '../../src/application/use-cases/DeleteMeet
 import { GetMeetingUseCase } from '../../src/application/use-cases/GetMeetingUseCase';
 import { ListMeetingsUseCase } from '../../src/application/use-cases/ListMeetingsUseCase';
 import { SaveMeetingUseCase } from '../../src/application/use-cases/SaveMeetingUseCase';
+import { Language } from '../../src/domain/language/value-objects/Language';
+import type { LanguageCode } from '../../src/domain/language/value-objects/Language';
+import { Meeting } from '../../src/domain/meeting/entities/Meeting';
+import { Template } from '../../src/domain/meeting/value-objects/Template';
+import { SUMMARY_KINDS } from '../../src/domain/summary/value-objects/SummaryKind';
+import type { AppError } from '../../src/shared/errors/AppError';
+import { ok, type Result } from '../../src/shared/result/Result';
 import { Translator } from '../../src/presentation/i18n/Translator';
 import { HistoryPage } from '../../src/presentation/pages/HistoryPage';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
 import { finishedMeeting, settle } from './meetingFixtures';
 
+const STANDUP = Template.fromDefinition({
+  id: 'standup-ab12',
+  name: 'Daily standup',
+  builtIn: false,
+  systemRole: 'a daily standup',
+  mindMapStructure: 'Team → Done, Doing, Blocked',
+  summaryKinds: SUMMARY_KINDS,
+  featuredOrder: SUMMARY_KINDS,
+  kindLabels: {},
+  promptOverrides: {},
+});
+
+const templates = {
+  execute: (): Promise<Result<Template[], AppError>> =>
+    Promise.resolve(ok([Template.generic(), Template.work(), Template.interview(), STANDUP])),
+};
+
+const search = async (root: HTMLElement, query: string): Promise<void> => {
+  const input = root.querySelector<HTMLInputElement>('#search')!;
+  input.value = query;
+  input.dispatchEvent(new Event('input'));
+  await settle();
+};
+
 const renderHistory = async (
   repo: InMemoryMeetingRepository,
+  language: LanguageCode = 'en',
 ): Promise<{ root: HTMLElement; repo: InMemoryMeetingRepository }> => {
   const page = new HistoryPage({
+    listTemplates: templates,
     listMeetings: new ListMeetingsUseCase(repo),
     getMeeting: new GetMeetingUseCase(repo),
     saveMeeting: new SaveMeetingUseCase(repo),
     deleteMeeting: new DeleteMeetingUseCase(repo),
     clearMeetings: new ClearMeetingsUseCase(repo),
-    translator: new Translator('en'),
+    translator: new Translator(language),
   });
   const root = document.createElement('div');
   document.body.appendChild(root);
@@ -106,5 +139,51 @@ describe('HistoryPage', () => {
 
     expect(root.querySelector('#list img')).toBeNull();
     expect(root.querySelector('#list h2')?.textContent).toBe('<img src=x onerror=alert(1)>');
+  });
+
+  it('shows and finds a custom template by its name, never its id', async () => {
+    const repo = new InMemoryMeetingRepository();
+    await repo.save(finishedMeeting({ title: 'Monday', seconds: 600, template: STANDUP }));
+    await repo.save(finishedMeeting({ title: 'Tuesday', seconds: 600 }));
+    const { root } = await renderHistory(repo);
+
+    const rows = (): HTMLElement[] => [...root.querySelectorAll<HTMLElement>('#list li')];
+    const monday = rows().find((li) => li.textContent.includes('Monday'))!;
+    expect(monday.textContent).toContain('Daily standup');
+    expect(monday.textContent).not.toContain('standup-ab12');
+
+    await search(root, 'daily stand');
+    expect(rows().map((li) => li.querySelector('h2')?.textContent)).toEqual(['Monday']);
+  });
+
+  it('titles an untitled meeting in the interface language and finds it by that title', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = Meeting.start({
+      template: Template.work(),
+      language: Language.of('es'),
+      now: new Date(2026, 9, 3, 15, 37),
+    });
+    meeting.finish(new Date(2026, 9, 3, 16, 19));
+    await repo.save(meeting);
+    const { root } = await renderHistory(repo, 'es');
+
+    expect(root.querySelector('#list h2')?.textContent).toBe('Reunión · 3 oct, 15:37');
+    await search(root, 'reunión');
+    expect(root.querySelectorAll('#list li')).toHaveLength(1);
+  });
+
+  it('keeps each meta value whole and starts each separator on the value it introduces', async () => {
+    const repo = new InMemoryMeetingRepository();
+    await repo.save(finishedMeeting({ title: 'Budget review', seconds: 2520 }));
+    const { root } = await renderHistory(repo);
+
+    const parts = [...root.querySelectorAll<HTMLElement>('#list li p span')].map(
+      (span) => span.textContent,
+    );
+    expect(parts).toHaveLength(3);
+    expect(parts[0]).not.toContain('·');
+    expect(parts[1]).toBe('· 42 min');
+    expect(parts[2]).toBe('· Work');
+    expect(parts.every((part) => !part.trimEnd().endsWith('·'))).toBe(true);
   });
 });
