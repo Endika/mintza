@@ -4,6 +4,7 @@ import { GetMeetingUseCase } from '../../src/application/use-cases/GetMeetingUse
 import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTemplatesUseCase';
 import { RegenerateSummariesUseCase } from '../../src/application/use-cases/RegenerateSummariesUseCase';
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
+import { Template, type TemplateDefinition } from '../../src/domain/meeting/value-objects/Template';
 import { MeetingId } from '../../src/domain/meeting/value-objects/MeetingId';
 import { MindMap } from '../../src/domain/mindmap/entities/MindMap';
 import { MindMapNode } from '../../src/domain/mindmap/value-objects/MindMapNode';
@@ -18,14 +19,19 @@ import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
 import { expectCollapsibleResult } from './disclosureAssertions';
 import { finishedMeeting, settle } from './meetingFixtures';
 
-const renderDetail = async (repo: InMemoryMeetingRepository, id: string): Promise<HTMLElement> =>
-  (await renderDetailPage(repo, id)).root;
+const renderDetail = async (
+  repo: InMemoryMeetingRepository,
+  id: string,
+  seed: TemplateDefinition[] = [],
+): Promise<HTMLElement> => (await renderDetailPage(repo, id, seed)).root;
 
 const renderDetailPage = async (
   repo: InMemoryMeetingRepository,
   id: string,
+  seed: TemplateDefinition[] = [],
 ): Promise<{ page: MeetingDetailPage; root: HTMLElement }> => {
   window.localStorage.clear();
+  for (const def of seed) await new LocalStorageTemplateRepository(window.localStorage).save(def);
   window.location.hash = `#/meeting?id=${id}`;
   const page = new MeetingDetailPage({
     getMeeting: new GetMeetingUseCase(repo),
@@ -230,5 +236,33 @@ describe('MeetingDetailPage', () => {
     menu.open = true;
     document.body.click();
     expect(menu.open).toBe(true);
+  });
+
+  it('renders a hostile template name as text in the meta line and the regenerate select', async () => {
+    const hostile: TemplateDefinition = {
+      id: 'retro-1',
+      name: 'Retro"><img src=x onerror=alert(1)>',
+      builtIn: false,
+      systemRole: 'a retro',
+      mindMapStructure: 'Team',
+      summaryKinds: ['decisions'],
+      featuredOrder: ['decisions'],
+      kindLabels: {},
+      promptOverrides: {},
+    };
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({
+      title: 'Retro',
+      seconds: 60,
+      template: Template.fromDefinition(hostile),
+      summaries: { decisions: '- ship' },
+    });
+    await repo.save(meeting);
+    const root = await renderDetail(repo, meeting.id.value, [hostile]);
+
+    expect(root.querySelector('img')).toBeNull();
+    expect(root.querySelector('.meta-line')!.textContent).toContain(hostile.name);
+    const option = root.querySelector<HTMLOptionElement>('#regen-template option[value="retro-1"]');
+    expect(option?.textContent).toBe(hostile.name);
   });
 });
