@@ -5,10 +5,17 @@ export type ApiKeyProviderName = 'openai' | 'anthropic' | 'google' | 'googleSpee
 
 /**
  * api_blocked: the key's restrictions don't allow this API.
+ * key_restricted: the key's restrictions don't allow this site, IP or app.
  * api_disabled: the API isn't enabled in the key's project.
  */
 export type CheckFailureReason =
-  'invalid_key' | 'api_blocked' | 'api_disabled' | 'network' | 'unknown';
+  | 'invalid_key'
+  | 'api_blocked'
+  | 'key_restricted'
+  | 'api_disabled'
+  | 'billing_disabled'
+  | 'network'
+  | 'unknown';
 
 export interface ServiceCheck {
   readonly service: string;

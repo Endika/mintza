@@ -132,6 +132,35 @@ describe('SettingsPage Google keys', () => {
     );
   });
 
+  it('says billing is off and links to billing', async () => {
+    const { root } = await render({
+      language: 'es',
+      checks: { googleSpeech: { service: 'Google Speech', ok: false, reason: 'billing_disabled' } },
+    });
+    input(root, 'googleSpeech').value = 'AIza-speech';
+    await test(root, 'googleSpeech');
+    const line = result(root, 'googleSpeech');
+    expect(line.textContent).toContain(
+      'La facturación no está activada en este proyecto de Google Cloud.',
+    );
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(
+      'https://console.cloud.google.com/billing',
+    );
+  });
+
+  it('says the key is restricted to another site or app and links to the key settings', async () => {
+    const { root } = await render({
+      checks: { google: { service: 'Google Gemini', ok: false, reason: 'key_restricted' } },
+    });
+    input(root, 'google').value = 'AQ.gemini';
+    await test(root, 'google');
+    const line = result(root, 'google');
+    expect(line.textContent).toContain("This key's restrictions don't allow this site or app.");
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(
+      'https://console.cloud.google.com/apis/credentials',
+    );
+  });
+
   it("says the Gemini key's restrictions block the API and links to the key settings", async () => {
     const { root } = await render({
       checks: { google: { service: 'Google Gemini', ok: false, reason: 'api_blocked' } },

@@ -25,7 +25,7 @@ export class HttpApiKeyValidator implements ApiKeyValidator {
   ): Promise<Result<ValidationOutcome, AppError>> {
     const trimmed = key.trim();
     if (trimmed.length === 0) {
-      return err(new AppError('API_KEY_INVALID', 'Empty key'));
+      return err(new AppError('API_KEY_INVALID', 'Empty key', undefined, [], 'missing_key'));
     }
     const probes = buildProbes(provider, trimmed);
     const checks: ServiceCheck[] = [];
@@ -118,7 +118,9 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
 const CHECK_REASONS: ReadonlySet<CheckFailureReason> = new Set([
   'invalid_key',
   'api_blocked',
+  'key_restricted',
   'api_disabled',
+  'billing_disabled',
   'network',
   'unknown',
 ]);

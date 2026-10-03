@@ -100,13 +100,13 @@ describe('Google keys reach the right client', () => {
     expect(keySentTo('speech.googleapis.com')).toBe('AIza-speech');
   });
 
-  it('sends a 53-character AQ. Gemini key exactly as stored', async () => {
+  it('sends a 53-character AQ. Gemini key exactly as stored, and only to Gemini', async () => {
     expect(AQ_KEY).toHaveLength(53);
     const deps = await depsWith({ google: AQ_KEY });
     const m = meeting();
     await deps.transcribeChunk.execute({ meeting: m, chunk: chunk() });
     await deps.generateSummaries.execute({ meeting: m, kinds: ['bullet_points'] });
     expect(keySentTo('generativelanguage.googleapis.com')).toBe(AQ_KEY);
-    expect(keySentTo('speech.googleapis.com')).toBe(AQ_KEY);
+    expect(sent.some((s) => s.host === 'speech.googleapis.com')).toBe(false);
   });
 });

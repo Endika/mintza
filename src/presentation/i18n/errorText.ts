@@ -9,6 +9,8 @@ const REASON_TEXT: Record<ErrorReason, TranslationKey> = {
   invalid_key: 'error.invalid_key',
   api_blocked: 'error.api_blocked',
   api_disabled: 'error.api_disabled',
+  key_restricted: 'error.key_restricted',
+  billing_disabled: 'error.billing_disabled',
   network: 'error.network',
   no_speech: 'error.no_speech',
   bad_response: 'error.bad_response',

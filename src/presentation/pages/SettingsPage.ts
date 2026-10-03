@@ -42,6 +42,7 @@ const LICENCE_URL = 'https://github.com/Endika/mintza/blob/main/LICENSE';
 const OPENAI_KEYS_URL = 'https://platform.openai.com/api-keys';
 const KEY_FIELDS = ['openai', 'google', 'googleSpeech', 'azure', 'anthropic'] as const;
 const GOOGLE_CREDENTIALS_URL = 'https://console.cloud.google.com/apis/credentials';
+const GOOGLE_BILLING_URL = 'https://console.cloud.google.com/billing';
 const GOOGLE_API_LIBRARY_URL: Partial<Record<ApiKeyProviderName, string>> = {
   google: 'https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
   googleSpeech: 'https://console.cloud.google.com/apis/library/speech.googleapis.com',
@@ -466,9 +467,11 @@ const fixLink = (
   const link =
     reason === 'api_disabled'
       ? { href: library, label: t('settings.link_enable_api') }
-      : reason === 'api_blocked'
+      : reason === 'api_blocked' || reason === 'key_restricted'
         ? { href: GOOGLE_CREDENTIALS_URL, label: t('settings.link_key_restrictions') }
-        : undefined;
+        : reason === 'billing_disabled'
+          ? { href: GOOGLE_BILLING_URL, label: t('settings.link_billing') }
+          : undefined;
   if (!link) return '';
   return `<a href="${link.href}" target="_blank" rel="noopener" class="btn-ghost -ml-3 self-start text-sm">${link.label}${ICON_EXTERNAL}</a>`;
 };
