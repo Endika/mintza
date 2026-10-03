@@ -8,14 +8,16 @@ if (!root) {
 }
 
 const app = new App(root);
-void app.start();
 
 const version = document.createElement('span');
 version.textContent = `v${__APP_VERSION__}`;
 version.className =
   'fixed bottom-2 right-3 text-[10px] font-mono text-ink-100 pointer-events-none select-none';
-version.setAttribute('aria-label', `MINTZA version ${__APP_VERSION__}`);
 document.body.appendChild(version);
+
+void app.start().then(() => {
+  version.setAttribute('aria-label', app.translator.t('app.version', { version: __APP_VERSION__ }));
+});
 
 if (import.meta.env.PROD) {
   registerServiceWorker('/mintza/sw.js', app.translator);

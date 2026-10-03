@@ -1,25 +1,26 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { StatisticsCalculator } from '../../domain/statistics/services/StatisticsCalculator';
+import type { Translator } from '../i18n/Translator';
 import { escapeHtml } from '../util/escapeHtml';
 
 export class StatisticsPanel {
   private readonly calculator = new StatisticsCalculator();
 
-  render(target: HTMLElement, meeting: Meeting): void {
+  render(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     const stats = this.calculator.calculate(meeting);
     target.innerHTML = `
       <dl class="grid grid-cols-2 gap-4 md:grid-cols-4">
-        ${stat('Duration', formatDuration(stats.durationMs))}
-        ${stat('Words', String(stats.wordCount))}
-        ${stat('Words / min', String(stats.wordsPerMinute))}
-        ${stat('Providers', stats.providersUsed.join(', ') || '—')}
+        ${stat(translator.t('stats.duration'), formatDuration(stats.durationMs))}
+        ${stat(translator.t('stats.words'), String(stats.wordCount))}
+        ${stat(translator.t('stats.words_per_minute'), String(stats.wordsPerMinute))}
+        ${stat(translator.t('stats.providers'), stats.providersUsed.join(', ') || '—')}
       </dl>
       <div class="mt-4">
-        <h4 class="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">Top keywords</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${translator.t('stats.top_keywords')}</h4>
         <div class="flex flex-wrap gap-2">
           ${
             stats.topKeywords.length === 0
-              ? '<em class="text-sm text-ink-400">No keywords detected.</em>'
+              ? `<em class="text-sm text-ink-400">${translator.t('stats.no_keywords')}</em>`
               : stats.topKeywords
                   .map(
                     (k) =>

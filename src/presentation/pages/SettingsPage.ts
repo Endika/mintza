@@ -6,6 +6,7 @@ import type {
   QualityProfile,
 } from '../../domain/meeting/ports/ConfigRepository';
 import type { TemplateKind } from '../../domain/meeting/value-objects/Template';
+import type { TranslationKey } from '../i18n/translations';
 import type { ConfigStore } from '../state/ConfigStore';
 import type { Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
@@ -24,7 +25,12 @@ export class SettingsPage implements Page {
     this.root = root;
     const cfg = this.deps.config.get();
     const tr = this.deps.config.translator;
-    const t = (key: Parameters<typeof tr.t>[0]): string => tr.t(key);
+    const t = (key: TranslationKey): string => tr.t(key);
+    const qualityOptions: ReadonlyArray<QualityOption> = [
+      { value: 'cheap', label: t('settings.cheap'), hint: t('settings.hint_cheap') },
+      { value: 'balanced', label: t('settings.balanced'), hint: t('settings.hint_balanced') },
+      { value: 'premium', label: t('settings.premium'), hint: t('settings.hint_premium') },
+    ];
     root.innerHTML = `
       <main class="mx-auto max-w-2xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
@@ -37,37 +43,26 @@ export class SettingsPage implements Page {
             <h2 class="mb-3 text-lg font-semibold">${t('settings.api_keys')}</h2>
             <p class="mb-4 text-sm text-ink-400">${t('settings.api_keys_warning')}</p>
             <div class="space-y-3">
-              ${apiKeyInput('openai', 'OpenAI (Whisper + GPT)', cfg.apiKeys.openai, true, t('settings.btn_test'))}
-              ${apiKeyInput('google', 'Google (Gemini + Speech)', cfg.apiKeys.google, false, t('settings.btn_test'))}
-              ${apiKeyInput('anthropic', 'Anthropic Claude', cfg.apiKeys.anthropic, false, t('settings.btn_test'))}
-              ${apiKeyInput('azure', 'Azure Speech', cfg.apiKeys.azure, false, t('settings.btn_test'))}
+              ${apiKeyInput('openai', t('settings.provider_openai'), cfg.apiKeys.openai, true, t)}
+              ${apiKeyInput('google', t('settings.provider_google'), cfg.apiKeys.google, false, t)}
+              ${apiKeyInput('anthropic', t('settings.provider_anthropic'), cfg.apiKeys.anthropic, false, t)}
+              ${apiKeyInput('azure', t('settings.provider_azure'), cfg.apiKeys.azure, false, t)}
             </div>
           </section>
 
           <section class="card">
             <h2 class="mb-3 text-lg font-semibold">${t('settings.qualities')}</h2>
-            ${qualityFieldset('summaryQuality', t('settings.summary_quality'), cfg.summaryQuality, [
-              { value: 'cheap', label: t('settings.cheap'), hint: 'Gemini → Claude → GPT' },
-              {
-                value: 'balanced',
-                label: t('settings.balanced'),
-                hint: 'GPT-4o-mini → Claude → Gemini',
-              },
-              { value: 'premium', label: t('settings.premium'), hint: 'GPT-4o (no fallback)' },
-            ])}
+            ${qualityFieldset(
+              'summaryQuality',
+              t('settings.summary_quality'),
+              cfg.summaryQuality,
+              qualityOptions,
+            )}
             ${qualityFieldset(
               'transcriptionQuality',
               t('settings.transcription_quality'),
               cfg.transcriptionQuality,
-              [
-                { value: 'cheap', label: t('settings.cheap'), hint: 'Google Speech → Whisper' },
-                {
-                  value: 'balanced',
-                  label: t('settings.balanced'),
-                  hint: 'Whisper → Google Speech',
-                },
-                { value: 'premium', label: t('settings.premium'), hint: 'Whisper only' },
-              ],
+              qualityOptions,
             )}
           </section>
 
@@ -85,18 +80,18 @@ export class SettingsPage implements Page {
               <label class="block">
                 <span class="text-sm font-medium">${t('settings.default_template')}</span>
                 <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
-                  <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>${t('template.generic')}</option>
-                  <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>${t('template.work')}</option>
-                  <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.interview')}</option>
+                  <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>${t('template.builtin.generic')}</option>
+                  <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>${t('template.builtin.work')}</option>
+                  <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.builtin.interview')}</option>
                 </select>
               </label>
               <label class="block">
-                <span class="text-sm font-medium">Azure region</span>
+                <span class="text-sm font-medium">${t('settings.azure_region')}</span>
                 <input
                   type="text"
                   name="azureRegion"
                   value="${escapeHtml(cfg.azureRegion)}"
-                  placeholder="westeurope"
+                  placeholder="${t('settings.azure_region_placeholder')}"
                   class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm"
                 />
               </label>
@@ -286,7 +281,7 @@ const apiKeyInput = (
   label: string,
   value: string | undefined,
   required: boolean,
-  testLabel: string,
+  t: (key: TranslationKey) => string,
 ): string => `
   <div>
     <label class="block">
@@ -297,21 +292,27 @@ const apiKeyInput = (
           name="${escapeHtml(name)}"
           autocomplete="off"
           value="${value ? escapeHtml(value) : ''}"
-          placeholder="${value ? '••••••••••' : 'sk-...'}"
+          placeholder="${value ? '••••••••••' : t('settings.key_placeholder')}"
           class="flex-1 rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
         />
-        <button type="button" data-test-key="${escapeHtml(name)}" class="btn-ghost text-sm">${testLabel}</button>
+        <button type="button" data-test-key="${escapeHtml(name)}" class="btn-ghost text-sm">${t('settings.btn_test')}</button>
       </div>
     </label>
     <p data-status="${escapeHtml(name)}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>
   </div>
 `;
 
+interface QualityOption {
+  readonly value: QualityProfile;
+  readonly label: string;
+  readonly hint: string;
+}
+
 const qualityFieldset = (
   name: 'summaryQuality' | 'transcriptionQuality',
   legend: string,
   current: QualityProfile,
-  options: ReadonlyArray<{ value: QualityProfile; label: string; hint: string }>,
+  options: ReadonlyArray<QualityOption>,
 ): string => `
   <fieldset class="mb-4">
     <legend class="block text-sm font-medium mb-2">${legend}</legend>

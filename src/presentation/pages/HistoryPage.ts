@@ -3,6 +3,8 @@ import type { DeleteMeetingUseCase } from '../../application/use-cases/DeleteMee
 import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { MeetingListItem } from '../../domain/meeting/ports/MeetingRepository';
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
+import { Template } from '../../domain/meeting/value-objects/Template';
+import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
 import type { Page } from '../router/Router';
@@ -40,7 +42,7 @@ export class HistoryPage implements Page {
         <header class="mb-6 flex items-center justify-between gap-4">
           <h1 class="text-3xl font-bold tracking-tight">${t.t('history.title')}</h1>
           <div class="flex gap-2">
-            <button id="btn-clear" class="btn-ghost text-red-600 text-sm hidden">Clear all</button>
+            <button id="btn-clear" class="btn-ghost text-red-600 text-sm hidden">${t.t('history.clear_all')}</button>
             <a href="#/" class="btn-ghost">${t.t('nav.back')}</a>
           </div>
         </header>
@@ -86,7 +88,7 @@ export class HistoryPage implements Page {
     const result = await this.deps.listMeetings.execute();
     if (!result.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">Error: ${escapeHtml(result.error.message)}</p>`;
+        `<p class="text-red-600">${this.deps.translator.t('history.load_failed')} ${escapeHtml(result.error.message)}</p>`;
       this.qs<HTMLButtonElement>('#btn-clear').classList.add('hidden');
       this.qs<HTMLElement>('#filters').classList.add('hidden');
       return;
@@ -125,12 +127,12 @@ export class HistoryPage implements Page {
           <a href="#/meeting?id=${escapeHtml(m.id.value)}" class="flex-1 -m-2 p-2 rounded-md hover:bg-ink-50 transition-colors">
             <h3 class="font-semibold">${escapeHtml(m.title)}</h3>
             <p class="text-sm text-ink-400">
-              ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${escapeHtml(m.templateKind)}
+              ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${escapeHtml(this.templateLabel(m.templateKind))}
             </p>
           </a>
           <div class="flex items-center gap-2 shrink-0">
-            ${m.starred ? '<span title="Starred">★</span>' : ''}
-            <button type="button" data-delete="${escapeHtml(m.id.value)}" class="btn-ghost text-red-600 text-xs" aria-label="Delete meeting">✕</button>
+            ${m.starred ? `<span title="${t.t('history.starred')}">★</span>` : ''}
+            <button type="button" data-delete="${escapeHtml(m.id.value)}" class="btn-ghost text-red-600 text-xs" aria-label="${escapeHtml(t.t('history.delete_named', { title: m.title }))}">✕</button>
           </div>
         </article>`,
       )
@@ -142,6 +144,12 @@ export class HistoryPage implements Page {
         if (id) void this.handleDelete(id);
       });
     });
+  }
+
+  private templateLabel(kind: string): string {
+    return Template.isBuiltInId(kind)
+      ? templateDisplayName(Template.of(kind), this.deps.translator)
+      : kind;
   }
 
   private applyFilter(items: readonly MeetingListItem[]): MeetingListItem[] {
@@ -168,7 +176,7 @@ export class HistoryPage implements Page {
   }
 
   private async handleDelete(idValue: string): Promise<void> {
-    if (!window.confirm('Delete this meeting?')) return;
+    if (!window.confirm(this.deps.translator.t('history.confirm_delete'))) return;
     try {
       const id = MeetingId.restore(idValue);
       const result = await this.deps.deleteMeeting.execute({ id });
@@ -186,7 +194,7 @@ export class HistoryPage implements Page {
   }
 
   private async handleClearAll(): Promise<void> {
-    if (!window.confirm('Delete ALL meetings? This cannot be undone.')) return;
+    if (!window.confirm(this.deps.translator.t('history.confirm_clear'))) return;
     const result = await this.deps.clearMeetings.execute();
     if (result.ok) {
       this.all = [];

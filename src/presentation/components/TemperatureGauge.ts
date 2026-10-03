@@ -2,6 +2,8 @@ import type {
   TemperatureBand,
   TemperatureScore,
 } from '../../domain/temperature/value-objects/TemperatureScore';
+import type { TranslationKey } from '../i18n/translations';
+import type { Translator } from '../i18n/Translator';
 
 const BAND_COLORS: Record<TemperatureBand, string> = {
   very_negative: '#7f1d1d',
@@ -11,12 +13,12 @@ const BAND_COLORS: Record<TemperatureBand, string> = {
   very_positive: '#6366F1',
 };
 
-const BAND_LABELS: Record<TemperatureBand, string> = {
-  very_negative: 'Very negative',
-  negative: 'Negative',
-  neutral: 'Neutral',
-  positive: 'Positive',
-  very_positive: 'Very positive',
+const BAND_LABEL_KEYS: Record<TemperatureBand, TranslationKey> = {
+  very_negative: 'sentiment.very_negative',
+  negative: 'sentiment.negative',
+  neutral: 'sentiment.neutral',
+  positive: 'sentiment.positive',
+  very_positive: 'sentiment.very_positive',
 };
 
 const BAND_EMOJI: Record<TemperatureBand, string> = {
@@ -28,7 +30,7 @@ const BAND_EMOJI: Record<TemperatureBand, string> = {
 };
 
 export class TemperatureGauge {
-  render(target: HTMLElement, score: TemperatureScore): void {
+  render(target: HTMLElement, score: TemperatureScore, translator: Translator): void {
     const band = score.band();
     const color = BAND_COLORS[band];
     const percent = Math.round(score.value);
@@ -38,7 +40,7 @@ export class TemperatureGauge {
         <div class="flex-1">
           <div class="flex items-baseline justify-between">
             <span class="text-3xl font-bold tabular-nums" style="color:${color}">${percent}</span>
-            <span class="text-sm font-medium" style="color:${color}">${BAND_LABELS[band]}</span>
+            <span class="text-sm font-medium" style="color:${color}">${translator.t(BAND_LABEL_KEYS[band])}</span>
           </div>
           <div class="mt-2 h-2 rounded-full bg-ink-100 overflow-hidden">
             <div

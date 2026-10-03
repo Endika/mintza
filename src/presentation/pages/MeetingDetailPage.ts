@@ -5,15 +5,14 @@ import type { RegenerateSummariesUseCase } from '../../application/use-cases/Reg
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import type { Template } from '../../domain/meeting/value-objects/Template';
-import { defaultLabelFor } from '../../domain/summary/services/SummaryDefaults';
-import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
 import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
-import type { TranslationKey } from '../i18n/translations';
+import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
+import { templateDisplayName } from '../i18n/templateDisplayName';
 import { Router, type Page } from '../router/Router';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
@@ -43,7 +42,7 @@ export class MeetingDetailPage implements Page {
     const t = this.deps.translator;
     const id = parseIdFromHash();
     if (!id) {
-      root.innerHTML = errorShell(t.t('nav.back'), 'Missing meeting id');
+      root.innerHTML = errorShell(t.t('nav.back'), t.t('detail.missing_id'));
       return;
     }
 
@@ -51,7 +50,7 @@ export class MeetingDetailPage implements Page {
     try {
       meetingId = MeetingId.restore(id);
     } catch {
-      root.innerHTML = errorShell(t.t('nav.back'), 'Invalid meeting id');
+      root.innerHTML = errorShell(t.t('nav.back'), t.t('detail.invalid_id'));
       return;
     }
 
@@ -59,7 +58,7 @@ export class MeetingDetailPage implements Page {
       <main class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-6 flex items-center justify-between gap-4">
           <a href="#/history" class="btn-ghost">${t.t('nav.back')}</a>
-          <button id="btn-delete" class="btn-ghost text-red-600 text-sm">Delete</button>
+          <button id="btn-delete" class="btn-ghost text-red-600 text-sm">${t.t('detail.delete')}</button>
         </header>
         <p id="delete-status" class="mb-4 text-sm text-red-600 hidden" role="status"></p>
         <div id="detail-body"><em class="text-ink-400">${t.t('history.loading')}</em></div>
@@ -74,11 +73,11 @@ export class MeetingDetailPage implements Page {
     const body = root.querySelector<HTMLElement>('#detail-body');
     if (!body) return;
     if (!meetingResult.ok) {
-      body.innerHTML = `<p class="text-red-600">Error: ${escapeHtml(meetingResult.error.message)}</p>`;
+      body.innerHTML = `<p class="text-red-600">${t.t('detail.load_failed')} ${escapeHtml(meetingResult.error.message)}</p>`;
       return;
     }
     if (!meetingResult.value) {
-      body.innerHTML = `<em class="text-ink-400">Meeting not found.</em>`;
+      body.innerHTML = `<em class="text-ink-400">${t.t('detail.not_found')}</em>`;
       return;
     }
     this.meeting = meetingResult.value;
@@ -90,7 +89,7 @@ export class MeetingDetailPage implements Page {
   }
 
   private async handleDelete(id: MeetingId): Promise<void> {
-    if (!window.confirm('Delete this meeting? This cannot be undone.')) return;
+    if (!window.confirm(this.deps.translator.t('detail.confirm_delete'))) return;
     const result = await this.deps.deleteMeeting.execute({ id });
     if (result.ok) {
       Router.navigate('/history');
@@ -109,7 +108,7 @@ export class MeetingDetailPage implements Page {
       <section class="card mb-6">
         <h1 class="text-2xl font-bold tracking-tight">${escapeHtml(meeting.title)}</h1>
         <p class="mt-1 text-sm text-ink-400">
-          ${meeting.startedAt.toLocaleString()} · ${escapeHtml(meeting.template.name)} · ${meeting.language.code}
+          ${meeting.startedAt.toLocaleString()} · ${escapeHtml(templateDisplayName(meeting.template, t))} · ${meeting.language.code}
         </p>
         <div id="detail-cost" class="mt-3"></div>
       </section>
@@ -146,7 +145,7 @@ export class MeetingDetailPage implements Page {
       <section class="card mb-6">
         <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.transcript')}</h3>
         <div class="whitespace-pre-wrap text-ink-600 text-sm">
-          ${escapeHtml(meeting.fullText().value) || '<em class="text-ink-400">No transcript.</em>'}
+          ${escapeHtml(meeting.fullText().value) || `<em class="text-ink-400">${t.t('detail.no_transcript')}</em>`}
         </div>
       </section>
 
@@ -160,11 +159,12 @@ export class MeetingDetailPage implements Page {
       </section>
     `;
 
-    this.costCounter.renderFinal(target.querySelector<HTMLElement>('#detail-cost')!, meeting);
+    this.costCounter.renderFinal(target.querySelector<HTMLElement>('#detail-cost')!, meeting, t);
     if (meeting.temperature) {
       this.gauge.render(
         target.querySelector<HTMLElement>('#detail-temperature')!,
         meeting.temperature,
+        t,
       );
     }
     this.renderSummaries(target.querySelector<HTMLElement>('#detail-summaries')!, meeting);
@@ -174,7 +174,7 @@ export class MeetingDetailPage implements Page {
         meeting.mindMap,
       );
     }
-    this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting);
+    this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting, t);
     this.exportMenu.render(
       target.querySelector<HTMLElement>('#detail-export')!,
       () => this.meeting,
@@ -196,11 +196,11 @@ export class MeetingDetailPage implements Page {
           ${this.templates
             .map(
               (tpl) =>
-                `<option value="${escapeHtml(tpl.id)}" ${tpl.id === this.meeting?.template.id ? 'selected' : ''}>${escapeHtml(tpl.name)}</option>`,
+                `<option value="${escapeHtml(tpl.id)}" ${tpl.id === this.meeting?.template.id ? 'selected' : ''}>${escapeHtml(templateDisplayName(tpl, t))}</option>`,
             )
             .join('')}
         </select>
-        <button type="button" id="btn-regen" class="btn-ghost text-xs">${t.t('templates.edit')}</button>
+        <button type="button" id="btn-regen" class="btn-ghost text-xs">${t.t('detail.regenerate')}</button>
       </div>
     `;
   }
@@ -226,13 +226,16 @@ export class MeetingDetailPage implements Page {
     this.meeting = transient;
     this.renderMeeting(this.root.querySelector<HTMLElement>('#detail-body')!, transient);
     if (status) {
-      status.textContent = `${output.successCount} ok / ${output.failureCount} failed.`;
+      status.textContent = this.deps.translator.t('home.summaries_result', {
+        ok: output.successCount,
+        failed: output.failureCount,
+      });
     }
   }
 
   private renderSummaries(target: HTMLElement, meeting: Meeting): void {
     if (meeting.summaries.size === 0) {
-      target.innerHTML = '<em class="text-ink-400">No summaries.</em>';
+      target.innerHTML = `<em class="text-ink-400">${this.deps.translator.t('detail.no_summaries')}</em>`;
       return;
     }
     const order = meeting.template.featuredSummaryOrder();
@@ -242,7 +245,7 @@ export class MeetingDetailPage implements Page {
         if (!summary) return '';
         const label = meeting.template.labelFor(
           kind,
-          this.deps.translator.t(SUMMARY_KEYS[kind]) || defaultLabelFor(kind),
+          this.deps.translator.t(SUMMARY_LABEL_KEYS[kind]),
         );
         return `<article class="mb-4">
             <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escapeHtml(label)}</h4>
@@ -252,17 +255,6 @@ export class MeetingDetailPage implements Page {
       .join('');
   }
 }
-
-const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
-  bullet_points: 'summary.bullet_points',
-  action_items: 'summary.action_items',
-  one_liner: 'summary.one_liner',
-  keywords: 'summary.keywords',
-  sentiment: 'summary.sentiment',
-  timeline: 'summary.timeline',
-  decisions: 'summary.decisions',
-  next_steps: 'summary.next_steps',
-};
 
 const parseIdFromHash = (): string | null => {
   const raw = window.location.hash.replace(/^#/, '');

@@ -6,6 +6,7 @@ import {
 import type { LanguageCode } from '../../domain/language/value-objects/Language';
 import type { AppError } from '../../shared/errors/AppError';
 import { err, type Result } from '../../shared/result/Result';
+import { applyDocumentLanguage } from '../i18n/applyDocumentLanguage';
 import { Translator } from '../i18n/Translator';
 
 export type ConfigListener = (config: AppConfig) => void;
@@ -24,6 +25,7 @@ export class ConfigStore {
       this.loadError = undefined;
       this.current = result.value;
       this.translator.setLanguage(result.value.language);
+      applyDocumentLanguage(result.value.language);
     } else {
       this.loadError = result.error;
     }
@@ -72,6 +74,7 @@ export class ConfigStore {
     if (result.ok) {
       this.current = config;
       this.translator.setLanguage(config.language);
+      applyDocumentLanguage(config.language);
       this.listeners.forEach((l) => l(config));
     }
     return result;

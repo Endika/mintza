@@ -8,8 +8,11 @@ export class Translator {
     this.current = code;
   }
 
-  t(key: TranslationKey): string {
-    const dictionary = TRANSLATIONS[this.current];
-    return dictionary[key];
+  t(key: TranslationKey, vars?: Record<string, string | number>): string {
+    const text = TRANSLATIONS[this.current][key];
+    if (!vars) return text;
+    return text.replace(/\{(\w+)\}/g, (match, name: string) =>
+      name in vars ? String(vars[name]) : match,
+    );
   }
 }

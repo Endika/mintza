@@ -14,7 +14,7 @@ import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import type { MindMap } from '../../domain/mindmap/entities/MindMap';
 import type { TemplateRegistry } from '../../domain/meeting/services/TemplateRegistry';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
-import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import { SUMMARY_KINDS } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import type { ProviderAttempt } from '../../shared/errors/AppError';
@@ -25,6 +25,8 @@ import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
+import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
+import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
@@ -108,7 +110,7 @@ export class HomePage implements Page {
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between gap-4">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-                ${templateSelect(this.templates, cfg.defaultTemplate, t)}
+                ${templateSelect(this.templates, cfg.defaultTemplate, this.t)}
                 ${languageSelect(cfg.language, t)}
               </div>
               <span id="rec-badge" class="rec-badge hidden" aria-live="polite">
@@ -232,7 +234,7 @@ export class HomePage implements Page {
       language: Language.of(this.readLanguage()),
     });
     if (!result.ok) {
-      this.setStatus(result.error.message);
+      this.setStatus(this.t.t('home.start_failed'));
       return;
     }
     this.meeting = result.value.meeting;
@@ -240,7 +242,7 @@ export class HomePage implements Page {
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.startMeter();
-    this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
+    this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => {
       const p = this.handleChunk(chunk);
       this.pendingChunks.add(p);
@@ -264,7 +266,7 @@ export class HomePage implements Page {
       this.meeting?.resume();
       await this.deps.audio.resume();
       this.startMeter();
-      this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting);
+      this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
       this.setScreenState('recording');
       this.syncWakeLock(true);
     }
@@ -310,13 +312,13 @@ export class HomePage implements Page {
     this.renderStatistics();
     this.renderExportMenu();
     if (result.mindMap) this.renderMindMap(result.mindMap);
-    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting);
+    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting, this.t);
 
     if (result.saveError) {
       this.showSaveError(result.saveError.message);
     } else {
       this.setStatus(
-        `${this.t.t('home.done')} ${result.summarySuccessCount} ok / ${result.summaryFailureCount} failed.`,
+        `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.summarySuccessCount, failed: result.summaryFailureCount })}`,
       );
     }
     this.setScreenState('done');
@@ -324,7 +326,7 @@ export class HomePage implements Page {
 
   private showSaveError(message: string): void {
     const status = this.qs<HTMLElement>('#status');
-    status.textContent = `Save failed: ${message}`;
+    status.textContent = `${this.t.t('home.save_failed')} ${message}`;
     status.classList.add('text-rose-500');
   }
 
@@ -358,7 +360,7 @@ export class HomePage implements Page {
     btn.disabled = this.screenState !== 'recording' && this.screenState !== 'paused';
     if (this.screenState === 'recording' || this.screenState === 'paused') {
       this.setStatus(
-        `${this.t.t('home.done')} ${result.successCount} ok / ${result.failureCount} failed.`,
+        `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.successCount, failed: result.failureCount })}`,
       );
       window.setTimeout(() => {
         if (this.screenState === 'recording') this.setStatus(this.t.t('home.recording'));
@@ -408,12 +410,10 @@ export class HomePage implements Page {
       el.textContent = this.t.t('home.chunks_wait');
       return;
     }
-    el.textContent = this.t
-      .t('home.chunks_progress')
-      .replace('{received}', String(p.received))
-      .replace('{transcribed}', String(p.transcribed))
-      .replace('{skipped}', String(p.skipped))
-      .replace('{failed}', String(p.failed));
+    const parts = [this.t.t('home.progress', { done: p.transcribed, total: p.received })];
+    if (p.skipped > 0) parts.push(this.t.t('home.progress_skipped', { count: p.skipped }));
+    if (p.failed > 0) parts.push(this.t.t('home.progress_failed', { count: p.failed }));
+    el.textContent = parts.join(' · ');
   }
 
   private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
@@ -534,14 +534,14 @@ export class HomePage implements Page {
     if (!score) return;
     const card = this.qs<HTMLElement>('#temperature-card');
     card.classList.remove('hidden');
-    this.gauge.render(this.qs<HTMLElement>('#temperature'), score);
+    this.gauge.render(this.qs<HTMLElement>('#temperature'), score, this.t);
   }
 
   private renderStatistics(): void {
     if (!this.meeting) return;
     const card = this.qs<HTMLElement>('#stats-card');
     card.classList.remove('hidden');
-    this.statsPanel.render(this.qs<HTMLElement>('#stats-body'), this.meeting);
+    this.statsPanel.render(this.qs<HTMLElement>('#stats-body'), this.meeting, this.t);
   }
 
   private renderExportMenu(): void {
@@ -559,7 +559,7 @@ export class HomePage implements Page {
     this.meeting.setTemperature(score);
     const card = this.qs<HTMLElement>('#temperature-card');
     card.classList.remove('hidden');
-    this.gauge.render(this.qs<HTMLElement>('#temperature'), score);
+    this.gauge.render(this.qs<HTMLElement>('#temperature'), score, this.t);
   }
 
   private appendSegment(segment: TranscriptSegment): void {
@@ -582,7 +582,7 @@ export class HomePage implements Page {
         const summary = summaries.get(kind);
         if (!summary) return '';
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${this.t.t(SUMMARY_KEYS[kind])}</h4>
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h4>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
@@ -595,9 +595,7 @@ export class HomePage implements Page {
     btn.className = 'btn-ghost';
     const paint = (): void => {
       const on = this.deps.config.keepScreenAwake();
-      btn.textContent = on
-        ? `🔆 ${this.t.t('home.screen_on')}`
-        : `🌙 ${this.t.t('home.screen_off')}`;
+      btn.textContent = on ? this.t.t('home.keep_awake_off') : this.t.t('home.keep_awake_on');
     };
     btn.addEventListener('click', () => {
       void (async () => {
@@ -640,32 +638,21 @@ const ICON_STOP = `<svg width="14" height="14" viewBox="0 0 14 14" fill="current
 const ICON_SPARKLE = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M7 1l1.5 4L13 6.5 8.5 8 7 13 5.5 8 1 6.5 5.5 5 7 1z"/></svg>`;
 const ICON_PLUS = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>`;
 
-const SUMMARY_KEYS: Record<SummaryKind, TranslationKey> = {
-  bullet_points: 'summary.bullet_points',
-  action_items: 'summary.action_items',
-  one_liner: 'summary.one_liner',
-  keywords: 'summary.keywords',
-  sentiment: 'summary.sentiment',
-  timeline: 'summary.timeline',
-  decisions: 'summary.decisions',
-  next_steps: 'summary.next_steps',
-};
-
 const templateSelect = (
   templates: readonly Template[],
   currentId: TemplateKind,
-  t: (key: TranslationKey) => string,
+  translator: Translator,
 ): string => {
   const hasCurrent = templates.some((tpl) => tpl.id === currentId);
   const effective = hasCurrent ? currentId : 'generic';
   return `
   <label class="block">
-    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${t('home.field_template')}</span>
+    <span class="block text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1">${translator.t('home.field_template')}</span>
     <select id="template-select" class="rounded-lg border border-ink-100 px-2 py-1 text-sm">
       ${templates
         .map(
           (tpl) =>
-            `<option value="${escapeHtml(tpl.id)}" ${tpl.id === effective ? 'selected' : ''}>${escapeHtml(tpl.name)}${tpl.builtIn ? '' : ' ★'}</option>`,
+            `<option value="${escapeHtml(tpl.id)}" ${tpl.id === effective ? 'selected' : ''}>${escapeHtml(templateDisplayName(tpl, translator))}${tpl.builtIn ? '' : ' ★'}</option>`,
         )
         .join('')}
     </select>
