@@ -96,8 +96,9 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
         {
           service: 'Google Gemini',
           request: {
-            url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
+            url: 'https://generativelanguage.googleapis.com/v1beta/models',
             method: 'GET',
+            headers: { 'x-goog-api-key': key },
           },
           hint: () =>
             'Generative Language API not enabled. Visit console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
@@ -105,8 +106,9 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
         {
           service: 'Google Speech',
           request: {
-            url: `https://speech.googleapis.com/v1/operations?key=${encodeURIComponent(key)}`,
+            url: 'https://speech.googleapis.com/v1/operations',
             method: 'GET',
+            headers: { 'x-goog-api-key': key },
           },
           hint: () =>
             'Cloud Speech-to-Text API not enabled. Visit console.cloud.google.com/apis/library/speech.googleapis.com',
