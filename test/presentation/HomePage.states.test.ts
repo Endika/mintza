@@ -160,6 +160,22 @@ const recordAndStop = async (root: HTMLElement, audio: FakeAudio): Promise<void>
   await settle();
 };
 
+const viewport = (width: number, height: number): void => {
+  (window as unknown as { happyDOM: { setViewport(v: object): void } }).happyDOM.setViewport({
+    width,
+    height,
+  });
+  window.dispatchEvent(new Event('resize'));
+};
+
+const docked = (root: HTMLElement): boolean =>
+  root.querySelector('#home-wrap')!.hasAttribute('data-docked');
+
+const focusOrder = (root: HTMLElement): Element[] =>
+  [...root.querySelectorAll<HTMLElement>('a[href], button, select, input, textarea')].filter(
+    (el) => el.closest('[hidden], .hidden') === null,
+  );
+
 const visible = (root: HTMLElement, selector: string): boolean => {
   const el = root.querySelector<HTMLElement>(selector);
   return el !== null && !el.hidden && el.closest('[hidden]') === null;
@@ -169,6 +185,7 @@ describe('HomePage states', () => {
   afterEach(() => {
     pages.splice(0).forEach((page) => page.dispose());
     document.body.innerHTML = '';
+    viewport(1024, 768);
   });
 
   it('asks to connect OpenAI instead of offering a Record button that cannot work', async () => {
@@ -193,23 +210,30 @@ describe('HomePage states', () => {
     );
   });
 
-  it('docks Record above the tab bar only while idle with a key', async () => {
-    const { root, audio } = await mount('sk-test');
-    const docked = (): boolean => root.querySelector('#home-wrap')!.hasAttribute('data-docked');
+  it('docks Record outside the morphing card on a portrait phone, right after the language', async () => {
+    viewport(390, 844);
+    const { root } = await mount('sk-test');
 
     const dock = root.querySelector<HTMLElement>('#record-dock')!;
-    expect(dock.classList.contains('record-dock')).toBe(true);
     expect(dock.contains(root.querySelector('#btn-record'))).toBe(true);
+    expect(dock.closest('.rec-card')).toBeNull();
+    expect(dock.previousElementSibling).toBe(root.querySelector('#rec-card'));
     expect(visible(root, '#record-dock')).toBe(true);
-    expect(docked()).toBe(true);
-    const language = root.querySelector('#panel-idle select')!;
-    expect(language.compareDocumentPosition(dock)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(root.querySelector('#rec-card')!.contains(dock)).toBe(true);
+    expect(docked(root)).toBe(true);
+    const order = focusOrder(root);
+    expect(order[order.indexOf(root.querySelector('#panel-idle select')!) + 1]).toBe(
+      root.querySelector('#btn-record'),
+    );
+  });
+
+  it('docks Record only while idle', async () => {
+    viewport(390, 844);
+    const { root, audio } = await mount('sk-test');
 
     root.querySelector<HTMLButtonElement>('#btn-record')!.click();
     await settle();
     expect(visible(root, '#record-dock')).toBe(false);
-    expect(docked()).toBe(false);
+    expect(docked(root)).toBe(false);
 
     audio.emit(
       new AudioChunk({ blob: new Blob(['a']), startMs: 0, endMs: 1000, mimeType: 'audio/webm' }),
@@ -217,8 +241,51 @@ describe('HomePage states', () => {
     await settle();
     root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
     await settle();
+    expect(visible(root, '#panel-done')).toBe(true);
     expect(visible(root, '#record-dock')).toBe(false);
-    expect(docked()).toBe(false);
+    expect(docked(root)).toBe(false);
+
+    root.querySelector<HTMLButtonElement>('#btn-new')!.click();
+    await settle();
+    expect(visible(root, '#record-dock')).toBe(true);
+    expect(docked(root)).toBe(true);
+    expect(root.querySelector('#record-dock')!.closest('.rec-card')).toBeNull();
+  });
+
+  it.each([
+    ['a short landscape phone', 740, 360],
+    ['a wide screen', 1280, 800],
+  ])('keeps Record inline in its card on %s', async (_, width, height) => {
+    viewport(width, height);
+    const { root } = await mount('sk-test');
+
+    const dock = root.querySelector<HTMLElement>('#record-dock')!;
+    expect(dock.closest('#panel-idle')).not.toBeNull();
+    expect(visible(root, '#record-dock')).toBe(true);
+    expect(docked(root)).toBe(false);
+    const order = focusOrder(root);
+    expect(order[order.indexOf(root.querySelector('#panel-idle select')!) + 1]).toBe(
+      root.querySelector('#btn-record'),
+    );
+  });
+
+  it('moves Record in and out of the card when the phone turns, keeping focus on it', async () => {
+    viewport(390, 844);
+    const { root } = await mount('sk-test');
+    // happy-dom only fires `change` after a resize it saw match, and it assumes "no match" at first.
+    viewport(390, 844);
+    const record = root.querySelector<HTMLButtonElement>('#btn-record')!;
+    record.focus();
+
+    viewport(740, 360);
+    expect(record.closest('#panel-idle')).not.toBeNull();
+    expect(docked(root)).toBe(false);
+    expect(document.activeElement).toBe(record);
+
+    viewport(390, 844);
+    expect(record.closest('.rec-card')).toBeNull();
+    expect(docked(root)).toBe(true);
+    expect(document.activeElement).toBe(record);
   });
 
   it('docks nothing while OpenAI is not connected', async () => {

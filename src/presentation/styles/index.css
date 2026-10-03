@@ -204,16 +204,20 @@
   .tab[aria-current='page'] .tab-icon {
     @apply bg-raised md:bg-transparent;
   }
-  /* On phones Record sits in the thumb zone, right on the tab bar's top edge. */
-  .record-dock {
-    @apply max-md:fixed max-md:inset-x-0 max-md:bottom-[calc(4rem+env(safe-area-inset-bottom))] max-md:z-30 max-md:border-t max-md:border-line max-md:bg-ground max-md:px-4 max-md:py-3;
+  /* On portrait phones the page moves Record out of the morphing card into the thumb zone, on the tab bar's top edge. */
+  .home-wrap > .record-dock {
+    @apply fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-ground px-4 py-3;
   }
   /* Without a visible note the slot would still add a flex gap under the language field. */
   .idle-notes:not(:has(#card-notes > :not(:empty, .hidden, [hidden]))) {
     display: none;
   }
   .home-wrap[data-docked] {
-    @apply max-md:pb-28;
+    @apply pb-28;
+  }
+  /* Tab bar plus the docked strip, so a focused control never scrolls in under them. */
+  html:has(.home-wrap[data-docked]) {
+    scroll-padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));
   }
   .meta-line {
     @apply flex flex-wrap gap-x-3 gap-y-0.5;

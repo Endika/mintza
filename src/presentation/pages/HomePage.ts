@@ -102,6 +102,8 @@ const STEP_KEYS: Record<StepState, TranslationKey> = {
 };
 
 const VISIBLE_TEMPLATE_CHIPS = 4;
+// Portrait phones dock Record above the tab bar; short landscape ones keep it inline.
+const DOCK_QUERY = '(max-width: 767.98px) and (min-height: 500.02px)';
 // Summary content headings start at h4: page h1, card h2, summary label h3.
 const SUMMARY_HEADING_OFFSET = 3;
 
@@ -130,6 +132,8 @@ export class HomePage implements Page {
   private selectedTemplate: TemplateKind = 'generic';
   private readonly guard = new LeaveGuard();
   private alive = true;
+  private dockQuery: MediaQueryList | null = null;
+  private readonly onDockQueryChange = (): void => this.placeDock();
   private transcriptSaved: Promise<boolean> | null = null;
   private persisted = false;
   private transcriptStored = false;
@@ -232,6 +236,7 @@ export class HomePage implements Page {
 
   dispose(): void {
     this.alive = false;
+    this.dockQuery?.removeEventListener('change', this.onDockQueryChange);
     this.guard.dispose();
     this.deps.shell.setBusy(false);
     // While processing, handleStop still needs the final chunk the recorder emits on stop.
@@ -444,6 +449,10 @@ export class HomePage implements Page {
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
     this.bindTemplateChooser();
     this.renderWakeSwitch(this.qs<HTMLElement>('#wake-slot'));
+    if (typeof window.matchMedia === 'function') {
+      this.dockQuery = window.matchMedia(DOCK_QUERY);
+      this.dockQuery.addEventListener('change', this.onDockQueryChange);
+    }
   }
 
   private bindTemplateChooser(): void {
@@ -861,11 +870,8 @@ export class HomePage implements Page {
       transcriptLabel.textContent = this.t.t(live ? 'home.live_transcript' : 'home.transcript');
     }
 
+    this.placeDock();
     const card = this.qsOptional('#rec-card');
-    this.qsOptional('#home-wrap')?.toggleAttribute(
-      'data-docked',
-      state === 'idle' && !!card?.querySelector('#record-dock'),
-    );
     if (!card?.querySelector('#panel-idle')) return;
     card.classList.toggle('rec-card-live', live);
 
@@ -887,6 +893,22 @@ export class HomePage implements Page {
     badgeLabel.textContent = this.t.t(state === 'paused' ? 'home.rec_paused' : 'home.rec');
 
     if (moveFocus) this.keepFocusInView(state);
+  }
+
+  /** A fixed descendant of the view-transition card would be captured and morphed with it. */
+  private placeDock(): void {
+    const wrap = this.qsOptional('#home-wrap');
+    const card = this.qsOptional('#rec-card');
+    const dock = this.qsOptional('#record-dock');
+    const notes = this.qsOptional('#panel-idle .idle-notes');
+    const docked =
+      this.screenState === 'idle' && this.dockQuery?.matches === true && !!card && !!notes;
+    wrap?.toggleAttribute('data-docked', docked && !!dock);
+    if (!dock || !card || !notes || docked === (dock.parentElement === wrap)) return;
+    const focused = dock.contains(document.activeElement);
+    if (docked) card.after(dock);
+    else notes.before(dock);
+    if (focused && this.screenState === 'idle') this.qsOptional('#btn-record')?.focus();
   }
 
   /** Hiding the pressed button would drop focus to the body; hand it to the new panel instead. */
