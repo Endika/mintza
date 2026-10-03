@@ -12,7 +12,7 @@ export class Translator {
     const text = TRANSLATIONS[this.current][key];
     if (!vars) return text;
     return text.replace(/\{(\w+)\}/g, (match, name: string) =>
-      name in vars ? String(vars[name]) : match,
+      Object.hasOwn(vars, name) ? String(vars[name]) : match,
     );
   }
 }

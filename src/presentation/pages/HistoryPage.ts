@@ -157,7 +157,8 @@ export class HistoryPage implements Page {
     return items.filter(
       (m) =>
         m.title.toLowerCase().includes(this.query) ||
-        m.templateKind.toLowerCase().includes(this.query),
+        m.templateKind.toLowerCase().includes(this.query) ||
+        this.templateLabel(m.templateKind).toLowerCase().includes(this.query),
     );
   }
 

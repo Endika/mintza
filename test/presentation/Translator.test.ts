@@ -8,6 +8,6 @@ describe('Translator', () => {
   });
   it('speaks Euskara for the same key', () => {
     const t = new Translator('eu');
-    expect(t.t('home.summaries_result', { ok: 7, failed: 1 })).toBe('7 prest · 1 huts');
+    expect(t.t('home.summaries_result', { ok: 7, failed: 1 })).toBe('7 prest · 1 hutsegite');
   });
 });
