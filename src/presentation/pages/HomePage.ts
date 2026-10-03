@@ -936,7 +936,7 @@ export class HomePage implements Page {
         <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-raised text-fg">${ICON_HISTORY}</span>
         <span class="min-w-0 flex-1">
           <span class="block truncate font-semibold">${escapeHtml(last.title)}</span>
-          <span class="block truncate text-sm text-fg-muted tabular">${escapeHtml(this.lastMeetingMeta(last))}</span>
+          <span class="block break-words text-sm text-fg-muted tabular">${escapeHtml(this.lastMeetingMeta(last))}</span>
         </span>
         <span class="shrink-0 text-fg-muted">${ICON_CHEVRON}</span>
       </a>
