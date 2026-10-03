@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Router, type Page } from '../../src/presentation/router/Router';
+import { Router, type Page, type PageFactory } from '../../src/presentation/router/Router';
 
 class StubPage implements Page {
   rendered = false;
@@ -132,5 +132,48 @@ describe('Router', () => {
     await go('#/settings', 80);
     expect(slow.asked).toBe(1);
     expect(root.textContent).toBe('Settings');
+  });
+
+  it('follows a Back to the shown hash while a leave check is pending', async () => {
+    const slow = new StubPage('Home', true, 0, 30);
+    router = new Router(
+      root,
+      new Map([
+        ['/', () => slow],
+        ['/history', () => new StubPage('History')],
+      ]),
+      () => slow,
+    );
+    router.start();
+    await flush();
+    window.location.hash = '#/history';
+    await flush(5);
+    await go('#/', 80);
+    expect(window.location.hash).toBe('#/');
+    expect(root.textContent).toBe('Home');
+  });
+
+  it('follows a Back to the shown hash while the next page is still loading', async () => {
+    router = new Router(
+      root,
+      new Map<string, PageFactory>([
+        ['/', () => new StubPage('Home')],
+        [
+          '/history',
+          async () => {
+            await flush(40);
+            return new StubPage('History');
+          },
+        ],
+      ]),
+      () => new StubPage('Home'),
+    );
+    router.start();
+    await flush();
+    window.location.hash = '#/history';
+    await flush(5);
+    await go('#/', 80);
+    expect(window.location.hash).toBe('#/');
+    expect(root.textContent).toBe('Home');
   });
 });

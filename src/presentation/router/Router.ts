@@ -14,6 +14,7 @@ export type PageFactory = () => Page | Promise<Page>;
 export class Router {
   private current: Page | undefined;
   private currentHash = '';
+  private lastTargetHash = '';
   private generation = 0;
   private firstRender = true;
   private leaving: Promise<boolean> | undefined;
@@ -30,7 +31,7 @@ export class Router {
     window.addEventListener(
       'hashchange',
       (e) => {
-        if (e.oldURL && window.location.hash === this.currentHash) return;
+        if (e.oldURL && window.location.hash === this.lastTargetHash) return;
         void this.handle();
       },
       { signal: this.abort.signal },
@@ -53,6 +54,7 @@ export class Router {
 
   private async handle(): Promise<void> {
     const target = window.location.hash;
+    this.lastTargetHash = target;
     const initial = this.firstRender;
     this.firstRender = false;
     const generation = ++this.generation;
@@ -64,7 +66,9 @@ export class Router {
       const leave = await this.leaving;
       if (generation !== this.generation) return;
       if (!leave) {
-        history.replaceState(null, '', this.currentHash || '#/');
+        const restored = this.currentHash || '#/';
+        this.lastTargetHash = restored;
+        history.replaceState(null, '', restored);
         return;
       }
     }
