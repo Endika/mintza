@@ -13,6 +13,8 @@ export type PageFactory = () => Page | Promise<Page>;
 
 interface NavigateEventLike extends Event {
   readonly navigationType?: string;
+  readonly hashChange?: boolean;
+  readonly downloadRequest?: string | null;
 }
 
 export class Router {
@@ -40,11 +42,9 @@ export class Router {
     const navigation = (window as { navigation?: EventTarget }).navigation;
     if (navigation) {
       this.tracking = true;
-      navigation.addEventListener(
-        'navigate',
-        (e: NavigateEventLike) => this.track(e.navigationType),
-        { signal: this.abort.signal },
-      );
+      navigation.addEventListener('navigate', (e: NavigateEventLike) => this.track(e), {
+        signal: this.abort.signal,
+      });
     }
     window.addEventListener(
       'hashchange',
@@ -70,9 +70,12 @@ export class Router {
     }
   }
 
-  private track(type: string | undefined): void {
-    if (type === 'push') this.pushes++;
-    else if (type === 'traverse' && this.undoingTraverse) this.undoingTraverse = false;
+  /** Only hash navigations count: a download or a same-URL link never reaches the router. */
+  private track(e: NavigateEventLike): void {
+    if ((e.downloadRequest ?? null) !== null || !e.hashChange) return;
+    if (e.navigationType === 'push') this.pushes++;
+    else if (e.navigationType !== 'traverse') return;
+    else if (this.undoingTraverse) this.undoingTraverse = false;
     else this.popped = true;
   }
 

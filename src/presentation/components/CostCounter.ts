@@ -1,6 +1,7 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { meetingCost } from '../../domain/tokens/services/MeetingCost';
 import { Money } from '../../domain/tokens/value-objects/Money';
+import { PRICING } from '../../shared/constants/pricing';
 import type { Translator } from '../i18n/Translator';
 import { formatDuration } from '../util/formatDuration';
 import { metaLine } from '../util/metaLine';
@@ -109,7 +110,12 @@ export class CostCounter {
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
     if (transcribedMs === 0) return [translator.t('home.chunks_wait'), ''];
     const soFar = sumAll(meetingCost(meeting).transcription.values());
-    const amount = Math.round(soFar.toUsd() * 1000) > 0 ? soFar.format(3) : '—';
+    const amount =
+      Math.round(soFar.toUsd() * 1000) > 0
+        ? soFar.format(3)
+        : meeting.segments.every((s) => PRICING.transcription[s.provider]?.perMinuteUsd === 0)
+          ? translator.t('cost.free')
+          : '—';
     return [translator.t('cost.so_far', { amount }), this.liveWordCount(meeting, translator)];
   }
 

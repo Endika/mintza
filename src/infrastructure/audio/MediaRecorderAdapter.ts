@@ -8,6 +8,8 @@ import { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { AppError } from '../../shared/errors/AppError';
 
 const DEFAULT_TIMESLICE_MS = 15_000;
+/** Shorter than StopRecordingUseCase's wait, so the microphone is free before the page moves on. */
+const DEFAULT_STOP_TIMEOUT_MS = 4_000;
 const PREFERRED_MIME_TYPES = [
   'audio/webm;codecs=opus',
   'audio/webm',
@@ -17,6 +19,7 @@ const PREFERRED_MIME_TYPES = [
 
 export interface MediaRecorderAdapterOptions {
   readonly timesliceMs?: number;
+  readonly stopTimeoutMs?: number;
 }
 
 export class MediaRecorderAdapter implements AudioCapturePort {
@@ -29,6 +32,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
   private isRotating = false;
   private readonly handlers: Set<AudioChunkHandler> = new Set();
   private readonly timesliceMs: number;
+  private readonly stopTimeoutMs: number;
   private audioCtx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private peakSampler: number | null = null;
@@ -36,6 +40,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
 
   constructor(options: MediaRecorderAdapterOptions = {}) {
     this.timesliceMs = options.timesliceMs ?? DEFAULT_TIMESLICE_MS;
+    this.stopTimeoutMs = options.stopTimeoutMs ?? DEFAULT_STOP_TIMEOUT_MS;
   }
 
   state(): RecordingState {
@@ -103,23 +108,29 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     const recorder = this.recorder;
     const stream = this.stream;
     this.recorder = null;
-    if (recorder && recorder.state !== 'inactive') {
-      await new Promise<void>((resolve) => {
-        const previousOnStop = recorder.onstop;
-        recorder.onstop = (event) => {
-          try {
-            previousOnStop?.call(recorder, event);
-          } finally {
-            resolve();
-          }
-        };
-        recorder.stop();
-      });
+    let timer: number | undefined;
+    try {
+      if (recorder && recorder.state !== 'inactive') {
+        await new Promise<void>((resolve) => {
+          timer = window.setTimeout(resolve, this.stopTimeoutMs);
+          const previousOnStop = recorder.onstop;
+          recorder.onstop = (event) => {
+            try {
+              previousOnStop?.call(recorder, event);
+            } finally {
+              resolve();
+            }
+          };
+          recorder.stop();
+        });
+      }
+    } finally {
+      window.clearTimeout(timer);
+      stream?.getTracks().forEach((track) => track.stop());
+      this.stopPeakSampling();
+      this.stream = null;
+      this.mimeType = null;
     }
-    stream?.getTracks().forEach((track) => track.stop());
-    this.stopPeakSampling();
-    this.stream = null;
-    this.mimeType = null;
   }
 
   private startCycle(): void {

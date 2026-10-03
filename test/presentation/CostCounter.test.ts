@@ -57,8 +57,11 @@ const liveCost = (meeting: Meeting): string => {
 
 describe('CostCounter live line', () => {
   it('shows a dash until there is a cost to show', () => {
-    expect(liveCost(recording('webspeech', 60))).toBe('Cost so far: —');
     expect(liveCost(recording('whisper', 1))).toBe('Cost so far: —');
+  });
+
+  it('says it is free when only a free provider transcribed', () => {
+    expect(liveCost(recording('webspeech', 60))).toBe('Cost so far: Free');
   });
 
   it('shows the amount once there is one', () => {

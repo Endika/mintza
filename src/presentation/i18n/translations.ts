@@ -139,6 +139,7 @@ export type TranslationKey =
   | 'home.leave_recording'
   | 'home.leave_processing'
   | 'home.leave_unsaved'
+  | 'home.leave_summaries_unsaved'
   | 'home.connect_title'
   | 'home.connect_lede'
   | 'home.connect_step_account'
@@ -194,6 +195,7 @@ export type TranslationKey =
   | 'cost.total'
   | 'cost.words'
   | 'cost.so_far'
+  | 'cost.free'
   | 'stats.duration'
   | 'stats.words'
   | 'stats.words_per_minute'
@@ -390,6 +392,7 @@ const EN: Translations = {
   'home.leave_processing':
     "Mintza is still preparing your results. Leave anyway? They'll appear in History.",
   'home.leave_unsaved': "This meeting isn't saved. Leave and lose it?",
+  'home.leave_summaries_unsaved': "The summaries aren't saved. Leave without them?",
   'home.connect_title': 'Connect OpenAI to start',
   'home.connect_lede':
     "Mintza transcribes and summarises with your own OpenAI account. There's no Mintza account to create.",
@@ -447,6 +450,7 @@ const EN: Translations = {
   'cost.total': 'Total:',
   'cost.words': '{count} words',
   'cost.so_far': 'Cost so far: {amount}',
+  'cost.free': 'Free',
   'stats.duration': 'Duration',
   'stats.words': 'Words',
   'stats.words_per_minute': 'Words / min',
@@ -645,6 +649,7 @@ const ES: Translations = {
   'home.leave_processing':
     'Mintza aún está preparando los resultados. ¿Salir igualmente? Aparecerán en el historial.',
   'home.leave_unsaved': 'Esta reunión no se ha guardado. ¿Salir y perderla?',
+  'home.leave_summaries_unsaved': 'Los resúmenes no se han guardado. ¿Salir sin ellos?',
   'home.connect_title': 'Conecta OpenAI para empezar',
   'home.connect_lede':
     'Mintza transcribe y resume con tu propia cuenta de OpenAI. No hace falta crear ninguna cuenta de Mintza.',
@@ -702,6 +707,7 @@ const ES: Translations = {
   'cost.total': 'Total:',
   'cost.words': '{count} palabras',
   'cost.so_far': 'Coste hasta ahora: {amount}',
+  'cost.free': 'Gratis',
   'stats.duration': 'Duración',
   'stats.words': 'Palabras',
   'stats.words_per_minute': 'Palabras / min',
@@ -902,6 +908,7 @@ const EU: Translations = {
   'home.leave_processing':
     'Mintza oraindik emaitzak prestatzen ari da. Irten hala ere? Historian agertuko dira.',
   'home.leave_unsaved': 'Bilera hau ez da gorde. Irten eta galdu?',
+  'home.leave_summaries_unsaved': 'Laburpenak ez dira gorde. Haiek gabe irten?',
   'home.connect_title': 'Konektatu OpenAI hasteko',
   'home.connect_lede':
     'Mintzak zure OpenAI kontuarekin transkribatzen eta laburtzen du. Ez duzu Mintza konturik sortu behar.',
@@ -961,6 +968,7 @@ const EU: Translations = {
   'cost.total': 'Guztira:',
   'cost.words': '{count} hitz',
   'cost.so_far': 'Orain arteko kostua: {amount}',
+  'cost.free': 'Doan',
   'stats.duration': 'Iraupena',
   'stats.words': 'Hitzak',
   'stats.words_per_minute': 'Hitz / min',
