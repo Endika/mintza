@@ -1,7 +1,10 @@
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { ValidateApiKeyUseCase } from '../../application/use-cases/ValidateApiKeyUseCase';
 import type { LanguageCode } from '../../domain/language/value-objects/Language';
-import type { ApiKeyProviderName } from '../../domain/meeting/ports/ApiKeyValidator';
+import type {
+  ApiKeyProviderName,
+  CheckFailureReason,
+} from '../../domain/meeting/ports/ApiKeyValidator';
 import type {
   ApiKeys,
   AppConfig,
@@ -37,6 +40,18 @@ type T = (key: TranslationKey, vars?: Record<string, string | number>) => string
 const LICENCE_URL = 'https://github.com/Endika/mintza/blob/main/LICENSE';
 const OPENAI_KEYS_URL = 'https://platform.openai.com/api-keys';
 const KEY_FIELDS = ['openai', 'google', 'googleSpeech', 'azure', 'anthropic'] as const;
+const GOOGLE_CREDENTIALS_URL = 'https://console.cloud.google.com/apis/credentials';
+const GOOGLE_API_LIBRARY_URL: Partial<Record<ApiKeyProviderName, string>> = {
+  google: 'https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
+  googleSpeech: 'https://console.cloud.google.com/apis/library/speech.googleapis.com',
+};
+const REASON_TEXT: Record<CheckFailureReason, TranslationKey> = {
+  invalid_key: 'settings.reason_invalid_key',
+  api_blocked: 'settings.reason_api_blocked',
+  api_disabled: 'settings.reason_api_disabled',
+  network: 'settings.reason_network',
+  unknown: 'settings.reason_unknown',
+};
 
 export class SettingsPage implements Page {
   private root: HTMLElement | null = null;
@@ -248,7 +263,11 @@ export class SettingsPage implements Page {
       .map((c) =>
         c.ok
           ? checkLine(true, tr.t('settings.check_ok', { service: c.service }))
-          : checkLine(false, tr.t('settings.check_failed', { service: c.service }), c.message),
+          : checkLine(
+              false,
+              tr.t('settings.check_failed', { service: c.service }),
+              c.reason && tr.t(REASON_TEXT[c.reason]),
+            ) + fixLink(provider, c.reason, tr.t.bind(tr)),
       )
       .join('');
   }
@@ -430,6 +449,24 @@ const checkLine = (ok: boolean, text: string, detail?: string): string => `
     }</span>
   </p>
 `;
+
+/** For Google, where the person can fix a blocked or switched-off API. */
+const fixLink = (
+  provider: ApiKeyProviderName,
+  reason: CheckFailureReason | undefined,
+  t: T,
+): string => {
+  const library = GOOGLE_API_LIBRARY_URL[provider];
+  if (!library) return '';
+  const link =
+    reason === 'api_disabled'
+      ? { href: library, label: t('settings.link_enable_api') }
+      : reason === 'api_blocked'
+        ? { href: GOOGLE_CREDENTIALS_URL, label: t('settings.link_key_restrictions') }
+        : undefined;
+  if (!link) return '';
+  return `<a href="${link.href}" target="_blank" rel="noopener" class="btn-ghost -ml-3 self-start text-sm">${link.label}${ICON_EXTERNAL}</a>`;
+};
 
 interface QualityOption {
   readonly value: QualityProfile;

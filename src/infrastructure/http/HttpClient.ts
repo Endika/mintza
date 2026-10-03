@@ -18,6 +18,19 @@ export interface HttpResponse {
   readonly blob: () => Promise<Blob>;
 }
 
+/** Carried as the AppError cause when the server answered with an error status. */
+export interface HttpFailure {
+  readonly status: number;
+  readonly body: string;
+}
+
+export const httpFailureOf = (error: AppError): HttpFailure | undefined => {
+  const cause = error.cause;
+  if (typeof cause !== 'object' || cause === null) return undefined;
+  const { status, body } = cause as Partial<HttpFailure>;
+  return typeof status === 'number' && typeof body === 'string' ? { status, body } : undefined;
+};
+
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_RETRIES = 2;
 
@@ -49,14 +62,18 @@ export class HttpClient {
           continue;
         }
 
-        if (response.status === 401 || response.status === 403) {
-          return err(new AppError('API_KEY_INVALID', 'Invalid or unauthorized API key'));
-        }
-
         if (!response.ok) {
           const body = await response.text().catch(() => '');
+          const failure: HttpFailure = { status: response.status, body };
+          if (response.status === 401 || response.status === 403) {
+            return err(new AppError('API_KEY_INVALID', 'Invalid or unauthorized API key', failure));
+          }
           return err(
-            new AppError('NETWORK_ERROR', `HTTP ${response.status}: ${body.slice(0, 200)}`),
+            new AppError(
+              'NETWORK_ERROR',
+              `HTTP ${response.status}: ${body.slice(0, 200)}`,
+              failure,
+            ),
           );
         }
 

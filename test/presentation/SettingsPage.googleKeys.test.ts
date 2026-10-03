@@ -104,7 +104,7 @@ describe('SettingsPage Google keys', () => {
       apiKeys: { openai: 'sk-test', google: 'AIza-gemini', googleSpeech: 'AIza-speech' },
       checks: {
         google: { service: 'Google Gemini', ok: true },
-        googleSpeech: { service: 'Google Speech', ok: false },
+        googleSpeech: { service: 'Google Speech', ok: false, reason: 'api_disabled' },
       },
     });
 
@@ -117,6 +117,43 @@ describe('SettingsPage Google keys', () => {
     expect(validator.asked.at(-1)).toEqual({ provider: 'google', key: 'AIza-gemini' });
     expect(result(root, 'google').textContent).toContain('Google Gemini works');
     expect(result(root, 'googleSpeech').textContent).toContain("Google Speech didn't work");
+  });
+
+  it('says the Speech API is off and links to enabling it', async () => {
+    const { root } = await render({
+      checks: { googleSpeech: { service: 'Google Speech', ok: false, reason: 'api_disabled' } },
+    });
+    input(root, 'googleSpeech').value = 'AIza-speech';
+    await test(root, 'googleSpeech');
+    const line = result(root, 'googleSpeech');
+    expect(line.textContent).toContain("This API isn't turned on in your Google Cloud project.");
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(
+      'https://console.cloud.google.com/apis/library/speech.googleapis.com',
+    );
+  });
+
+  it("says the Gemini key's restrictions block the API and links to the key settings", async () => {
+    const { root } = await render({
+      checks: { google: { service: 'Google Gemini', ok: false, reason: 'api_blocked' } },
+    });
+    input(root, 'google').value = 'AIza-gemini';
+    await test(root, 'google');
+    const line = result(root, 'google');
+    expect(line.textContent).toContain("This key's restrictions don't allow this API.");
+    expect(line.querySelector('a')?.getAttribute('href')).toBe(
+      'https://console.cloud.google.com/apis/credentials',
+    );
+  });
+
+  it('gives the reason in the interface language, without a link it does not need', async () => {
+    const { root } = await render({
+      language: 'es',
+      checks: { openai: { service: 'OpenAI', ok: false, reason: 'invalid_key' } },
+    });
+    await test(root, 'openai');
+    const line = result(root, 'openai');
+    expect(line.textContent).toContain('La clave no es válida.');
+    expect(line.querySelector('a')).toBeNull();
   });
 
   it('counts an edited Speech key as an unsaved change and saves it', async () => {

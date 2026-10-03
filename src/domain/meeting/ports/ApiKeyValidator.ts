@@ -3,10 +3,17 @@ import type { Result } from '../../../shared/result/Result';
 
 export type ApiKeyProviderName = 'openai' | 'anthropic' | 'google' | 'googleSpeech' | 'azure';
 
+/**
+ * api_blocked: the key's restrictions don't allow this API.
+ * api_disabled: the API isn't enabled in the key's project.
+ */
+export type CheckFailureReason =
+  'invalid_key' | 'api_blocked' | 'api_disabled' | 'network' | 'unknown';
+
 export interface ServiceCheck {
   readonly service: string;
   readonly ok: boolean;
-  readonly message?: string;
+  readonly reason?: CheckFailureReason;
 }
 
 export interface ValidationOutcome {
