@@ -134,13 +134,28 @@ describe('Router', () => {
     expect(root.textContent).toBe('Settings');
   });
 
-  it('follows a Back to the shown hash while a leave check is pending', async () => {
-    const slow = new StubPage('Home', true, 0, 30);
+  it('keeps the shown page alive on Back while a leave check is pending', async () => {
+    let renders = 0;
+    let historyRenders = 0;
+    class Counting extends StubPage {
+      override render(r: HTMLElement): Promise<void> {
+        renders++;
+        return super.render(r);
+      }
+    }
+    const slow = new Counting('Home', true, 0, 30);
     router = new Router(
       root,
-      new Map([
+      new Map<string, PageFactory>([
         ['/', () => slow],
-        ['/history', () => new StubPage('History')],
+        [
+          '/history',
+          async () => {
+            await flush(10);
+            historyRenders++;
+            return new StubPage('History');
+          },
+        ],
       ]),
       () => slow,
     );
@@ -151,6 +166,9 @@ describe('Router', () => {
     await go('#/', 80);
     expect(window.location.hash).toBe('#/');
     expect(root.textContent).toBe('Home');
+    expect(slow.disposed).toBe(false);
+    expect(renders).toBe(1);
+    expect(historyRenders).toBe(0);
   });
 
   it('follows a Back to the shown hash while the next page is still loading', async () => {
