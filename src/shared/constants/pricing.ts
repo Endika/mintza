@@ -18,6 +18,8 @@ export const PRICING = {
     'gpt-4o-mini': { inputPerMillion: 0.15, outputPerMillion: 0.6 },
     'gpt-4o': { inputPerMillion: 5, outputPerMillion: 15 },
     'claude-sonnet-4-5': { inputPerMillion: 3, outputPerMillion: 15 },
+    'gemini-3.1-flash-lite': { inputPerMillion: 0.25, outputPerMillion: 1.5 },
+    // Retired on 2026-06-01; kept so meetings summarised with it still price correctly.
     'gemini-2.0-flash': { inputPerMillion: 0.1, outputPerMillion: 0.4 },
   } as Readonly<Record<string, LLMPricing>>,
 } as const;

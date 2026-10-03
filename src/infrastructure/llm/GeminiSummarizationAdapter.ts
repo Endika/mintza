@@ -13,7 +13,7 @@ export interface GeminiSummarizationOptions {
   readonly model?: string;
 }
 
-const DEFAULT_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 
 export class GeminiSummarizationAdapter implements SummarizationPort {
   private readonly model: string;
