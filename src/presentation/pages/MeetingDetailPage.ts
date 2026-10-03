@@ -16,6 +16,7 @@ import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import { renderMarkdown } from '../util/renderMarkdown';
+import { escapeHtml } from '../util/escapeHtml';
 
 export interface MeetingDetailPageDeps {
   readonly getMeeting: GetMeetingUseCase;
@@ -106,9 +107,9 @@ export class MeetingDetailPage implements Page {
     const t = this.deps.translator;
     target.innerHTML = `
       <section class="card mb-6">
-        <h1 class="text-2xl font-bold tracking-tight">${escape(meeting.title)}</h1>
+        <h1 class="text-2xl font-bold tracking-tight">${escapeHtml(meeting.title)}</h1>
         <p class="mt-1 text-sm text-ink-400">
-          ${meeting.startedAt.toLocaleString()} · ${escape(meeting.template.name)} · ${meeting.language.code}
+          ${meeting.startedAt.toLocaleString()} · ${escapeHtml(meeting.template.name)} · ${meeting.language.code}
         </p>
         <div id="detail-cost" class="mt-3"></div>
       </section>
@@ -145,7 +146,7 @@ export class MeetingDetailPage implements Page {
       <section class="card mb-6">
         <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.transcript')}</h3>
         <div class="whitespace-pre-wrap text-ink-600 text-sm">
-          ${escape(meeting.fullText().value) || '<em class="text-ink-400">No transcript.</em>'}
+          ${escapeHtml(meeting.fullText().value) || '<em class="text-ink-400">No transcript.</em>'}
         </div>
       </section>
 
@@ -195,7 +196,7 @@ export class MeetingDetailPage implements Page {
           ${this.templates
             .map(
               (tpl) =>
-                `<option value="${tpl.id}" ${tpl.id === this.meeting?.template.id ? 'selected' : ''}>${escape(tpl.name)}</option>`,
+                `<option value="${escapeHtml(tpl.id)}" ${tpl.id === this.meeting?.template.id ? 'selected' : ''}>${escapeHtml(tpl.name)}</option>`,
             )
             .join('')}
         </select>
@@ -244,7 +245,7 @@ export class MeetingDetailPage implements Page {
           this.deps.translator.t(SUMMARY_KEYS[kind]) || defaultLabelFor(kind),
         );
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escape(label)}</h4>
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escapeHtml(label)}</h4>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
@@ -274,11 +275,6 @@ const parseIdFromHash = (): string | null => {
 const errorShell = (backLabel: string, message: string): string => `
   <main class="mx-auto max-w-3xl px-6 py-12">
     <header class="mb-8"><a href="#/history" class="btn-ghost">${backLabel}</a></header>
-    <p class="text-red-600">${escape(message)}</p>
+    <p class="text-red-600">${escapeHtml(message)}</p>
   </main>
 `;
-
-const escape = (raw: string): string =>
-  raw.replace(/[&<>"]/g, (ch) =>
-    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;',
-  );

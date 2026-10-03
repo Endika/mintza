@@ -29,6 +29,7 @@ import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
 import { renderMarkdown } from '../util/renderMarkdown';
+import { escapeHtml } from '../util/escapeHtml';
 
 export interface HomePageDeps {
   readonly config: ConfigStore;
@@ -664,7 +665,7 @@ const templateSelect = (
       ${templates
         .map(
           (tpl) =>
-            `<option value="${tpl.id}" ${tpl.id === effective ? 'selected' : ''}>${tpl.name}${tpl.builtIn ? '' : ' ★'}</option>`,
+            `<option value="${escapeHtml(tpl.id)}" ${tpl.id === effective ? 'selected' : ''}>${escapeHtml(tpl.name)}${tpl.builtIn ? '' : ' ★'}</option>`,
         )
         .join('')}
     </select>
@@ -682,6 +683,3 @@ const languageSelect = (current: LanguageCode, t: (key: TranslationKey) => strin
     </select>
   </label>
 `;
-
-const escapeHtml = (raw: string): string =>
-  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
