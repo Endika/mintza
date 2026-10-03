@@ -8,6 +8,16 @@ describe('renderMarkdown', () => {
     );
   });
 
+  it('shifts headings under the card heading', () => {
+    expect(renderMarkdown('# Title\n## Sub', { headingOffset: 3 })).toBe(
+      '<h4>Title</h4><h5>Sub</h5>',
+    );
+  });
+
+  it('never goes past h6', () => {
+    expect(renderMarkdown('#### Deep', { headingOffset: 3 })).toBe('<h6>Deep</h6>');
+  });
+
   it('renders bold, italic and inline code', () => {
     expect(renderMarkdown('a **bold** and *italic* and `code`')).toBe(
       '<p>a <strong>bold</strong> and <em>italic</em> and <code>code</code></p>',
