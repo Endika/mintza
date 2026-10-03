@@ -212,7 +212,7 @@ export class TemplatesPage implements Page {
           <legend class="font-semibold">${t.t('templates.field_kinds')}</legend>
           <p class="mt-2 text-sm text-fg-muted">${t.t('templates.field_kinds_hint')}</p>
           <div id="tpl-chips" class="mt-3 flex flex-wrap gap-2"></div>
-          <p id="tpl-main" class="mt-3 flex items-center gap-2 text-sm empty:hidden"></p>
+          <div id="tpl-main" class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 empty:hidden"></div>
         </fieldset>
         <div class="flex min-w-0 flex-col gap-2">
           <label for="tpl-mindmap" class="font-semibold">${t.t('templates.field_mindmap')}</label>
@@ -245,8 +245,11 @@ export class TemplatesPage implements Page {
       const target = e.target instanceof Element ? e.target : null;
       const chip = target?.closest<HTMLButtonElement>('[data-kind]');
       if (chip) this.toggleKind(chip.dataset['kind'] as SummaryKind);
-      const makeMain = target?.closest<HTMLButtonElement>('[data-make-main]');
-      if (makeMain) this.makeMain(makeMain.dataset['makeMain'] as SummaryKind);
+    });
+    form.addEventListener('change', (e) => {
+      if (e.target instanceof HTMLSelectElement && e.target.id === 'tpl-main-select') {
+        this.makeMain(e.target.value as SummaryKind);
+      }
     });
     this.qs<HTMLButtonElement>('#btn-cancel').addEventListener('click', () => this.closeEditor());
     const exists = this.templates.some((tpl) => tpl.id === def.id);
@@ -284,7 +287,7 @@ export class TemplatesPage implements Page {
   private makeMain(kind: SummaryKind): void {
     this.order = [kind, ...this.order.filter((k) => k !== kind)];
     this.syncResults();
-    this.root?.querySelector<HTMLElement>(`[data-row-main="${kind}"] span`)?.focus();
+    this.root?.querySelector<HTMLSelectElement>('#tpl-main-select')?.focus();
   }
 
   private syncResults(): void {
@@ -300,14 +303,18 @@ export class TemplatesPage implements Page {
       }</button>`;
     }).join('');
     this.qs<HTMLElement>('#tpl-main').innerHTML = main
-      ? `${ICON_STAR_FILLED}<span>${t.t('templates.main_result')}: <strong class="font-semibold">${t.t(SUMMARY_LABEL_KEYS[main])}</strong></span>`
+      ? `<label for="tpl-main-select" class="flex items-center gap-2 font-semibold">${ICON_STAR_FILLED}<span>${t.t('templates.main_result')}</span></label>
+         <select id="tpl-main-select" class="field w-auto min-w-0 max-w-full">${this.order
+           .map(
+             (k) =>
+               `<option value="${k}"${k === main ? ' selected' : ''}>${t.t(SUMMARY_LABEL_KEYS[k])}</option>`,
+           )
+           .join('')}</select>`
       : '';
     for (const k of SUMMARY_KINDS) {
       this.qs<HTMLElement>(`[data-row="${k}"]`).classList.toggle('hidden', !this.order.includes(k));
       this.qs<HTMLElement>(`[data-row-main="${k}"]`).innerHTML =
-        k === main
-          ? `<span tabindex="-1" class="${BADGE} inline-flex items-center gap-1">${t.t('templates.main_result')}</span>`
-          : `<button type="button" class="btn-ghost min-h-11 px-3 text-sm" data-make-main="${k}">${t.t('templates.make_main')}</button>`;
+        k === main ? `<span class="${BADGE}">${t.t('templates.main_result')}</span>` : '';
     }
   }
 
@@ -334,7 +341,7 @@ export class TemplatesPage implements Page {
 
     const kindLabels: Partial<Record<SummaryKind, string>> = {};
     const promptOverrides: Partial<Record<SummaryKind, string>> = {};
-    for (const k of SUMMARY_KINDS) {
+    for (const k of this.order) {
       const label = field(data, `label_${k}`);
       if (label.length > 0) kindLabels[k] = label;
       const prompt = field(data, `prompt_${k}`);

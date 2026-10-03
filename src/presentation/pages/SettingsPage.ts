@@ -41,6 +41,7 @@ const KEY_FIELDS = ['openai', 'google', 'azure', 'anthropic'] as const;
 export class SettingsPage implements Page {
   private root: HTMLElement | null = null;
   private baseline: AppConfig | null = null;
+  private initialSpoken: LanguageCode = 'en';
   private readonly guard = new LeaveGuard();
   private readonly confirm: Confirm;
 
@@ -51,6 +52,7 @@ export class SettingsPage implements Page {
   async render(root: HTMLElement): Promise<void> {
     this.root = root;
     const cfg = this.deps.config.get();
+    this.initialSpoken = this.deps.config.spokenLanguage();
     const templates = await this.loadTemplates();
     const tr = this.deps.config.translator;
     const t: T = (key, vars) => tr.t(key, vars);
@@ -152,10 +154,10 @@ export class SettingsPage implements Page {
           <section class="card" aria-labelledby="settings-about">
             <h2 id="settings-about" class="mb-2 text-xl font-semibold tracking-tight">${t('settings.about')}</h2>
             <p class="text-fg-muted tabular">${t('app.version', { version: __APP_VERSION__ })}</p>
-            <a href="${LICENCE_URL}" target="_blank" rel="noopener" class="btn-ghost -ml-3 mt-2">${t('settings.licence')}${ICON_EXTERNAL}</a>
+            <p class="mt-1"><a href="${LICENCE_URL}" target="_blank" rel="noopener" class="inline-block rounded-[var(--radius-control)] py-2.5 font-semibold text-fg underline-offset-4 hover:underline">${t('settings.licence')}<span class="ml-1.5 inline-block align-[-0.2em]">${ICON_EXTERNAL}</span></a></p>
           </section>
 
-          <div id="save-bar" class="bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 data-dirty:sticky md:bottom-4">
+          <div class="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 md:bottom-4">
             <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-3 shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]">
               <div class="min-w-0 flex-1 text-sm">
                 <p id="dirty-indicator" hidden class="flex items-center gap-2 font-semibold text-warning">${ICON_ALERT}<span>${t('settings.unsaved')}</span></p>
@@ -208,6 +210,7 @@ export class SettingsPage implements Page {
     return buildProposedConfig(
       new FormData(this.qs<HTMLFormElement>('#settings-form')),
       this.deps.config.get(),
+      this.initialSpoken,
     );
   }
 
@@ -217,11 +220,10 @@ export class SettingsPage implements Page {
     this.guard.setBusy(isDirty);
     this.qs<HTMLButtonElement>('#btn-save').disabled = !isDirty;
     this.qs<HTMLElement>('#dirty-indicator').hidden = !isDirty;
-    this.qs<HTMLElement>('#save-bar').toggleAttribute('data-dirty', isDirty);
     if (isDirty) this.setStatus('');
-    this.qs<HTMLButtonElement>('[data-action="clear-keys"]').disabled = !hasAnyKey(
-      this.deps.config.get().apiKeys,
-    );
+    // Clearing re-renders from the stored config, which would drop other unsaved edits.
+    this.qs<HTMLButtonElement>('[data-action="clear-keys"]').disabled =
+      isDirty || !hasAnyKey(this.deps.config.get().apiKeys);
   }
 
   private async handleValidate(btn: HTMLButtonElement): Promise<void> {
@@ -266,6 +268,7 @@ export class SettingsPage implements Page {
       this.deps.shell?.relabel();
       if (this.root) await this.render(this.root);
     } else {
+      this.initialSpoken = this.deps.config.spokenLanguage();
       this.baseline = next;
       this.refreshButtonStates();
     }
@@ -301,14 +304,25 @@ export class SettingsPage implements Page {
 const hasAnyKey = (keys: ApiKeys): boolean =>
   Object.values(keys).some((v) => typeof v === 'string' && v.length > 0);
 
-const buildProposedConfig = (data: FormData, current: AppConfig): AppConfig => {
+/**
+ * The spoken language keeps following the interface language until the person picks a different
+ * one; only then (or once one is already stored) is it written explicitly.
+ */
+const buildProposedConfig = (
+  data: FormData,
+  current: AppConfig,
+  initialSpoken: LanguageCode,
+): AppConfig => {
   const azureRegionRaw = data.get('azureRegion');
   const language = (data.get('language') as LanguageCode | null) ?? current.language;
+  const spoken = (data.get('spokenLanguage') as LanguageCode | null) ?? initialSpoken;
+  const pinSpoken =
+    current.spokenLanguage !== undefined || (spoken !== initialSpoken && spoken !== language);
+  const { spokenLanguage: _spoken, ...rest } = current;
   return {
-    ...current,
+    ...rest,
+    ...(pinSpoken ? { spokenLanguage: spoken } : {}),
     language,
-    spokenLanguage:
-      (data.get('spokenLanguage') as LanguageCode | null) ?? current.spokenLanguage ?? language,
     defaultTemplate:
       (data.get('defaultTemplate') as TemplateKind | null) ?? current.defaultTemplate,
     summaryQuality: (data.get('summaryQuality') as QualityProfile | null) ?? current.summaryQuality,
@@ -375,7 +389,9 @@ const keyRow = (
         <input
           type="password"
           name="${name}"
-          autocomplete="off"
+          autocomplete="new-password"
+          data-1p-ignore
+          data-lpignore="true"
           spellcheck="false"
           value="${value ? escapeHtml(value) : ''}"
           placeholder="${escapeHtml(t('settings.key_placeholder'))}"
