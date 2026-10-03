@@ -92,6 +92,32 @@ describe('a failed key test says why', () => {
     expect((await onlyCheck('anthropic')).reason).toBe('network');
   });
 
+  it('reads a 403 BILLING_DISABLED as billing that is off', async () => {
+    respondWith(403, googleError(403, 'PERMISSION_DENIED', 'BILLING_DISABLED'));
+    expect((await onlyCheck('googleSpeech')).reason).toBe('billing_disabled');
+  });
+
+  it.each([
+    'API_KEY_HTTP_REFERRER_BLOCKED',
+    'API_KEY_IP_ADDRESS_BLOCKED',
+    'API_KEY_ANDROID_APP_BLOCKED',
+    'API_KEY_IOS_APP_BLOCKED',
+  ])('reads a 403 %s as a key restricted to another site or app', async (reason) => {
+    respondWith(403, googleError(403, 'PERMISSION_DENIED', reason));
+    expect((await onlyCheck('google')).reason).toBe('key_restricted');
+  });
+
+  it('reads a 401 UNAUTHENTICATED CREDENTIALS_MISSING from Speech as an invalid key', async () => {
+    respondWith(401, googleError(401, 'UNAUTHENTICATED', 'CREDENTIALS_MISSING'));
+    expect((await onlyCheck('googleSpeech')).reason).toBe('invalid_key');
+  });
+
+  it('names an empty key as a missing key', async () => {
+    const result = await new HttpApiKeyValidator(new HttpClient()).validate('google', '  ');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.reason).toBe('missing_key');
+  });
+
   it('falls back to unknown for a Google error it cannot place', async () => {
     respondWith(403, 'not json');
     expect((await onlyCheck('google')).reason).toBe('unknown');

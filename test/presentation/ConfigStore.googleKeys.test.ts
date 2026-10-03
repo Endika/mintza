@@ -19,6 +19,16 @@ describe('ConfigStore Google keys', () => {
     expect(store.googleSpeechKey()).toBe('AIza-legacy');
   });
 
+  it('never lends a Gemini-only AQ. key to Speech', async () => {
+    const aqKey = `AQ.${'Ab8RN6Lz_q-W'.repeat(5)}`.slice(0, 53);
+    const store = new ConfigStore(
+      new FakeConfigRepo({ ...DEFAULT_CONFIG, apiKeys: { google: aqKey } }),
+    );
+    await store.hydrate();
+    expect(store.googleKey()).toBe(aqKey);
+    expect(store.googleSpeechKey()).toBeUndefined();
+  });
+
   it('prefers an explicit Speech key and keeps the Gemini key apart', async () => {
     const store = new ConfigStore(
       new FakeConfigRepo({

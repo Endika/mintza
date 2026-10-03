@@ -17,6 +17,8 @@ export type ErrorReason =
   | 'invalid_key'
   | 'api_blocked'
   | 'api_disabled'
+  | 'key_restricted'
+  | 'billing_disabled'
   | 'network'
   | 'no_speech'
   | 'bad_response'

@@ -246,6 +246,9 @@ export type TranslationKey =
   | 'error.bad_response'
   | 'error.unknown'
   | 'settings.key_empty'
+  | 'error.key_restricted'
+  | 'error.billing_disabled'
+  | 'settings.link_billing'
   | 'settings.link_enable_api'
   | 'settings.link_key_restrictions'
   | 'settings.confirm_clear'
@@ -520,6 +523,9 @@ const EN: Translations = {
   'error.bad_response': "The service sent an answer Mintza couldn't read.",
   'error.unknown': 'Something went wrong. Try again in a moment.',
   'settings.key_empty': 'Paste a key first.',
+  'error.key_restricted': "This key's restrictions don't allow this site or app.",
+  'error.billing_disabled': "Billing isn't turned on for this Google Cloud project.",
+  'settings.link_billing': 'Open billing',
   'settings.link_enable_api': 'Turn on the API',
   'settings.link_key_restrictions': "Edit the key's restrictions",
   'settings.confirm_clear':
@@ -794,8 +800,11 @@ const ES: Translations = {
   'error.missing_region': 'Falta la región de Azure en Ajustes.',
   'error.no_speech': 'No se ha oído voz en este fragmento.',
   'error.bad_response': 'El servicio ha devuelto una respuesta que Mintza no puede leer.',
-  'error.unknown': 'Algo ha fallado. Vuelve a probar dentro de un momento.',
+  'error.unknown': 'Algo ha fallado. Vuelve a intentarlo en un momento.',
   'settings.key_empty': 'Pega primero una clave.',
+  'error.key_restricted': 'Las restricciones de esta clave no permiten este sitio ni esta app.',
+  'error.billing_disabled': 'La facturación no está activada en este proyecto de Google Cloud.',
+  'settings.link_billing': 'Abrir facturación',
   'settings.link_enable_api': 'Activar la API',
   'settings.link_key_restrictions': 'Editar las restricciones de la clave',
   'settings.confirm_clear':
@@ -1076,6 +1085,9 @@ const EU: Translations = {
   'error.bad_response': 'Zerbitzuak Mintzak irakurri ezin duen erantzuna itzuli du.',
   'error.unknown': 'Zerbait gaizki joan da. Saiatu berriro pixka bat barru.',
   'settings.key_empty': 'Itsatsi gako bat lehenik.',
+  'error.key_restricted': 'Gako honen murrizketek ez dute gune edo aplikazio hau onartzen.',
+  'error.billing_disabled': 'Fakturazioa ez dago aktibatuta Google Cloud proiektu honetan.',
+  'settings.link_billing': 'Ireki fakturazioa',
   'settings.link_enable_api': 'Aktibatu APIa',
   'settings.link_key_restrictions': 'Editatu gakoaren murrizketak',
   'settings.confirm_clear':

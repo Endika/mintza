@@ -52,9 +52,14 @@ export class ConfigStore {
     return this.current.apiKeys.google;
   }
 
-  /** Falls back to the Gemini key, so a single legacy key that covers both keeps working. */
+  /**
+   * Falls back to a legacy Gemini key that may cover both, but never to an `AQ.` auth key:
+   * those only work on Gemini, and every chunk would be uploaded to Speech for a certain 401.
+   */
   googleSpeechKey(): string | undefined {
-    return this.current.apiKeys.googleSpeech ?? this.current.apiKeys.google;
+    const { googleSpeech, google } = this.current.apiKeys;
+    if (googleSpeech !== undefined) return googleSpeech;
+    return google?.startsWith('AQ.') ? undefined : google;
   }
 
   azureKey(): string | undefined {
