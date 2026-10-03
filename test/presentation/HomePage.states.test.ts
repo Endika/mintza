@@ -204,6 +204,22 @@ describe('HomePage states', () => {
     expect(root.querySelector('#status')!.textContent).toContain('Saved to History');
   });
 
+  it('leaves sentiment to the gauge instead of repeating it as a text row', async () => {
+    const { root, audio } = await mount(
+      'sk-test',
+      new FakeSummarizationPort({ kind: 'success', content: 'Calm and upbeat. Score: 0.6' }),
+    );
+
+    await recordAndStop(root, audio);
+
+    expect(visible(root, '#temperature-card')).toBe(true);
+    const labels = [...root.querySelectorAll('#primary-summary h3, #rest-summaries h3')].map(
+      (h) => h.textContent,
+    );
+    expect(labels).toHaveLength(7);
+    expect(labels).not.toContain('Sentiment');
+  });
+
   it('keeps every failed result marked with its reason', async () => {
     const { root, audio } = await mount(
       'sk-test',

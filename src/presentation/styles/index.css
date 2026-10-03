@@ -121,6 +121,11 @@
       animation-iteration-count: 1 !important;
       transition-duration: 1ms !important;
     }
+
+    /* The crossfade is what reduced motion gets instead of the morph. */
+    .rec-card-fade {
+      animation-duration: 150ms !important;
+    }
   }
 }
 
@@ -232,11 +237,6 @@
   }
   .rec-card-fade {
     animation: rec-card-fade 150ms ease-out;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .rec-card-fade {
-      animation-duration: 150ms !important;
-    }
   }
   .prose-summary > * + * {
     @apply mt-2;

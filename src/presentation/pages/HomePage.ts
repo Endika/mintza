@@ -309,7 +309,7 @@ export class HomePage implements Page {
         <div id="last-error" class="hidden text-sm text-danger"></div>
       </div>`;
     return `
-      <div id="panel-idle" class="flex flex-col gap-6 max-sm:min-h-[calc(100dvh-22rem)]">
+      <div id="panel-idle" class="flex flex-col gap-6">
         <div>
           <h2 class="text-xl font-semibold tracking-tight">${t('home.record_title')}</h2>
           <p class="mt-1 leading-relaxed text-fg-muted">${t('home.record_hint')}</p>
@@ -319,7 +319,7 @@ export class HomePage implements Page {
           <span class="text-sm font-medium text-fg-muted">${t('home.field_language')}</span>
           ${languageSelect(this.deps.config.spokenLanguage())}
         </label>
-        <div class="mt-auto flex flex-col gap-3" data-slot="idle">
+        <div class="flex flex-col gap-3" data-slot="idle">
           <button id="btn-record" type="button" class="btn-action btn-lg w-full">
             ${ICON_RECORD}<span>${t('home.btn_record')}</span>
           </button>
@@ -328,12 +328,15 @@ export class HomePage implements Page {
 
       <div id="panel-live" class="flex flex-1 flex-col" hidden>
         <div class="flex min-w-0 items-center justify-between gap-3">
-          <h2 id="rec-badge" class="rec-badge" tabindex="-1">
+          <h2 id="rec-badge" class="rec-badge shrink-0" tabindex="-1">
             <span class="rec-dot" aria-hidden="true"></span>
             <span id="rec-badge-label">${t('home.rec')}</span>
           </h2>
-          <span id="live-context" class="min-w-0 truncate text-sm text-fg-muted"></span>
+          <button id="btn-summarize" type="button" class="btn-ghost -mr-3 shrink-0 px-3! text-sm whitespace-nowrap">
+            <span class="max-[359px]:hidden">${ICON_SPARKLE}</span><span>${t('home.btn_summarize_now')}</span>
+          </button>
         </div>
+        <p id="live-context" class="mt-1 truncate text-sm text-fg-muted"></p>
         <div class="flex flex-1 flex-col items-center justify-center gap-8 py-10 text-center">
           <div id="counter"></div>
           <div id="meter" class="hidden w-full max-w-md"></div>
@@ -348,12 +351,7 @@ export class HomePage implements Page {
             ${ICON_STOP}<span>${t('home.btn_stop')}</span>
           </button>
         </div>
-        <div class="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <span id="wake-slot"></span>
-          <button id="btn-summarize" type="button" class="btn-ghost -mx-3 px-3! text-sm">
-            ${ICON_SPARKLE}<span>${t('home.btn_summarize_now')}</span>
-          </button>
-        </div>
+        <div id="wake-slot" class="mt-3 empty:hidden"></div>
       </div>
 
       <div id="panel-processing" hidden>
@@ -638,9 +636,11 @@ export class HomePage implements Page {
     this.renderExportMenu();
     void this.generateAndRenderMindMap();
     btn.disabled = false;
-    this.setStatus(
-      `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.successCount, failed: result.failureCount })}`,
-    );
+    if (this.screenState === 'recording' || this.screenState === 'paused') {
+      this.setStatus(
+        `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.successCount, failed: result.failureCount })}`,
+      );
+    }
   }
 
   private startMeter(): void {
@@ -749,7 +749,7 @@ export class HomePage implements Page {
     const state = this.screenState;
     const live = state === 'recording' || state === 'paused';
 
-    this.qsOptional('#home-header')?.classList.toggle('sr-only', live);
+    this.qsOptional('#home-header')?.classList.toggle('sr-only', live || state === 'done');
     this.qsOptional('#last-meeting')?.classList.toggle(
       'hidden',
       state !== 'idle' || !this.qsOptional('#last-meeting')?.hasChildNodes(),
@@ -875,7 +875,11 @@ export class HomePage implements Page {
   private renderSummaries(): void {
     if (!this.meeting) return;
     const meeting = this.meeting;
-    const generated = this.kinds.filter((kind) => meeting.summaries.has(kind));
+    // Once finished, the sentiment gauge under "More about this meeting" shows it better than its raw text.
+    const gaugeShown = meeting.isFinished && meeting.temperature !== undefined;
+    const generated = this.kinds.filter(
+      (kind) => meeting.summaries.has(kind) && !(gaugeShown && kind === 'sentiment'),
+    );
     const { primary, rest } = orderSummaries(meeting.template, generated);
     const primaryEl = this.qsOptional('#primary-summary');
     const restEl = this.qsOptional('#rest-summaries');
