@@ -9,10 +9,17 @@ import {
 } from '../../domain/meeting/value-objects/Template';
 import { defaultInstructionFor } from '../../domain/summary/services/SummaryDefaults';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import {
+  ICON_BACK,
+  ICON_CHEVRON,
+  ICON_PLUS,
+  ICON_STAR_FILLED,
+  ICON_TRASH,
+} from '../components/icons';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
-import { ICON_BACK } from '../components/icons';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
+import type { Confirm } from '../lifecycle/LeaveGuard';
 import type { Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
 
@@ -22,31 +29,42 @@ export interface TemplatesPageDeps {
   readonly saveTemplate: SaveTemplateUseCase;
   readonly deleteTemplate: DeleteTemplateUseCase;
   readonly translator: Translator;
+  readonly confirm?: Confirm;
 }
+
+const BADGE = 'rounded-full bg-raised px-2.5 py-0.5 text-xs font-semibold text-fg';
 
 export class TemplatesPage implements Page {
   private root: HTMLElement | null = null;
   private templates: Template[] = [];
   private usageById: Map<string, number> = new Map();
   private editing: TemplateDefinition | null = null;
+  /** Active results, main result first: this order is saved as featuredOrder. */
+  private order: SummaryKind[] = [];
+  private readonly confirm: Confirm;
 
-  constructor(private readonly deps: TemplatesPageDeps) {}
+  constructor(private readonly deps: TemplatesPageDeps) {
+    this.confirm = deps.confirm ?? ((m) => window.confirm(m));
+  }
 
   async render(root: HTMLElement): Promise<void> {
     this.root = root;
     const t = this.deps.translator;
     root.innerHTML = `
-      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <a href="#/settings" class="btn-ghost -ml-3 mb-2">${ICON_BACK}<span>${t.t('nav.settings')}</span></a>
-        <header class="mb-6 flex items-center justify-between gap-4">
-          <h1 class="text-3xl font-bold tracking-tight">${t.t('templates.title')}</h1>
-          <button id="btn-new" class="btn-action text-sm">${t.t('templates.new')}</button>
+      <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
+        <a id="back-settings" href="#/settings" class="btn-ghost -ml-3 mb-2">${ICON_BACK}<span>${t.t('nav.settings')}</span></a>
+        <button id="back-list" type="button" class="btn-ghost -ml-3 mb-2 hidden">${ICON_BACK}<span>${t.t('templates.title')}</span></button>
+        <header class="mb-5 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
+          <h1 id="page-title" tabindex="-1" class="min-w-0 break-words text-3xl font-semibold tracking-tight sm:text-4xl">${t.t('templates.title')}</h1>
+          <button id="btn-new" type="button" class="btn-action">${ICON_PLUS}<span>${t.t('templates.new')}</span></button>
         </header>
-        <div id="list" class="space-y-3"></div>
-        <div id="editor" class="hidden mt-6"></div>
+        <p id="list-status" role="status" class="mb-4 text-sm text-danger empty:hidden"></p>
+        <div id="list" class="flex flex-col gap-3"></div>
+        <div id="editor" class="hidden"></div>
       </div>
     `;
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.openEditor(null));
+    this.qs<HTMLButtonElement>('#back-list').addEventListener('click', () => this.closeEditor());
     await this.refresh();
   }
 
@@ -74,32 +92,39 @@ export class TemplatesPage implements Page {
     const list = this.qs<HTMLElement>('#list');
     const t = this.deps.translator;
     list.innerHTML = this.templates
-      .map((tpl) => {
+      .map((tpl, i) => {
         const usage = this.usageById.get(tpl.id) ?? 0;
-        const usageLine =
-          usage > 0
-            ? `<p class="text-xs text-fg-muted mt-0.5">${t.t('templates.used_in', { count: usage })}</p>`
+        const inUse = !tpl.builtIn && usage > 0;
+        const count = tpl.summaryKinds.length;
+        const usageId = `tpl-usage-${i}`;
+        const usageText = inUse
+          ? t.t('templates.in_use_block', { count: usage })
+          : usage > 0
+            ? t.t('templates.used_in', { count: usage })
             : '';
-        const deleteDisabled = usage > 0;
-        const deleteTitle = deleteDisabled ? t.t('templates.in_use_block', { count: usage }) : '';
         return `
-          <article class="card flex items-center justify-between gap-3">
-            <div>
-              <h2 class="font-semibold">${escapeHtml(templateDisplayName(tpl, t))}${
-                tpl.builtIn
-                  ? ` <span class="ml-2 text-xs uppercase tracking-wide text-fg-muted">${t.t('templates.builtin')}</span>`
-                  : ''
-              }</h2>
-              <p class="text-sm text-fg-muted">${escapeHtml(tpl.systemRole)} · ${t.t('templates.section_count', { count: tpl.summaryKinds.length })}</p>
-              ${usageLine}
+          <article class="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 class="min-w-0 break-words text-lg font-semibold">${escapeHtml(templateDisplayName(tpl, t))}</h2>
+                ${tpl.builtIn ? `<span class="${BADGE}">${t.t('templates.builtin')}</span>` : ''}
+              </div>
+              <p class="mt-1 text-sm text-fg-muted">${
+                count === 1
+                  ? t.t('templates.result_count_one')
+                  : t.t('templates.result_count', { count })
+              }</p>
+              ${usageText ? `<p id="${usageId}" class="mt-0.5 text-sm text-fg-muted">${usageText}</p>` : ''}
             </div>
-            <div class="flex gap-2 shrink-0 text-sm">
-              <button type="button" data-duplicate="${escapeHtml(tpl.id)}" class="btn-ghost">${t.t('templates.duplicate')}</button>
+            <div class="flex shrink-0 flex-wrap gap-2">
+              <button type="button" data-duplicate="${escapeHtml(tpl.id)}" class="btn-secondary">${t.t('templates.duplicate')}</button>
               ${
                 tpl.builtIn
                   ? ''
-                  : `<button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-ghost">${t.t('templates.edit')}</button>
-                     <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-danger" ${deleteDisabled ? 'disabled' : ''} title="${escapeHtml(deleteTitle)}">${t.t('templates.delete')}</button>`
+                  : `<button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-secondary">${t.t('templates.edit')}</button>
+                     <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-danger disabled:text-fg-muted"${
+                       inUse ? ` disabled aria-describedby="${usageId}"` : ''
+                     }>${ICON_TRASH}<span>${t.t('templates.delete')}</span></button>`
               }
             </div>
           </article>`;
@@ -138,87 +163,159 @@ export class TemplatesPage implements Page {
 
   private async handleDelete(id: string): Promise<void> {
     if (id in BUILT_IN_TEMPLATES) return;
-    if (!window.confirm(this.deps.translator.t('templates.confirm_delete'))) return;
+    const t = this.deps.translator;
+    if (!this.confirm(t.t('templates.confirm_delete'))) return;
     const result = await this.deps.deleteTemplate.execute({ id });
     if (result.ok) {
+      this.qs<HTMLElement>('#list-status').textContent = '';
       await this.refresh();
     } else {
-      window.alert(`${this.deps.translator.t('templates.delete_failed')} ${result.error.message}`);
+      this.qs<HTMLElement>('#list-status').textContent =
+        `${t.t('templates.delete_failed')} ${result.error.message}`;
     }
+  }
+
+  private setView(editing: boolean, title: string): void {
+    this.qs<HTMLElement>('#back-settings').classList.toggle('hidden', editing);
+    this.qs<HTMLElement>('#back-list').classList.toggle('hidden', !editing);
+    this.qs<HTMLElement>('#btn-new').classList.toggle('hidden', editing);
+    this.qs<HTMLElement>('#list').classList.toggle('hidden', editing);
+    this.qs<HTMLElement>('#list-status').classList.toggle('hidden', editing);
+    this.qs<HTMLElement>('#editor').classList.toggle('hidden', !editing);
+    const heading = this.qs<HTMLElement>('#page-title');
+    heading.textContent = title;
+    heading.focus({ preventScroll: true });
+    window.scrollTo?.({ top: 0 });
   }
 
   private openEditor(initial: TemplateDefinition | null): void {
     const t = this.deps.translator;
-    this.editing = initial ?? blankTemplate();
+    const def = initial ?? blankTemplate();
+    this.editing = def;
+    this.order = [
+      ...def.featuredOrder.filter((k) => def.summaryKinds.includes(k)),
+      ...def.summaryKinds.filter((k) => !def.featuredOrder.includes(k)),
+    ];
     const editor = this.qs<HTMLElement>('#editor');
-    editor.classList.remove('hidden');
-    const def = this.editing;
-    const isNew = def.id === '';
     editor.innerHTML = `
-      <form id="tpl-form" class="card space-y-5">
-        <label class="block">
-          <span class="text-sm font-medium">${t.t('templates.field_name')}</span>
-          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base" />
-        </label>
-        <label class="block">
-          <span class="text-sm font-medium">${t.t('templates.field_meeting_type')}</span>
-          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base" />
-          <span class="mt-1 block text-xs text-fg-muted">${t.t('templates.field_meeting_type_hint')}</span>
-        </label>
-        <label class="block">
-          <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
-          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
-        </label>
-        <fieldset>
-          <legend class="text-sm font-medium mb-2">${t.t('templates.field_kinds')}</legend>
-          <div class="space-y-2">
-            ${SUMMARY_KINDS.map((k) => {
-              const checked = isNew ? true : def.summaryKinds.includes(k);
-              const defaultLabel = t.t(SUMMARY_LABEL_KEYS[k]);
-              const labelValue = def.kindLabels[k] ?? '';
-              return `
-              <label class="flex items-center gap-3 text-sm">
-                <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
-                <span class="w-32 text-fg-muted">${defaultLabel}</span>
-                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-edge px-2 py-1.5 text-sm" />
-              </label>`;
-            }).join('')}
-          </div>
+      <form id="tpl-form" class="card flex flex-col gap-6">
+        <div class="flex min-w-0 flex-col gap-2">
+          <label for="tpl-name" class="font-semibold">${t.t('templates.field_name')}</label>
+          <input id="tpl-name" name="name" required value="${escapeHtml(def.name)}" class="field min-w-0 w-full" />
+        </div>
+        <div class="flex min-w-0 flex-col gap-2">
+          <label for="tpl-role" class="font-semibold">${t.t('templates.field_meeting_type')}</label>
+          <p id="tpl-role-hint" class="text-sm text-fg-muted">${t.t('templates.field_meeting_type_hint')}</p>
+          <input id="tpl-role" name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" aria-describedby="tpl-role-hint" class="field min-w-0 w-full" />
+        </div>
+        <fieldset class="min-w-0">
+          <legend class="font-semibold">${t.t('templates.field_kinds')}</legend>
+          <p class="mt-2 text-sm text-fg-muted">${t.t('templates.field_kinds_hint')}</p>
+          <div id="tpl-chips" class="mt-3 flex flex-wrap gap-2"></div>
+          <p id="tpl-main" class="mt-3 flex items-center gap-2 text-sm empty:hidden"></p>
         </fieldset>
-        <fieldset>
-          <legend class="text-sm font-medium mb-2">${t.t('templates.field_prompt_overrides')}</legend>
-          <div class="space-y-3">
-            ${SUMMARY_KINDS.map((k) => {
-              const promptValue = def.promptOverrides[k] ?? (isNew ? '' : defaultInstructionFor(k));
-              return `
-              <details${promptValue ? ' open' : ''} class="rounded-lg border border-line">
-                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-fg">${t.t(SUMMARY_LABEL_KEYS[k])}</summary>
-                <div class="px-3 pb-3">
-                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-edge px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
-                </div>
-              </details>`;
-            }).join('')}
+        <div class="flex min-w-0 flex-col gap-2">
+          <label for="tpl-mindmap" class="font-semibold">${t.t('templates.field_mindmap')}</label>
+          <textarea id="tpl-mindmap" name="mindMapStructure" required rows="3" class="field min-w-0 w-full py-2">${escapeHtml(def.mindMapStructure)}</textarea>
+        </div>
+        <details class="group min-w-0 rounded-[var(--radius-control)] border border-line">
+          <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-2 font-semibold [&::-webkit-details-marker]:hidden">
+            <span class="shrink-0 transition-transform duration-150 group-open:rotate-90">${ICON_CHEVRON}</span>
+            <span class="min-w-0">${t.t('templates.customise')}</span>
+          </summary>
+          <div class="flex flex-col gap-3 border-t border-line px-4 pt-4 pb-5">
+            <p class="text-sm text-fg-muted">${t.t('templates.customise_hint')}</p>
+            ${SUMMARY_KINDS.map((k) => this.wordingRow(k, def)).join('')}
           </div>
-        </fieldset>
-        <div class="flex justify-end gap-2">
+        </details>
+        <p id="form-error" role="alert" class="text-sm font-semibold text-danger empty:hidden"></p>
+        <div class="flex flex-wrap justify-end gap-2">
           <button type="button" id="btn-cancel" class="btn-ghost">${t.t('templates.cancel')}</button>
           <button type="submit" class="btn-action">${t.t('templates.save')}</button>
         </div>
-        <p id="form-error" class="text-sm text-danger hidden"></p>
       </form>
     `;
-    this.qs<HTMLFormElement>('#tpl-form').addEventListener('submit', (e) => {
+    this.syncResults();
+    const form = this.qs<HTMLFormElement>('#tpl-form');
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       void this.handleSubmit();
     });
+    form.addEventListener('click', (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      const chip = target?.closest<HTMLButtonElement>('[data-kind]');
+      if (chip) this.toggleKind(chip.dataset['kind'] as SummaryKind);
+      const makeMain = target?.closest<HTMLButtonElement>('[data-make-main]');
+      if (makeMain) this.makeMain(makeMain.dataset['makeMain'] as SummaryKind);
+    });
     this.qs<HTMLButtonElement>('#btn-cancel').addEventListener('click', () => this.closeEditor());
+    const exists = this.templates.some((tpl) => tpl.id === def.id);
+    this.setView(true, exists ? t.t('templates.edit_title') : t.t('templates.new'));
+  }
+
+  private wordingRow(k: SummaryKind, def: TemplateDefinition): string {
+    const t = this.deps.translator;
+    const defaultLabel = t.t(SUMMARY_LABEL_KEYS[k]);
+    return `
+      <div data-row="${k}" class="flex min-w-0 flex-col gap-3 rounded-[var(--radius-control)] border border-line p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="font-semibold">${defaultLabel}</p>
+          <span data-row-main="${k}"></span>
+        </div>
+        <label class="flex min-w-0 flex-col gap-1.5">
+          <span class="text-sm font-medium">${t.t('templates.field_label')}</span>
+          <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(def.kindLabels[k] ?? '')}" class="field min-w-0 w-full" />
+        </label>
+        <label class="flex min-w-0 flex-col gap-1.5">
+          <span class="text-sm font-medium">${t.t('templates.field_prompt')}</span>
+          <textarea name="prompt_${k}" rows="4" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="field min-w-0 w-full py-2 text-sm">${escapeHtml(def.promptOverrides[k] ?? '')}</textarea>
+        </label>
+      </div>`;
+  }
+
+  private toggleKind(kind: SummaryKind): void {
+    this.order = this.order.includes(kind)
+      ? this.order.filter((k) => k !== kind)
+      : [...this.order, kind];
+    this.syncResults();
+    this.root?.querySelector<HTMLButtonElement>(`[data-kind="${kind}"]`)?.focus();
+  }
+
+  private makeMain(kind: SummaryKind): void {
+    this.order = [kind, ...this.order.filter((k) => k !== kind)];
+    this.syncResults();
+    this.root?.querySelector<HTMLElement>(`[data-row-main="${kind}"] span`)?.focus();
+  }
+
+  private syncResults(): void {
+    const t = this.deps.translator;
+    const main = this.order[0];
+    this.qs<HTMLElement>('#tpl-chips').innerHTML = SUMMARY_KINDS.map((k) => {
+      const on = this.order.includes(k);
+      const isMain = k === main;
+      return `<button type="button" class="chip gap-1.5" data-kind="${k}" aria-pressed="${on}">${
+        isMain ? ICON_STAR_FILLED : ''
+      }<span>${t.t(SUMMARY_LABEL_KEYS[k])}</span>${
+        isMain ? `<span class="sr-only">(${t.t('templates.main_result')})</span>` : ''
+      }</button>`;
+    }).join('');
+    this.qs<HTMLElement>('#tpl-main').innerHTML = main
+      ? `${ICON_STAR_FILLED}<span>${t.t('templates.main_result')}: <strong class="font-semibold">${t.t(SUMMARY_LABEL_KEYS[main])}</strong></span>`
+      : '';
+    for (const k of SUMMARY_KINDS) {
+      this.qs<HTMLElement>(`[data-row="${k}"]`).classList.toggle('hidden', !this.order.includes(k));
+      this.qs<HTMLElement>(`[data-row-main="${k}"]`).innerHTML =
+        k === main
+          ? `<span tabindex="-1" class="${BADGE} inline-flex items-center gap-1">${t.t('templates.main_result')}</span>`
+          : `<button type="button" class="btn-ghost min-h-11 px-3 text-sm" data-make-main="${k}">${t.t('templates.make_main')}</button>`;
+    }
   }
 
   private closeEditor(): void {
     this.editing = null;
-    const editor = this.qs<HTMLElement>('#editor');
-    editor.classList.add('hidden');
-    editor.innerHTML = '';
+    this.order = [];
+    this.qs<HTMLElement>('#editor').innerHTML = '';
+    this.setView(false, this.deps.translator.t('templates.title'));
   }
 
   private async handleSubmit(): Promise<void> {
@@ -230,8 +327,7 @@ export class TemplatesPage implements Page {
     const mindMapStructure = field(data, 'mindMapStructure');
     if (!name || !systemRole || !mindMapStructure) return;
 
-    const kinds: SummaryKind[] = SUMMARY_KINDS.filter((k) => data.get(`kind_${k}`) === 'on');
-    if (kinds.length === 0) {
+    if (this.order.length === 0) {
       this.showFormError(this.deps.translator.t('templates.kinds_required'));
       return;
     }
@@ -252,8 +348,8 @@ export class TemplatesPage implements Page {
       builtIn: false,
       systemRole,
       mindMapStructure,
-      summaryKinds: kinds,
-      featuredOrder: kinds,
+      summaryKinds: SUMMARY_KINDS.filter((k) => this.order.includes(k)),
+      featuredOrder: [...this.order],
       kindLabels,
       promptOverrides,
     };
@@ -267,9 +363,7 @@ export class TemplatesPage implements Page {
   }
 
   private showFormError(message: string): void {
-    const el = this.qs<HTMLElement>('#form-error');
-    el.textContent = message;
-    el.classList.remove('hidden');
+    this.qs<HTMLElement>('#form-error').textContent = message;
   }
 
   private qs<T extends HTMLElement>(selector: string): T {

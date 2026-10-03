@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTemplatesUseCase';
 import { ValidateApiKeyUseCase } from '../../src/application/use-cases/ValidateApiKeyUseCase';
 import type {
   ApiKeyValidator,
@@ -9,6 +10,8 @@ import {
   type AppConfig,
   type ConfigRepository,
 } from '../../src/domain/meeting/ports/ConfigRepository';
+import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
+import { LocalStorageTemplateRepository } from '../../src/infrastructure/persistence/LocalStorageTemplateRepository';
 import type { Translator } from '../../src/presentation/i18n/Translator';
 import { SettingsPage } from '../../src/presentation/pages/SettingsPage';
 import { ConfigStore } from '../../src/presentation/state/ConfigStore';
@@ -53,11 +56,14 @@ describe('SettingsPage language change', () => {
     const page = new SettingsPage({
       config,
       validateApiKey: new ValidateApiKeyUseCase(new AcceptingValidator()),
+      listTemplates: new ListTemplatesUseCase(
+        new TemplateRegistry(new LocalStorageTemplateRepository(window.localStorage)),
+      ),
       shell,
     });
     const root = document.createElement('div');
     document.body.appendChild(root);
-    page.render(root);
+    await page.render(root);
 
     root.querySelector<HTMLSelectElement>('select[name="language"]')!.value = 'es';
     root

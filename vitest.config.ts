@@ -1,9 +1,15 @@
 import { defineConfig } from 'vitest/config';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
 const r = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
+const pkg = JSON.parse(readFileSync(r('./package.json'), 'utf-8')) as { version: string };
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   resolve: {
     alias: {
       '@domain': r('./src/domain'),

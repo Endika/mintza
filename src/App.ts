@@ -57,6 +57,7 @@ export class App {
     return new SettingsPage({
       config: this.deps.configStore,
       validateApiKey: this.deps.validateApiKey,
+      listTemplates: this.deps.listTemplates,
       shell,
     });
   }

@@ -3,6 +3,7 @@ import { StatisticsCalculator } from '../../domain/statistics/services/Statistic
 import type { Translator } from '../i18n/Translator';
 import { escapeHtml } from '../util/escapeHtml';
 import { formatDuration } from '../util/formatDuration';
+import { TRANSCRIPTION_LABEL } from './providerLabels';
 
 export class StatisticsPanel {
   private readonly calculator = new StatisticsCalculator();
@@ -15,7 +16,7 @@ export class StatisticsPanel {
         ${stat(translator.t('stats.duration'), formatDuration(stats.durationMs / 1000, translator.language))}
         ${stat(translator.t('stats.words'), number.format(stats.wordCount))}
         ${stat(translator.t('stats.words_per_minute'), number.format(stats.wordsPerMinute))}
-        ${stat(translator.t('stats.providers'), escapeHtml(stats.providersUsed.join(', ') || '—'))}
+        ${stat(translator.t('stats.providers'), escapeHtml(stats.providersUsed.map((p) => TRANSCRIPTION_LABEL[p]).join(', ') || '—'))}
       </dl>
       <h4 class="mt-5 mb-2 text-sm font-medium text-fg-muted">${translator.t('stats.top_keywords')}</h4>
       ${
