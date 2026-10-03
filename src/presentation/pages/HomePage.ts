@@ -742,7 +742,7 @@ const templateSelect = (
   return `
   <label class="block">
     <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('home.field_template')}</span>
-    <select id="template-select" class="rounded-lg border border-line px-2 py-1 text-sm">
+    <select id="template-select" class="rounded-lg border border-edge px-2 py-1 text-sm">
       ${templates
         .map(
           (tpl) =>
@@ -757,7 +757,7 @@ const templateSelect = (
 const languageSelect = (current: LanguageCode, t: (key: TranslationKey) => string): string => `
   <label class="block">
     <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${t('home.field_language')}</span>
-    <select id="lang-select" class="rounded-lg border border-line px-2 py-1 text-sm">
+    <select id="lang-select" class="rounded-lg border border-edge px-2 py-1 text-sm">
       <option value="en" ${current === 'en' ? 'selected' : ''}>English</option>
       <option value="es" ${current === 'es' ? 'selected' : ''}>Español</option>
       <option value="eu" ${current === 'eu' ? 'selected' : ''}>Euskara</option>

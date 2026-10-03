@@ -159,16 +159,16 @@ export class TemplatesPage implements Page {
       <form id="tpl-form" class="card space-y-5">
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_name')}</span>
-          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base" />
+          <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base" />
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_meeting_type')}</span>
-          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base" />
+          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base" />
           <span class="mt-1 block text-xs text-fg-muted">${t.t('templates.field_meeting_type_hint')}</span>
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
-          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
+          <textarea name="mindMapStructure" required rows="3" class="mt-1 block w-full rounded-lg border border-edge px-3 py-2 text-base">${escapeHtml(def.mindMapStructure)}</textarea>
         </label>
         <fieldset>
           <legend class="text-sm font-medium mb-2">${t.t('templates.field_kinds')}</legend>
@@ -181,7 +181,7 @@ export class TemplatesPage implements Page {
               <label class="flex items-center gap-3 text-sm">
                 <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
                 <span class="w-32 text-fg-muted">${defaultLabel}</span>
-                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-line px-2 py-1.5 text-sm" />
+                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-edge px-2 py-1.5 text-sm" />
               </label>`;
             }).join('')}
           </div>
@@ -195,7 +195,7 @@ export class TemplatesPage implements Page {
               <details${promptValue ? ' open' : ''} class="rounded-lg border border-line">
                 <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-fg">${t.t(SUMMARY_LABEL_KEYS[k])}</summary>
                 <div class="px-3 pb-3">
-                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-line px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
+                  <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-edge px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
                 </div>
               </details>`;
             }).join('')}

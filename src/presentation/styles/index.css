@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: 'Figtree';
-  src: url('/mintza/fonts/Figtree-Variable.woff2') format('woff2');
+  src: url('/fonts/Figtree-Variable.woff2') format('woff2');
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
@@ -153,7 +153,7 @@
     @apply inline-block size-3 shrink-0 animate-rec-pulse rounded-full bg-live motion-reduce:animate-none;
   }
   .rec-badge {
-    @apply inline-flex items-center gap-2 rounded-full bg-live/12 px-3 py-1 text-sm font-semibold text-live;
+    @apply inline-flex items-center gap-2 rounded-full bg-live/10 px-3 py-1 text-sm font-semibold text-live;
   }
   .rec-badge-paused {
     @apply bg-raised text-fg-muted;

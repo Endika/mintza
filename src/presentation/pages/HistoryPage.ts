@@ -51,12 +51,12 @@ export class HistoryPage implements Page {
             type="search"
             id="search"
             placeholder="${t.t('history.search_placeholder')}"
-            class="rounded-lg border border-line px-3 py-2 text-sm"
+            class="rounded-lg border border-edge px-3 py-2 text-sm"
             autocomplete="off"
           />
           <label class="flex items-center gap-2 text-sm">
             <span class="text-fg-muted">${t.t('history.sort_label')}</span>
-            <select id="sort" class="rounded-lg border border-line px-2 py-2 text-sm">
+            <select id="sort" class="rounded-lg border border-edge px-2 py-2 text-sm">
               ${SORT_OPTIONS.map(
                 (o) =>
                   `<option value="${o.value}" ${o.value === this.sort ? 'selected' : ''}>${t.t(o.labelKey)}</option>`,
