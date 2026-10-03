@@ -32,6 +32,7 @@ import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
+import { LeaveGuard } from '../lifecycle/LeaveGuard';
 
 export interface HomePageDeps {
   readonly config: ConfigStore;
@@ -79,6 +80,8 @@ export class HomePage implements Page {
     lastError: null,
   };
   private templates: Template[] = [];
+  private readonly guard = new LeaveGuard();
+  private alive = true;
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -93,7 +96,6 @@ export class HomePage implements Page {
     const templatesResult = await this.deps.listTemplates.execute();
     this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
     root.innerHTML = `
-      <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded-sm focus:bg-primary focus:px-3 focus:py-1 focus:text-white focus:z-50">${t('home.skip')}</a>
       <main id="main" class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-8 flex items-center justify-between">
           <div>
@@ -190,12 +192,38 @@ export class HomePage implements Page {
     }
   }
 
+  async canLeave(): Promise<boolean> {
+    if (!this.guard.busy) return true;
+    const message =
+      this.screenState === 'processing'
+        ? this.t.t('home.leave_processing')
+        : this.t.t('home.leave_recording');
+    if (!this.guard.confirmLeave(message, (m) => window.confirm(m))) return false;
+    if (this.screenState === 'recording' || this.screenState === 'paused') await this.stop();
+    return true;
+  }
+
   dispose(): void {
-    this.unsubChunks?.();
-    this.unsubChunks = null;
+    this.alive = false;
+    this.guard.dispose();
+    // While processing, handleStop still needs the final chunk the recorder emits on stop.
+    if (this.screenState !== 'processing') {
+      this.unsubChunks?.();
+      this.unsubChunks = null;
+    }
+    if (this.screenState === 'recording' || this.screenState === 'paused') {
+      void this.deps.audio.stop();
+    }
     this.counter.stop();
     this.meter.stop();
     void this.deps.screenWake.release();
+  }
+
+  /** Resolves once the transcript is saved; summaries keep finalizing in the background. */
+  private stop(): Promise<void> {
+    return new Promise((resolve) => {
+      void this.handleStop(resolve).finally(resolve);
+    });
   }
 
   private syncWakeLock(active: boolean): void {
@@ -233,6 +261,10 @@ export class HomePage implements Page {
       template,
       language: Language.of(this.readLanguage()),
     });
+    if (!this.alive) {
+      if (result.ok) void this.deps.audio.stop();
+      return;
+    }
     if (!result.ok) {
       this.setStatus(this.t.t('home.start_failed'));
       return;
@@ -255,6 +287,7 @@ export class HomePage implements Page {
   private async handlePauseResume(): Promise<void> {
     if (this.screenState === 'recording') {
       await this.deps.audio.pause();
+      if (!this.alive) return;
       this.meeting?.pause();
       this.counter.stop();
       this.meter.stop();
@@ -265,6 +298,7 @@ export class HomePage implements Page {
     } else if (this.screenState === 'paused') {
       this.meeting?.resume();
       await this.deps.audio.resume();
+      if (!this.alive) return;
       this.startMeter();
       this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
       this.setScreenState('recording');
@@ -272,7 +306,7 @@ export class HomePage implements Page {
     }
   }
 
-  private async handleStop(): Promise<void> {
+  private async handleStop(onTranscriptSaved: () => void = () => undefined): Promise<void> {
     if (!this.meeting) return;
     this.setScreenState('processing');
     this.syncWakeLock(false);
@@ -280,39 +314,40 @@ export class HomePage implements Page {
     this.meter.stop();
     this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
+    const meeting = this.meeting;
     await this.deps.stopRecording.execute({
-      meeting: this.meeting,
+      meeting,
       flushPending: () => Promise.allSettled([...this.pendingChunks]),
     });
     this.unsubChunks?.();
     this.unsubChunks = null;
 
-    if (this.meeting.segments.length === 0) {
+    if (meeting.segments.length === 0) {
       this.setStatus(this.t.t('home.no_audio'));
       this.setScreenState('done');
       return;
     }
 
-    const transcriptSaved = await this.deps.saveMeeting.execute({ meeting: this.meeting });
+    const transcriptSaved = await this.deps.saveMeeting.execute({ meeting });
+    onTranscriptSaved();
     if (!transcriptSaved.ok) {
       this.showSaveError(transcriptSaved.error.message);
     }
 
     this.setStatus(this.t.t('home.generating'));
-    const summariesEl = this.qs<HTMLElement>('#summaries');
-    summariesEl.innerHTML = '<em class="text-ink-400">…</em>';
+    const pendingSummaries = this.qsOptional('#summaries');
+    if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-ink-400">…</em>';
 
-    const result = await this.deps.finalizeMeeting.execute({
-      meeting: this.meeting,
-      kinds: SUMMARY_KINDS,
-    });
+    const result = await this.deps.finalizeMeeting.execute({ meeting, kinds: SUMMARY_KINDS });
 
-    this.renderSummaries(summariesEl);
+    const summariesEl = this.qsOptional('#summaries');
+    if (summariesEl) this.renderSummaries(summariesEl);
     this.renderTemperature();
     this.renderStatistics();
     this.renderExportMenu();
     if (result.mindMap) this.renderMindMap(result.mindMap);
-    this.counter.renderFinal(this.qs<HTMLElement>('#counter'), this.meeting, this.t);
+    const counterEl = this.qsOptional('#counter');
+    if (counterEl) this.counter.renderFinal(counterEl, meeting, this.t);
 
     if (result.saveError) {
       this.showSaveError(result.saveError.message);
@@ -325,7 +360,8 @@ export class HomePage implements Page {
   }
 
   private showSaveError(message: string): void {
-    const status = this.qs<HTMLElement>('#status');
+    const status = this.qsOptional('#status');
+    if (!status) return;
     status.textContent = `${this.t.t('home.save_failed')} ${message}`;
     status.classList.add('text-rose-500');
   }
@@ -352,7 +388,9 @@ export class HomePage implements Page {
       meeting: this.meeting,
       kinds: SUMMARY_KINDS,
     });
-    this.renderSummaries(this.qs<HTMLElement>('#summaries'));
+    const summariesEl = this.qsOptional('#summaries');
+    if (!summariesEl) return;
+    this.renderSummaries(summariesEl);
     this.applyTemperature();
     this.renderStatistics();
     this.renderExportMenu();
@@ -403,7 +441,8 @@ export class HomePage implements Page {
   }
 
   private updateProgress(): void {
-    const el = this.qs<HTMLElement>('#progress');
+    const el = this.qsOptional('#progress');
+    if (!el) return;
     el.classList.remove('hidden');
     const p = this.progress;
     if (p.received === 0) {
@@ -417,7 +456,8 @@ export class HomePage implements Page {
   }
 
   private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
-    const el = this.qs<HTMLElement>('#last-error');
+    const el = this.qsOptional('#last-error');
+    if (!el) return;
     el.classList.remove('hidden');
     const label = this.t.t('home.last_error');
     if (attempts.length === 0) {
@@ -436,6 +476,12 @@ export class HomePage implements Page {
   }
 
   private applyScreenState(): void {
+    if (!this.alive) return;
+    this.guard.setBusy(
+      this.screenState === 'recording' ||
+        this.screenState === 'paused' ||
+        this.screenState === 'processing',
+    );
     if (!this.root) return;
     const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
     const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
@@ -523,31 +569,39 @@ export class HomePage implements Page {
   }
 
   private renderMindMap(mindMap: MindMap): void {
-    const card = this.qs<HTMLElement>('#mindmap-card');
+    const card = this.qsOptional('#mindmap-card');
+    const body = this.qsOptional('#mindmap');
+    if (!card || !body) return;
     card.classList.remove('hidden');
-    this.mindMapView.render(this.qs<HTMLElement>('#mindmap'), mindMap);
+    this.mindMapView.render(body, mindMap);
   }
 
   private renderTemperature(): void {
     if (!this.meeting) return;
     const score = this.meeting.temperature;
     if (!score) return;
-    const card = this.qs<HTMLElement>('#temperature-card');
+    const card = this.qsOptional('#temperature-card');
+    const body = this.qsOptional('#temperature');
+    if (!card || !body) return;
     card.classList.remove('hidden');
-    this.gauge.render(this.qs<HTMLElement>('#temperature'), score, this.t);
+    this.gauge.render(body, score, this.t);
   }
 
   private renderStatistics(): void {
     if (!this.meeting) return;
-    const card = this.qs<HTMLElement>('#stats-card');
+    const card = this.qsOptional('#stats-card');
+    const body = this.qsOptional('#stats-body');
+    if (!card || !body) return;
     card.classList.remove('hidden');
-    this.statsPanel.render(this.qs<HTMLElement>('#stats-body'), this.meeting, this.t);
+    this.statsPanel.render(body, this.meeting, this.t);
   }
 
   private renderExportMenu(): void {
-    const card = this.qs<HTMLElement>('#export-card');
+    const card = this.qsOptional('#export-card');
+    const body = this.qsOptional('#export-menu');
+    if (!card || !body) return;
     card.classList.remove('hidden');
-    this.exportMenu.render(this.qs<HTMLElement>('#export-menu'), () => this.meeting, this.t);
+    this.exportMenu.render(body, () => this.meeting, this.t);
   }
 
   private applyTemperature(): void {
@@ -557,13 +611,16 @@ export class HomePage implements Page {
     const score = this.scoreParser.parse(sentiment.content);
     if (!score) return;
     this.meeting.setTemperature(score);
-    const card = this.qs<HTMLElement>('#temperature-card');
+    const card = this.qsOptional('#temperature-card');
+    const body = this.qsOptional('#temperature');
+    if (!card || !body) return;
     card.classList.remove('hidden');
-    this.gauge.render(this.qs<HTMLElement>('#temperature'), score, this.t);
+    this.gauge.render(body, score, this.t);
   }
 
   private appendSegment(segment: TranscriptSegment): void {
-    const container = this.qs<HTMLElement>('#transcription');
+    const container = this.qsOptional('#transcription');
+    if (!container) return;
     const span = document.createElement('span');
     span.textContent = `${segment.text.value} `;
     container.appendChild(span);
@@ -620,7 +677,14 @@ export class HomePage implements Page {
   }
 
   private setStatus(message: string): void {
-    this.qs<HTMLElement>('#status').textContent = message;
+    const status = this.qsOptional('#status');
+    if (status) status.textContent = message;
+  }
+
+  /** Null once disposed: the root may already hold the next page's elements with the same ids. */
+  private qsOptional<T extends HTMLElement = HTMLElement>(selector: string): T | null {
+    if (!this.alive || !this.root) return null;
+    return this.root.querySelector<T>(selector);
   }
 
   private qs<T extends HTMLElement>(selector: string): T {

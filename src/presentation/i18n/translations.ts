@@ -126,6 +126,8 @@ export type TranslationKey =
   | 'home.progress'
   | 'home.progress_skipped'
   | 'home.progress_failed'
+  | 'home.leave_recording'
+  | 'home.leave_processing'
   | 'history.clear_all'
   | 'history.load_failed'
   | 'history.starred'
@@ -306,6 +308,9 @@ const EN: Translations = {
   'home.progress': 'Transcribing… {done} of {total} parts',
   'home.progress_skipped': '{count} skipped',
   'home.progress_failed': '{count} failed',
+  'home.leave_recording': 'Stop and save this recording before leaving?',
+  'home.leave_processing':
+    "Mintza is still preparing your results. Leave anyway? They'll appear in History.",
   'history.clear_all': 'Clear all',
   'history.load_failed': "Couldn't load your meetings.",
   'history.starred': 'Starred',
@@ -486,6 +491,9 @@ const ES: Translations = {
   'home.progress': 'Transcribiendo… {done} de {total} partes',
   'home.progress_skipped': '{count} omitidas',
   'home.progress_failed': '{count} fallidas',
+  'home.leave_recording': '¿Parar y guardar la grabación antes de salir?',
+  'home.leave_processing':
+    'Mintza aún está preparando los resultados. ¿Salir igualmente? Aparecerán en el historial.',
   'history.clear_all': 'Borrar todo',
   'history.load_failed': 'No se pudieron cargar tus reuniones.',
   'history.starred': 'Destacada',
@@ -668,6 +676,9 @@ const EU: Translations = {
   'home.progress': 'Transkribatzen… {done}/{total} zati',
   'home.progress_skipped': '{count} saltatuta',
   'home.progress_failed': '{count} hutsegite',
+  'home.leave_recording': 'Grabazioa gelditu eta gorde irten aurretik?',
+  'home.leave_processing':
+    'Mintza oraindik emaitzak prestatzen ari da. Irten hala ere? Historian agertuko dira.',
   'history.clear_all': 'Ezabatu guztiak',
   'history.load_failed': 'Ezin izan dira zure bilerak kargatu.',
   'history.starred': 'Nabarmendua',
