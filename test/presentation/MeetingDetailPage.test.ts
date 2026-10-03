@@ -5,7 +5,11 @@ import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTempla
 import { RegenerateSummariesUseCase } from '../../src/application/use-cases/RegenerateSummariesUseCase';
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
 import { MeetingId } from '../../src/domain/meeting/value-objects/MeetingId';
+import { MindMap } from '../../src/domain/mindmap/entities/MindMap';
+import { MindMapNode } from '../../src/domain/mindmap/value-objects/MindMapNode';
+import { Summary } from '../../src/domain/summary/entities/Summary';
 import { TemperatureScore } from '../../src/domain/temperature/value-objects/TemperatureScore';
+import { TokenCount } from '../../src/domain/tokens/value-objects/TokenCount';
 import { LocalStorageTemplateRepository } from '../../src/infrastructure/persistence/LocalStorageTemplateRepository';
 import { Translator } from '../../src/presentation/i18n/Translator';
 import { MeetingDetailPage } from '../../src/presentation/pages/MeetingDetailPage';
@@ -86,6 +90,41 @@ describe('MeetingDetailPage', () => {
     expect(rows).toEqual(['Whisper', 'GPT', 'Total']);
     expect(root.querySelector('#detail-cost')?.textContent).toContain('$0.060');
     expect(root.querySelector('header')?.textContent).toContain('English');
+  });
+
+  it('prices a premium summary at its own model and counts the mind map', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({ title: 'Premium', seconds: 60 });
+    meeting.setSummary(
+      new Summary({
+        kind: 'decisions',
+        content: '- ship',
+        tokensIn: TokenCount.of(1_000_000),
+        tokensOut: TokenCount.zero(),
+        provider: 'openai',
+        model: 'gpt-4o',
+        generatedAt: new Date('2026-09-30T10:01:00Z'),
+      }),
+    );
+    meeting.setMindMap(
+      new MindMap(new MindMapNode('root', []), {
+        model: 'gpt-4o-mini',
+        tokensIn: TokenCount.of(1_000_000),
+        tokensOut: TokenCount.zero(),
+      }),
+    );
+    await repo.save(meeting);
+    const root = await renderDetail(repo, meeting.id.value);
+
+    const rows = [...root.querySelectorAll('#detail-cost div')].map((row) => [
+      row.querySelector('dt')?.textContent,
+      row.querySelector('dd')?.textContent,
+    ]);
+    expect(rows).toEqual([
+      ['GPT', '$5.000'],
+      ['Mind map', '$0.150'],
+      ['Total', '$5.150'],
+    ]);
   });
 
   it('shows the sentiment as the gauge, not as a text result', async () => {

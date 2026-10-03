@@ -8,6 +8,7 @@ export interface SummaryProps {
   readonly tokensIn: TokenCount;
   readonly tokensOut: TokenCount;
   readonly provider: LLMProviderName;
+  readonly model?: string;
   readonly generatedAt: Date;
 }
 
@@ -32,6 +33,10 @@ export class Summary {
 
   get provider(): LLMProviderName {
     return this.props.provider;
+  }
+
+  get model(): string | undefined {
+    return this.props.model;
   }
 
   get generatedAt(): Date {

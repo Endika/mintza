@@ -39,7 +39,14 @@ interface PersistedSummary {
   readonly tokensIn: number;
   readonly tokensOut: number;
   readonly provider: LLMProviderName;
+  readonly model?: string;
   readonly generatedAt: string;
+}
+
+interface PersistedMindMapUsage {
+  readonly model: string;
+  readonly tokensIn: number;
+  readonly tokensOut: number;
 }
 
 interface PersistedMindMapNode {
@@ -58,6 +65,7 @@ interface PersistedMeeting {
   readonly summaries: PersistedSummary[];
   readonly temperature?: number;
   readonly mindMap?: PersistedMindMapNode;
+  readonly mindMapUsage?: PersistedMindMapUsage;
   readonly costMicroUsd: number;
   readonly starred: boolean;
   readonly tags: string[];
@@ -207,10 +215,20 @@ const toPersisted = (meeting: Meeting): PersistedMeeting => ({
     tokensIn: s.tokensIn.value,
     tokensOut: s.tokensOut.value,
     provider: s.provider,
+    ...(s.model !== undefined ? { model: s.model } : {}),
     generatedAt: s.generatedAt.toISOString(),
   })),
   ...(meeting.temperature !== undefined ? { temperature: meeting.temperature.value } : {}),
   ...(meeting.mindMap ? { mindMap: nodeToPersisted(meeting.mindMap.root) } : {}),
+  ...(meeting.mindMap?.usage
+    ? {
+        mindMapUsage: {
+          model: meeting.mindMap.usage.model,
+          tokensIn: meeting.mindMap.usage.tokensIn.value,
+          tokensOut: meeting.mindMap.usage.tokensOut.value,
+        },
+      }
+    : {}),
   costMicroUsd: meeting.cost.microUsd,
   starred: meeting.starred,
   tags: [...meeting.tags],
@@ -224,6 +242,21 @@ const nodeToPersisted = (node: MindMapNode): PersistedMindMapNode => ({
 const nodeFromPersisted = (node: PersistedMindMapNode): MindMapNode =>
   new MindMapNode(node.label, node.children.map(nodeFromPersisted));
 
+const mindMapFromPersisted = (
+  root: PersistedMindMapNode,
+  usage: PersistedMindMapUsage | undefined,
+): MindMap =>
+  new MindMap(
+    nodeFromPersisted(root),
+    usage
+      ? {
+          model: usage.model,
+          tokensIn: TokenCount.of(usage.tokensIn),
+          tokensOut: TokenCount.of(usage.tokensOut),
+        }
+      : undefined,
+  );
+
 const fromPersisted = (p: PersistedMeeting, template: Template): Meeting => {
   const summaries = new Map<SummaryKind, Summary>();
   for (const s of p.summaries) {
@@ -236,6 +269,7 @@ const fromPersisted = (p: PersistedMeeting, template: Template): Meeting => {
         tokensIn: TokenCount.of(s.tokensIn),
         tokensOut: TokenCount.of(s.tokensOut),
         provider: s.provider,
+        ...(s.model !== undefined ? { model: s.model } : {}),
         generatedAt: new Date(s.generatedAt),
       }),
     );
@@ -260,7 +294,7 @@ const fromPersisted = (p: PersistedMeeting, template: Template): Meeting => {
     ),
     summaries,
     ...(p.temperature !== undefined ? { temperature: TemperatureScore.of(p.temperature) } : {}),
-    ...(p.mindMap ? { mindMap: new MindMap(nodeFromPersisted(p.mindMap)) } : {}),
+    ...(p.mindMap ? { mindMap: mindMapFromPersisted(p.mindMap, p.mindMapUsage) } : {}),
     cost: Money.fromUsd(p.costMicroUsd / 1_000_000),
     starred: p.starred,
     tags: [...p.tags],

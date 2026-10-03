@@ -4,6 +4,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { Language } from '../../../src/domain/language/value-objects/Language';
 import { Meeting } from '../../../src/domain/meeting/entities/Meeting';
 import { TemplateRegistry } from '../../../src/domain/meeting/services/TemplateRegistry';
+import { MeetingId } from '../../../src/domain/meeting/value-objects/MeetingId';
 import { Template } from '../../../src/domain/meeting/value-objects/Template';
 import { MindMap } from '../../../src/domain/mindmap/entities/MindMap';
 import { MindMapNode } from '../../../src/domain/mindmap/value-objects/MindMapNode';
@@ -161,5 +162,89 @@ describe('IndexedDBMeetingRepository', () => {
     const loaded = await repo.findById(meeting.id);
     if (!loaded.ok || !loaded.value) throw new Error('expected meeting');
     expect(loaded.value.mindMap).toBeUndefined();
+  });
+
+  it('keeps the model each call ran on', async () => {
+    const meeting = Meeting.start({
+      template: Template.work(),
+      language: Language.of('en'),
+      now: new Date('2026-05-21T14:00:00Z'),
+    });
+    meeting.setSummary(
+      new Summary({
+        kind: 'decisions',
+        content: '- ship',
+        tokensIn: TokenCount.of(100),
+        tokensOut: TokenCount.of(20),
+        provider: 'openai',
+        model: 'gpt-4o',
+        generatedAt: new Date('2026-05-21T14:05:00Z'),
+      }),
+    );
+    meeting.setMindMap(
+      new MindMap(new MindMapNode('root', []), {
+        model: 'gpt-4o',
+        tokensIn: TokenCount.of(900),
+        tokensOut: TokenCount.of(300),
+      }),
+    );
+
+    await repo.save(meeting);
+    const loaded = await repo.findById(meeting.id);
+    if (!loaded.ok || !loaded.value) throw new Error('expected meeting');
+
+    expect(loaded.value.summaries.get('decisions')?.model).toBe('gpt-4o');
+    const usage = loaded.value.mindMap?.usage;
+    expect(usage?.model).toBe('gpt-4o');
+    expect(usage?.tokensIn.value).toBe(900);
+    expect(usage?.tokensOut.value).toBe(300);
+  });
+
+  it('loads a meeting stored before models were recorded', async () => {
+    const factory = new IDBFactory();
+    repo = new IndexedDBMeetingRepository(factory);
+    await repo.list();
+    const record = {
+      id: '0b5c2f1e-7a3d-4c8e-9f21-6d4b8a1c3e57',
+      title: 'Old',
+      template: 'work',
+      language: 'en',
+      startedAt: '2026-01-10T09:00:00.000Z',
+      endedAt: '2026-01-10T09:30:00.000Z',
+      segments: [],
+      summaries: [
+        {
+          kind: 'decisions',
+          content: '- ship',
+          tokensIn: 10,
+          tokensOut: 5,
+          provider: 'openai',
+          generatedAt: '2026-01-10T09:31:00.000Z',
+        },
+      ],
+      mindMap: { label: 'root', children: [] },
+      costMicroUsd: 0,
+      starred: false,
+      tags: [],
+    };
+    await new Promise<void>((resolve, reject) => {
+      const open = factory.open('mintza-db', 1);
+      open.onsuccess = () => {
+        const tx = open.result.transaction('meetings', 'readwrite');
+        tx.objectStore('meetings').put(record);
+        tx.oncomplete = () => {
+          open.result.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error ?? new Error('put failed'));
+      };
+      open.onerror = () => reject(open.error ?? new Error('open failed'));
+    });
+
+    const loaded = await repo.findById(MeetingId.restore('0b5c2f1e-7a3d-4c8e-9f21-6d4b8a1c3e57'));
+    if (!loaded.ok || !loaded.value) throw new Error('expected meeting');
+    expect(loaded.value.summaries.get('decisions')?.model).toBeUndefined();
+    expect(loaded.value.mindMap?.root.label).toBe('root');
+    expect(loaded.value.mindMap?.usage).toBeUndefined();
   });
 });

@@ -199,6 +199,7 @@ export type TranslationKey =
   | 'sentiment.overall'
   | 'detail.cost'
   | 'detail.cost_total'
+  | 'detail.cost_mind_map'
   | 'settings.language_title'
   | 'settings.spoken_language'
   | 'settings.spoken_language_hint'
@@ -434,6 +435,7 @@ const EN: Translations = {
   'sentiment.overall': 'Overall tone',
   'detail.cost': 'Cost',
   'detail.cost_total': 'Total',
+  'detail.cost_mind_map': 'Mind map',
   'settings.language_title': 'Language',
   'settings.spoken_language': 'Language spoken in meetings',
   'settings.spoken_language_hint':
@@ -671,6 +673,7 @@ const ES: Translations = {
   'sentiment.overall': 'Tono general',
   'detail.cost': 'Coste',
   'detail.cost_total': 'Total',
+  'detail.cost_mind_map': 'Mapa mental',
   'settings.language_title': 'Idioma',
   'settings.spoken_language': 'Idioma que se habla en las reuniones',
   'settings.spoken_language_hint':
@@ -912,6 +915,7 @@ const EU: Translations = {
   'sentiment.overall': 'Tonu orokorra',
   'detail.cost': 'Kostua',
   'detail.cost_total': 'Guztira',
+  'detail.cost_mind_map': 'Buru-mapa',
   'settings.language_title': 'Hizkuntza',
   'settings.spoken_language': 'Bileretan hitz egiten den hizkuntza',
   'settings.spoken_language_hint':

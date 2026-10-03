@@ -1,7 +1,8 @@
-import type { MindMap } from '../../domain/mindmap/entities/MindMap';
+import { MindMap } from '../../domain/mindmap/entities/MindMap';
 import type { MindMapPort, MindMapRequest } from '../../domain/mindmap/ports/MindMapPort';
 import { MindMapJsonParser } from '../../domain/mindmap/services/MindMapJsonParser';
 import { MindMapPromptBuilder } from '../../domain/mindmap/services/MindMapPromptBuilder';
+import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
 import type { OpenAIClient } from './OpenAIClient';
@@ -27,8 +28,14 @@ export class LLMMindMapAdapter implements MindMapPort {
     });
     if (!response.ok) return response;
     try {
-      const mindMap = this.parser.parse(response.value.content);
-      return ok(mindMap);
+      const { root } = this.parser.parse(response.value.content);
+      return ok(
+        new MindMap(root, {
+          model: this.model,
+          tokensIn: TokenCount.of(response.value.promptTokens),
+          tokensOut: TokenCount.of(response.value.completionTokens),
+        }),
+      );
     } catch (cause) {
       return err(new AppError('SUMMARIZATION_FAILED', 'Invalid mind map JSON', cause));
     }

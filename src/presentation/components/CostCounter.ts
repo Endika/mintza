@@ -1,20 +1,11 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
-import type { LLMProviderName } from '../../domain/summary/value-objects/LLMProvider';
-import { CostCalculator } from '../../domain/tokens/services/CostCalculator';
+import { meetingCost } from '../../domain/tokens/services/MeetingCost';
 import { Money } from '../../domain/tokens/value-objects/Money';
-import type { TranscriptionProviderName } from '../../domain/transcription/value-objects/TranscriptionProvider';
 import type { Translator } from '../i18n/Translator';
 import { formatDuration } from '../util/formatDuration';
 import { LLM_LABEL, TRANSCRIPTION_LABEL } from './providerLabels';
 
-const LLM_DEFAULT_MODEL: Record<LLMProviderName, string> = {
-  openai: 'gpt-4o-mini',
-  anthropic: 'claude-sonnet-4-5',
-  gemini: 'gemini-2.0-flash',
-};
-
 export class CostCounter {
-  private readonly calculator = new CostCalculator();
   private interval: number | null = null;
   private live: { elapsed: Text; cost: Text } | null = null;
 
@@ -41,10 +32,7 @@ export class CostCounter {
   /** One quiet line for a just-finished meeting: how long, how many words, what it cost. */
   renderSummaryLine(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     this.stop();
-    const total = sumAll([
-      ...this.transcriptionByProvider(meeting).values(),
-      ...this.llmByProvider(meeting).values(),
-    ]);
+    const { total } = meetingCost(meeting);
     target.innerHTML = `
       <p class="flex flex-wrap gap-x-2 text-sm text-fg-muted">
         <span class="tabular">${formatDuration(meeting.durationMs / 1000, translator.language)}</span><span aria-hidden="true">·</span>
@@ -57,12 +45,13 @@ export class CostCounter {
   /** What each provider charged, so people paying with their own keys can see where it went. */
   renderBreakdown(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     this.stop();
-    const transcription = this.transcriptionByProvider(meeting);
-    const llm = this.llmByProvider(meeting);
-    const total = sumAll([...transcription.values(), ...llm.values()]);
+    const { transcription, llm, mindMap, total } = meetingCost(meeting);
     const rows = [
       ...this.providerRows(transcription, TRANSCRIPTION_LABEL),
       ...this.providerRows(llm, LLM_LABEL),
+      ...(mindMap.toUsd() > 0
+        ? [costRow(translator.t('detail.cost_mind_map'), mindMap.format(3))]
+        : []),
     ];
     target.innerHTML = `
       <dl class="flex flex-col divide-y divide-line">
@@ -101,27 +90,8 @@ export class CostCounter {
   private liveCostText(meeting: Meeting, translator: Translator): string {
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
     if (transcribedMs === 0) return translator.t('home.chunks_wait');
-    const soFar = sumAll(this.transcriptionByProvider(meeting).values());
+    const soFar = sumAll(meetingCost(meeting).transcription.values());
     return `${translator.t('cost.so_far', { amount: soFar.format(3) })} · ${translator.t('cost.words', { count: meeting.fullText().wordCount() })}`;
-  }
-
-  private transcriptionByProvider(meeting: Meeting): Map<TranscriptionProviderName, Money> {
-    const result = new Map<TranscriptionProviderName, Money>();
-    for (const segment of meeting.segments) {
-      const cost = this.calculator.transcriptionCost(segment.provider, segment.durationMs);
-      result.set(segment.provider, (result.get(segment.provider) ?? Money.zero()).add(cost));
-    }
-    return result;
-  }
-
-  private llmByProvider(meeting: Meeting): Map<LLMProviderName, Money> {
-    const result = new Map<LLMProviderName, Money>();
-    for (const summary of meeting.summaries.values()) {
-      const model = LLM_DEFAULT_MODEL[summary.provider];
-      const cost = this.calculator.llmCost(model, summary.tokensIn, summary.tokensOut);
-      result.set(summary.provider, (result.get(summary.provider) ?? Money.zero()).add(cost));
-    }
-    return result;
   }
 }
 
