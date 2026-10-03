@@ -76,6 +76,29 @@ describe('HistoryPage', () => {
     expect(saved.ok && saved.value?.starred).toBe(true);
   });
 
+  it('returns focus to the page heading after deleting a row', async () => {
+    const repo = new InMemoryMeetingRepository();
+    await repo.save(finishedMeeting({ title: 'Old sync', seconds: 120 }));
+    await repo.save(finishedMeeting({ title: 'New sync', seconds: 60 }));
+    const { root } = await renderHistory(repo);
+    const original = Object.getOwnPropertyDescriptor(window, 'confirm');
+    Object.defineProperty(window, 'confirm', { value: () => true, configurable: true });
+    try {
+      const del = root.querySelector<HTMLButtonElement>('[data-delete]')!;
+      del.focus();
+      del.click();
+      await settle();
+    } finally {
+      if (original) Object.defineProperty(window, 'confirm', original);
+      else Reflect.deleteProperty(window, 'confirm');
+    }
+
+    expect(root.querySelectorAll('#list li')).toHaveLength(1);
+    // happy-dom focuses any element; real browsers need the tabindex on a direct load.
+    expect(root.querySelector('h1')?.getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(root.querySelector('h1'));
+  });
+
   it('escapes meeting titles in the row and its button labels', async () => {
     const repo = new InMemoryMeetingRepository();
     await repo.save(finishedMeeting({ title: '<img src=x onerror=alert(1)>', seconds: 45 }));

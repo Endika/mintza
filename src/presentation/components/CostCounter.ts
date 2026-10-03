@@ -12,6 +12,19 @@ const LLM_DEFAULT_MODEL: Record<LLMProviderName, string> = {
   gemini: 'gemini-2.0-flash',
 };
 
+const TRANSCRIPTION_LABEL: Record<TranscriptionProviderName, string> = {
+  whisper: 'Whisper',
+  google: 'Google Speech',
+  azure: 'Azure Speech',
+  webspeech: 'Web Speech',
+};
+
+const LLM_LABEL: Record<LLMProviderName, string> = {
+  openai: 'GPT',
+  anthropic: 'Claude',
+  gemini: 'Gemini',
+};
+
 export class CostCounter {
   private readonly calculator = new CostCalculator();
   private interval: number | null = null;
@@ -51,6 +64,33 @@ export class CostCounter {
         <span class="tabular">${translator.t('cost.total')} ${total.format(total.toUsd() >= 0.1 ? 2 : 3)}</span>
       </p>
     `;
+  }
+
+  /** What each provider charged, so people paying with their own keys can see where it went. */
+  renderBreakdown(target: HTMLElement, meeting: Meeting, translator: Translator): void {
+    this.stop();
+    const transcription = this.transcriptionByProvider(meeting);
+    const llm = this.llmByProvider(meeting);
+    const total = sumAll([...transcription.values(), ...llm.values()]);
+    const rows = [
+      ...this.providerRows(transcription, TRANSCRIPTION_LABEL),
+      ...this.providerRows(llm, LLM_LABEL),
+    ];
+    target.innerHTML = `
+      <dl class="flex flex-col divide-y divide-line">
+        ${rows.join('')}
+        ${costRow(translator.t('detail.cost_total'), total.format(3), 'font-semibold')}
+      </dl>
+    `;
+  }
+
+  private providerRows<K extends string>(
+    costs: Map<K, Money>,
+    labels: Record<K, string>,
+  ): string[] {
+    return [...costs.entries()]
+      .filter(([, cost]) => cost.toUsd() > 0)
+      .map(([provider, cost]) => costRow(labels[provider], cost.format(3)));
   }
 
   /** Built once per recording so each tick only rewrites two text nodes. */
@@ -96,6 +136,13 @@ export class CostCounter {
     return result;
   }
 }
+
+const costRow = (label: string, amount: string, emphasis = ''): string => `
+  <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0 last:pb-0 ${emphasis}">
+    <dt>${label}</dt>
+    <dd class="tabular">${amount}</dd>
+  </div>
+`;
 
 const sumAll = (values: Iterable<Money>): Money => {
   let total = Money.zero();

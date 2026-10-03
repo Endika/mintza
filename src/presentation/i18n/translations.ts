@@ -149,7 +149,6 @@ export type TranslationKey =
   | 'home.more_about'
   | 'history.clear_all'
   | 'history.load_failed'
-  | 'history.starred'
   | 'history.delete_named'
   | 'history.confirm_delete'
   | 'history.confirm_clear'
@@ -201,7 +200,9 @@ export type TranslationKey =
   | 'detail.back_to_history'
   | 'detail.other_results'
   | 'detail.delete_meeting'
-  | 'sentiment.overall';
+  | 'sentiment.overall'
+  | 'detail.cost'
+  | 'detail.cost_total';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -358,7 +359,6 @@ const EN: Translations = {
   'home.more_about': 'More about this meeting',
   'history.clear_all': 'Clear all',
   'history.load_failed': "Couldn't load your meetings.",
-  'history.starred': 'Starred',
   'history.delete_named': 'Delete {title}',
   'history.confirm_delete': 'Delete this meeting?',
   'history.confirm_clear': "Delete all meetings? This can't be undone.",
@@ -412,6 +412,8 @@ const EN: Translations = {
   'detail.other_results': 'Other results',
   'detail.delete_meeting': 'Delete meeting',
   'sentiment.overall': 'Overall tone',
+  'detail.cost': 'Cost',
+  'detail.cost_total': 'Total',
 };
 
 const ES: Translations = {
@@ -567,7 +569,6 @@ const ES: Translations = {
   'home.more_about': 'Más sobre esta reunión',
   'history.clear_all': 'Borrar todo',
   'history.load_failed': 'No se pudieron cargar tus reuniones.',
-  'history.starred': 'Destacada',
   'history.delete_named': 'Borrar {title}',
   'history.confirm_delete': '¿Borrar esta reunión?',
   'history.confirm_clear': '¿Borrar todas las reuniones? No se puede deshacer.',
@@ -621,6 +622,8 @@ const ES: Translations = {
   'detail.other_results': 'Otros resultados',
   'detail.delete_meeting': 'Borrar reunión',
   'sentiment.overall': 'Tono general',
+  'detail.cost': 'Coste',
+  'detail.cost_total': 'Total',
 };
 
 const EU: Translations = {
@@ -779,7 +782,6 @@ const EU: Translations = {
   'home.more_about': 'Bilera honi buruz gehiago',
   'history.clear_all': 'Ezabatu guztiak',
   'history.load_failed': 'Ezin izan dira zure bilerak kargatu.',
-  'history.starred': 'Nabarmendua',
   'history.delete_named': 'Ezabatu {title}',
   'history.confirm_delete': 'Bilera hau ezabatu?',
   'history.confirm_clear': 'Bilera guztiak ezabatu? Ezin da desegin.',
@@ -834,6 +836,8 @@ const EU: Translations = {
   'detail.other_results': 'Beste emaitza batzuk',
   'detail.delete_meeting': 'Ezabatu bilera',
   'sentiment.overall': 'Tonu orokorra',
+  'detail.cost': 'Kostua',
+  'detail.cost_total': 'Guztira',
 };
 
 export const TRANSLATIONS: Record<LanguageCode, Translations> = {

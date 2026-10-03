@@ -18,6 +18,7 @@ const FORMATS: ReadonlyArray<{ value: Format; labelKey: TranslationKey }> = [
 export class ExportMenu {
   private readonly exporter = new MeetingExporter();
   private readonly pdfExporter = new PdfExporter();
+  private outsideClick: AbortController | null = null;
 
   render(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     target.innerHTML = `
@@ -34,6 +35,15 @@ export class ExportMenu {
       </details>
     `;
     const menu = target.querySelector<HTMLDetailsElement>('details');
+    this.outsideClick?.abort();
+    this.outsideClick = new AbortController();
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+      },
+      { signal: this.outsideClick.signal },
+    );
     menu?.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || !menu.open) return;
       menu.open = false;

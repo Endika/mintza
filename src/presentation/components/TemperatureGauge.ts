@@ -7,11 +7,11 @@ import type { Translator } from '../i18n/Translator';
 import { escapeHtml } from '../util/escapeHtml';
 
 const BAND_TEXT: Record<TemperatureBand, string> = {
-  very_negative: 'text-danger',
+  very_negative: 'text-warning',
   negative: 'text-warning',
   neutral: 'text-fg-muted',
   positive: 'text-success',
-  very_positive: 'text-action',
+  very_positive: 'text-success',
 };
 
 const BAND_LABEL_KEYS: Record<TemperatureBand, TranslationKey> = {
@@ -22,8 +22,9 @@ const BAND_LABEL_KEYS: Record<TemperatureBand, TranslationKey> = {
   very_positive: 'sentiment.very_positive',
 };
 
+// Red stays reserved for recording and destructive actions, so a low score reads as amber.
 const SCALE =
-  'linear-gradient(90deg, var(--color-danger), var(--color-warning), var(--color-fg-muted), var(--color-success), var(--color-action))';
+  'linear-gradient(90deg, var(--color-warning), var(--color-fg-muted), var(--color-success))';
 
 export class TemperatureGauge {
   render(target: HTMLElement, score: TemperatureScore, translator: Translator): void {

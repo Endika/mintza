@@ -107,6 +107,11 @@
     outline-offset: 2px;
   }
 
+  /* The router moves focus to the page heading for screen readers; it isn't a control. */
+  h1[tabindex='-1']:focus {
+    outline: none;
+  }
+
   /* v4 preflight sets buttons to cursor: default. */
   button:not(:disabled),
   [role='button']:not(:disabled) {

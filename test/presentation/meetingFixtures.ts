@@ -4,12 +4,15 @@ import { Template } from '../../src/domain/meeting/value-objects/Template';
 import { Summary } from '../../src/domain/summary/entities/Summary';
 import type { SummaryKind } from '../../src/domain/summary/value-objects/SummaryKind';
 import { TokenCount } from '../../src/domain/tokens/value-objects/TokenCount';
+import { TranscriptSegment } from '../../src/domain/transcription/entities/TranscriptSegment';
+import { TranscriptText } from '../../src/domain/transcription/value-objects/TranscriptText';
 
 export const finishedMeeting = (params: {
   title: string;
   seconds: number;
   template?: Template;
   summaries?: Partial<Record<SummaryKind, string>>;
+  transcript?: string;
 }): Meeting => {
   const startedAt = new Date('2026-09-30T10:00:00Z');
   const meeting = Meeting.start({
@@ -27,6 +30,17 @@ export const finishedMeeting = (params: {
         tokensOut: TokenCount.of(5),
         provider: 'openai',
         generatedAt: startedAt,
+      }),
+    );
+  }
+  if (params.transcript) {
+    meeting.appendSegment(
+      new TranscriptSegment({
+        id: 's1',
+        startMs: 0,
+        endMs: params.seconds * 1000,
+        text: TranscriptText.of(params.transcript),
+        provider: 'whisper',
       }),
     );
   }
