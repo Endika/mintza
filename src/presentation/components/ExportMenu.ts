@@ -19,6 +19,7 @@ export class ExportMenu {
   private readonly exporter = new MeetingExporter();
   private readonly pdfExporter = new PdfExporter();
   private outsideClick: AbortController | null = null;
+  private disposed = false;
 
   render(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     target.innerHTML = `
@@ -36,6 +37,8 @@ export class ExportMenu {
     `;
     const menu = target.querySelector<HTMLDetailsElement>('details');
     this.outsideClick?.abort();
+    // A page still rendering after it was left must not attach a listener nobody removes.
+    if (this.disposed) return;
     this.outsideClick = new AbortController();
     document.addEventListener(
       'click',
@@ -59,6 +62,12 @@ export class ExportMenu {
         });
       });
     });
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    this.outsideClick?.abort();
+    this.outsideClick = null;
   }
 
   private async download(meeting: Meeting, format: Format, btn: HTMLButtonElement): Promise<void> {

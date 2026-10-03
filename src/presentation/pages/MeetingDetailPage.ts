@@ -51,6 +51,10 @@ export class MeetingDetailPage implements Page {
     return this.deps.translator;
   }
 
+  dispose(): void {
+    this.exportMenu.dispose();
+  }
+
   async render(root: HTMLElement): Promise<void> {
     this.root = root;
     const t = this.t;
@@ -316,7 +320,10 @@ export class MeetingDetailPage implements Page {
       template: newTemplate,
     });
     this.meeting = transient;
+    // Reusing the same live region lets screen readers announce the result; a fresh one stays silent.
+    const region = this.root.querySelector<HTMLElement>('#regen-status');
     this.renderMeeting(transient);
+    if (region) this.root.querySelector('#regen-status')?.replaceWith(region);
     this.root.querySelector<HTMLButtonElement>('#btn-regen')?.focus();
     this.setRegenStatus(
       this.t.t('home.summaries_result', { ok: output.successCount, failed: output.failureCount }),

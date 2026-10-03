@@ -15,9 +15,15 @@ import { Translator } from '../../src/presentation/i18n/Translator';
 import { MeetingDetailPage } from '../../src/presentation/pages/MeetingDetailPage';
 import { FakeSummarizationPort } from '../fakes/FakeSummarizationPort';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
-import { finishedMeeting } from './meetingFixtures';
+import { finishedMeeting, settle } from './meetingFixtures';
 
-const renderDetail = async (repo: InMemoryMeetingRepository, id: string): Promise<HTMLElement> => {
+const renderDetail = async (repo: InMemoryMeetingRepository, id: string): Promise<HTMLElement> =>
+  (await renderDetailPage(repo, id)).root;
+
+const renderDetailPage = async (
+  repo: InMemoryMeetingRepository,
+  id: string,
+): Promise<{ page: MeetingDetailPage; root: HTMLElement }> => {
   window.localStorage.clear();
   window.location.hash = `#/meeting?id=${id}`;
   const page = new MeetingDetailPage({
@@ -35,7 +41,7 @@ const renderDetail = async (repo: InMemoryMeetingRepository, id: string): Promis
   const root = document.createElement('div');
   document.body.appendChild(root);
   await page.render(root);
-  return root;
+  return { page, root };
 };
 
 afterEach(() => {
@@ -153,5 +159,42 @@ describe('MeetingDetailPage', () => {
     expect(root.querySelector('a[href="#/history"]')?.textContent).toContain('Back to History');
     expect(root.querySelector('#btn-delete')).toBeNull();
     expect(root.textContent).not.toContain('Delete');
+  });
+
+  it('announces the regenerate result from the live region that was already there', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({
+      title: 'Retro',
+      seconds: 600,
+      transcript: 'We kept the budget flat.',
+      summaries: { decisions: '- keep it flat' },
+    });
+    await repo.save(meeting);
+    const root = await renderDetail(repo, meeting.id.value);
+    const region = root.querySelector('#regen-status');
+
+    root.querySelector<HTMLButtonElement>('#btn-regen')!.click();
+    await settle();
+
+    expect(root.querySelector('#regen-status')).toBe(region);
+    expect(region?.isConnected).toBe(true);
+    expect(region?.textContent).toMatch(/\d+ ready · \d+ failed/);
+  });
+
+  it('stops closing the export menu on outside clicks once the page is gone', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({ title: 'Retro', seconds: 600, transcript: 'hello' });
+    await repo.save(meeting);
+    const { page, root } = await renderDetailPage(repo, meeting.id.value);
+    const menu = root.querySelector<HTMLDetailsElement>('details:has([data-export])')!;
+
+    menu.open = true;
+    document.body.click();
+    expect(menu.open).toBe(false);
+
+    page.dispose();
+    menu.open = true;
+    document.body.click();
+    expect(menu.open).toBe(true);
   });
 });
