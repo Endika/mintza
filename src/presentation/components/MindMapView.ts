@@ -8,7 +8,7 @@ export class MindMapView {
   render(target: HTMLElement, mindMap: MindMap): void {
     target.innerHTML = `
       <div>
-        <h4 class="text-lg font-semibold mb-3">${escapeHtml(mindMap.root.label)}</h4>
+        <h3 class="text-lg font-semibold mb-3">${escapeHtml(mindMap.root.label)}</h3>
         <ul class="space-y-2">
           ${mindMap.root.children
             .map((branch, index) =>

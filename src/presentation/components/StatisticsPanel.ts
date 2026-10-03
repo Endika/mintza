@@ -16,7 +16,7 @@ export class StatisticsPanel {
         ${stat(translator.t('stats.providers'), stats.providersUsed.join(', ') || '—')}
       </dl>
       <div class="mt-4">
-        <h4 class="text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('stats.top_keywords')}</h4>
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('stats.top_keywords')}</h3>
         <div class="flex flex-wrap gap-2">
           ${
             stats.topKeywords.length === 0

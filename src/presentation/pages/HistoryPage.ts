@@ -38,13 +38,10 @@ export class HistoryPage implements Page {
     this.root = root;
     const t = this.deps.translator;
     root.innerHTML = `
-      <main class="mx-auto max-w-3xl px-6 py-12">
+      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <header class="mb-6 flex items-center justify-between gap-4">
           <h1 class="text-3xl font-bold tracking-tight">${t.t('history.title')}</h1>
-          <div class="flex gap-2">
-            <button id="btn-clear" class="btn-ghost text-danger text-sm hidden">${t.t('history.clear_all')}</button>
-            <a href="#/" class="btn-ghost">${t.t('nav.back')}</a>
-          </div>
+          <button id="btn-clear" class="btn-ghost text-danger text-sm hidden">${t.t('history.clear_all')}</button>
         </header>
         <div id="filters" class="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] hidden">
           <input
@@ -68,7 +65,7 @@ export class HistoryPage implements Page {
         <div id="list" class="space-y-3">
           <em class="text-fg-muted">${t.t('history.loading')}</em>
         </div>
-      </main>
+      </div>
     `;
     this.qs<HTMLButtonElement>('#btn-clear').addEventListener('click', () => {
       void this.handleClearAll();
@@ -125,7 +122,7 @@ export class HistoryPage implements Page {
         (m) => `
         <article class="card flex items-center justify-between gap-3">
           <a href="#/meeting?id=${escapeHtml(m.id.value)}" class="flex-1 -m-2 p-2 rounded-md hover:bg-raised transition-colors">
-            <h3 class="font-semibold">${escapeHtml(m.title)}</h3>
+            <h2 class="font-semibold">${escapeHtml(m.title)}</h2>
             <p class="text-sm text-fg-muted">
               ${m.startedAt.toLocaleString()} · ${Math.round(m.durationMs / 1000)}s · ${escapeHtml(this.templateLabel(m.templateKind))}
             </p>

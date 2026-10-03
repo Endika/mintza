@@ -6,6 +6,7 @@ import type {
   QualityProfile,
 } from '../../domain/meeting/ports/ConfigRepository';
 import type { TemplateKind } from '../../domain/meeting/value-objects/Template';
+import type { AppShell } from '../components/AppShell';
 import type { TranslationKey } from '../i18n/translations';
 import type { ConfigStore } from '../state/ConfigStore';
 import type { Page } from '../router/Router';
@@ -14,6 +15,7 @@ import { escapeHtml } from '../util/escapeHtml';
 export interface SettingsPageDeps {
   readonly config: ConfigStore;
   readonly validateApiKey: ValidateApiKeyUseCase;
+  readonly shell?: Pick<AppShell, 'relabel'>;
 }
 
 export class SettingsPage implements Page {
@@ -32,11 +34,8 @@ export class SettingsPage implements Page {
       { value: 'premium', label: t('settings.premium'), hint: t('settings.hint_premium') },
     ];
     root.innerHTML = `
-      <main class="mx-auto max-w-2xl px-6 py-12">
-        <header class="mb-8 flex items-center justify-between">
-          <h1 class="text-3xl font-bold tracking-tight">${t('settings.title')}</h1>
-          <a href="#/" class="btn-ghost">${t('nav.back')}</a>
-        </header>
+      <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        <h1 class="mb-8 text-3xl font-bold tracking-tight">${t('settings.title')}</h1>
 
         <form id="settings-form" class="space-y-6">
           <section class="card">
@@ -117,7 +116,7 @@ export class SettingsPage implements Page {
           </div>
           <p id="settings-status" class="text-sm text-fg-muted"></p>
         </form>
-      </main>
+      </div>
     `;
     this.bind();
     this.refreshButtonStates();

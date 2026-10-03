@@ -18,6 +18,7 @@ import { SUMMARY_KINDS } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import type { ProviderAttempt } from '../../shared/errors/AppError';
+import type { AppShell } from '../components/AppShell';
 import { AudioLevelMeter } from '../components/AudioLevelMeter';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
@@ -47,6 +48,7 @@ export interface HomePageDeps {
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listTemplates: ListTemplatesUseCase;
   readonly templateRegistry: TemplateRegistry;
+  readonly shell: Pick<AppShell, 'setBusy'>;
 }
 
 type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
@@ -99,16 +101,10 @@ export class HomePage implements Page {
     if (!this.alive) return;
     this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
     root.innerHTML = `
-      <main id="main" class="mx-auto max-w-3xl px-6 py-12">
-        <header class="mb-8 flex items-center justify-between">
-          <div>
-            <h1 class="text-4xl font-bold tracking-tight">MINTZA</h1>
-            <p class="mt-1 text-sm text-fg-muted">${t('app.tagline')}</p>
-          </div>
-          <nav class="flex gap-2 text-sm">
-            <a href="#/history" class="btn-ghost">${t('nav.history')}</a>
-            <a href="#/settings" class="btn-ghost">${t('nav.settings')}</a>
-          </nav>
+      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+        <header class="mb-8">
+          <h1 class="text-3xl font-bold tracking-tight">${t('home.new_meeting')}</h1>
+          <p class="mt-1 text-sm text-fg-muted">${t('app.tagline')}</p>
         </header>
 
         <section class="card mb-6">
@@ -154,38 +150,38 @@ export class HomePage implements Page {
         </section>
 
         <section id="temperature-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.sentiment')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.sentiment')}</h2>
           <div id="temperature"></div>
         </section>
 
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.transcript')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.transcript')}</h2>
           <div id="transcription" class="min-h-[120px] whitespace-pre-wrap text-fg">
             <em class="text-fg-muted">${t('home.transcript_placeholder')}</em>
           </div>
         </section>
 
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.summary')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.summary')}</h2>
           <div id="summaries" class="text-fg">
             <em class="text-fg-muted">${t('home.summary_placeholder')}</em>
           </div>
         </section>
 
         <section id="mindmap-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.mind_map')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.mind_map')}</h2>
           <div id="mindmap"></div>
         </section>
 
         <section id="stats-card" class="card mb-6 hidden">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.statistics')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.statistics')}</h2>
           <div id="stats-body"></div>
         </section>
 
         <section id="export-card" class="card hidden">
           <div id="export-menu"></div>
         </section>
-      </main>
+      </div>
     `;
 
     this.bind();
@@ -215,6 +211,7 @@ export class HomePage implements Page {
   dispose(): void {
     this.alive = false;
     this.guard.dispose();
+    this.deps.shell.setBusy(false);
     // While processing, handleStop still needs the final chunk the recorder emits on stop.
     if (this.screenState !== 'processing') {
       this.unsubChunks?.();
@@ -506,12 +503,12 @@ export class HomePage implements Page {
 
   private applyScreenState(): void {
     if (!this.alive) return;
-    this.guard.setBusy(
+    const capturing =
       this.screenState === 'recording' ||
-        this.screenState === 'paused' ||
-        this.screenState === 'processing' ||
-        this.hasUnsavedMeeting,
-    );
+      this.screenState === 'paused' ||
+      this.screenState === 'processing';
+    this.guard.setBusy(capturing || this.hasUnsavedMeeting);
+    this.deps.shell.setBusy(capturing);
     if (!this.root) return;
     const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
     const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
@@ -669,7 +666,7 @@ export class HomePage implements Page {
         const summary = summaries.get(kind);
         if (!summary) return '';
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h4>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h3>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })

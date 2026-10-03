@@ -1,4 +1,5 @@
 import { buildAppDeps, type AppDeps } from './bootstrap/setup';
+import { AppShell } from './presentation/components/AppShell';
 import { HomePage } from './presentation/pages/HomePage';
 import type { Translator } from './presentation/i18n/Translator';
 import { Router, type Page, type PageFactory } from './presentation/router/Router';
@@ -17,19 +18,22 @@ export class App {
   async start(): Promise<void> {
     await this.deps.configStore.hydrate();
 
+    const shell = new AppShell(this.root, this.translator);
     const routes = new Map<string, PageFactory>([
-      ['/', (): Page => this.buildHome()],
-      ['/settings', (): Promise<Page> => this.buildSettings()],
+      ['/', (): Page => this.buildHome(shell)],
+      ['/settings', (): Promise<Page> => this.buildSettings(shell)],
       ['/history', (): Promise<Page> => this.buildHistory()],
       ['/meeting', (): Promise<Page> => this.buildMeetingDetail()],
       ['/templates', (): Promise<Page> => this.buildTemplates()],
     ]);
 
-    const router = new Router(this.root, routes, (): Page => this.buildHome());
+    const router = new Router(shell.main, routes, (): Page => this.buildHome(shell), {
+      onNavigate: (path) => shell.setActive(path),
+    });
     router.start();
   }
 
-  private buildHome(): HomePage {
+  private buildHome(shell: AppShell): HomePage {
     return new HomePage({
       config: this.deps.configStore,
       audio: this.deps.audio,
@@ -43,14 +47,16 @@ export class App {
       saveMeeting: this.deps.saveMeeting,
       listTemplates: this.deps.listTemplates,
       templateRegistry: this.deps.templateRegistry,
+      shell,
     });
   }
 
-  private async buildSettings(): Promise<Page> {
+  private async buildSettings(shell: AppShell): Promise<Page> {
     const { SettingsPage } = await import('./presentation/pages/SettingsPage');
     return new SettingsPage({
       config: this.deps.configStore,
       validateApiKey: this.deps.validateApiKey,
+      shell,
     });
   }
 

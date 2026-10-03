@@ -10,6 +10,7 @@ import {
 import { defaultInstructionFor } from '../../domain/summary/services/SummaryDefaults';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
+import { ICON_BACK } from '../components/icons';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { Page } from '../router/Router';
@@ -35,17 +36,15 @@ export class TemplatesPage implements Page {
     this.root = root;
     const t = this.deps.translator;
     root.innerHTML = `
-      <main class="mx-auto max-w-3xl px-6 py-12">
+      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+        <a href="#/settings" class="btn-ghost -ml-3 mb-2">${ICON_BACK}<span>${t.t('nav.settings')}</span></a>
         <header class="mb-6 flex items-center justify-between gap-4">
           <h1 class="text-3xl font-bold tracking-tight">${t.t('templates.title')}</h1>
-          <div class="flex gap-2">
-            <button id="btn-new" class="btn-action text-sm">${t.t('templates.new')}</button>
-            <a href="#/settings" class="btn-ghost">${t.t('nav.back')}</a>
-          </div>
+          <button id="btn-new" class="btn-action text-sm">${t.t('templates.new')}</button>
         </header>
         <div id="list" class="space-y-3"></div>
         <div id="editor" class="hidden mt-6"></div>
-      </main>
+      </div>
     `;
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.openEditor(null));
     await this.refresh();
@@ -86,11 +85,11 @@ export class TemplatesPage implements Page {
         return `
           <article class="card flex items-center justify-between gap-3">
             <div>
-              <h3 class="font-semibold">${escapeHtml(templateDisplayName(tpl, t))}${
+              <h2 class="font-semibold">${escapeHtml(templateDisplayName(tpl, t))}${
                 tpl.builtIn
                   ? ` <span class="ml-2 text-xs uppercase tracking-wide text-fg-muted">${t.t('templates.builtin')}</span>`
                   : ''
-              }</h3>
+              }</h2>
               <p class="text-sm text-fg-muted">${escapeHtml(tpl.systemRole)} · ${t.t('templates.section_count', { count: tpl.summaryKinds.length })}</p>
               ${usageLine}
             </div>

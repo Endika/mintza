@@ -163,13 +163,28 @@
   }
 
   .tabbar {
-    @apply flex min-h-16 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)];
+    @apply fixed inset-x-0 bottom-0 z-40 flex min-h-16 items-stretch border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:sticky md:top-0 md:bottom-auto md:items-center md:justify-between md:border-t-0 md:border-b md:px-6 md:pb-0;
+  }
+  .tabbar-wordmark {
+    @apply hidden rounded-[var(--radius-control)] text-xl font-bold text-fg md:inline-flex md:min-h-11 md:items-center;
+  }
+  .tabbar-tabs {
+    @apply flex flex-1 md:flex-none md:gap-1;
   }
   .tab {
-    @apply flex min-h-11 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-fg-muted transition-colors duration-150 hover:text-fg;
+    @apply flex min-h-11 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-fg-muted transition-colors duration-150 hover:text-fg md:flex-none md:flex-row md:gap-2 md:rounded-full md:px-4 md:text-sm;
+  }
+  .tab-icon {
+    @apply flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-150 md:h-auto md:w-auto;
   }
   .tab[aria-current='page'] {
-    @apply font-semibold text-fg;
+    @apply font-semibold text-fg md:bg-raised;
+  }
+  .tab[aria-current='page'] .tab-icon {
+    @apply bg-raised md:bg-transparent;
+  }
+  .shell-main {
+    @apply block pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0;
   }
 
   .meter-bar-track {
