@@ -5,6 +5,51 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.22.0](https://github.com/Endika/mintza/compare/v1.21.3...v1.22.0) (2026-10-03)
+
+
+### Features
+
+* guard route changes and move focus and title on navigation ([f5ba8d3](https://github.com/Endika/mintza/commit/f5ba8d3790adcc5d2cefe4b1748b61399b2a1862))
+* persistent app shell with a bottom tab bar on phones ([fef029c](https://github.com/Endika/mintza/commit/fef029c613b80ca2b68e554c41d8438a0eb2460f))
+* redesign history and meeting detail with the main result first ([0e5de16](https://github.com/Endika/mintza/commit/0e5de16a8ed760f9a8d7c489487e94988fc46497))
+* redesign home around connecting, recording and one result first ([b0d3a63](https://github.com/Endika/mintza/commit/b0d3a6380f7586535c0bd46f1f64074d4097a177))
+* redesign settings and templates with plain language and progressive disclosure ([6b6d690](https://github.com/Endika/mintza/commit/6b6d690e82a249b806552eaf47fc57bc81e9d07a))
+* shift summary headings under their card ([73a2548](https://github.com/Endika/mintza/commit/73a2548e939cccca0f7fbb9a0f888fefb1b76dda))
+* store the spoken language apart from the interface language ([5b39175](https://github.com/Endika/mintza/commit/5b39175c1bd4a430a20e98b4d7b81a8c7dc77891))
+* warm design tokens with dark mode, self-hosted Figtree and zoom allowed ([92c642e](https://github.com/Endika/mintza/commit/92c642ec545e643af3acd7fdc1f0f5b1222ce8b6))
+
+
+### Bug Fixes
+
+* address detector findings ([de30c85](https://github.com/Endika/mintza/commit/de30c857d6298b196e80f6479dadb1ec598c365a))
+* ask before leaving a meeting that isn't saved ([ec9e1b9](https://github.com/Endika/mintza/commit/ec9e1b9452c83d9de3364a95ed75ddfee2ce66e5))
+* ask before starting over on an unsaved meeting ([8024013](https://github.com/Endika/mintza/commit/8024013ff8d0cc3c49f4beb8f2a4b24f544453c6))
+* clean font url, status colours and control borders ([fdc2fb4](https://github.com/Endika/mintza/commit/fdc2fb4bf41637cfd3b56709bc228d3195279326))
+* escape error messages rendered into the page ([8b9fc51](https://github.com/Endika/mintza/commit/8b9fc513187ea2e974b4bd6a81c1c4df9b33ce21))
+* escape user-entered names everywhere they reach HTML ([7bcc785](https://github.com/Endika/mintza/commit/7bcc785f8f04e9cce83b0e1ac07ef47dfb86309e))
+* generate only the summaries the template asks for ([9a203aa](https://github.com/Endika/mintza/commit/9a203aa4e2c28df0f4e1ecc2a5d9f12588880d36))
+* keep sentiment and mind map out of the action colour ([29258bf](https://github.com/Endika/mintza/commit/29258bfc6ba4dc12d9ac14474ced7fc056c1a0da))
+* keep the save bar in view and stop pinning the spoken language ([2ba6c32](https://github.com/Endika/mintza/commit/2ba6c3216c377611822cd73a62b2a6906008c954))
+* keep the shown page alive when navigation returns to it ([6e93600](https://github.com/Endika/mintza/commit/6e93600d688abb4a48a9d92efcffd3f472efe78c))
+* larger recording timer and smaller fixes ([d9995f2](https://github.com/Endika/mintza/commit/d9995f2a613f06e2f965fd0c0b859e4b1d3a53c4))
+* never lose a recording when leaving the page ([509b7e5](https://github.com/Endika/mintza/commit/509b7e52267918a11fa65782a883a2ddb48bcd1f))
+* only call registered route factories ([26c3705](https://github.com/Endika/mintza/commit/26c3705f1a68a23eca8c24457b1f4ca4adc69ed2))
+* only leave a recording once its transcript is saved ([0cce83d](https://github.com/Endika/mintza/commit/0cce83d4400b558ce8ee599d74f815df97281e79))
+* pin the record button above the tab bar on phones ([aeb6bf0](https://github.com/Endika/mintza/commit/aeb6bf0e5f4fe6de25306b347af9413bcf366588))
+* price summaries and the mind map with the model that ran ([d1bee19](https://github.com/Endika/mintza/commit/d1bee19b11562d20113abeed49e819adf6a9d282))
+* relabel the app shell when the interface language changes ([43b012d](https://github.com/Endika/mintza/commit/43b012d4ef7929e2dde7b546ec7784f576c7019f))
+* render each route into its own container ([b0f0152](https://github.com/Endika/mintza/commit/b0f0152c31d9045ec405b8434e1533b7880ac426))
+* restore cost breakdown, keep red for recording and fix history focus ([c346b06](https://github.com/Endika/mintza/commit/c346b0656c267ec38a21ca8ecd93bb23c0ed44e9))
+* route every interface string through i18n and set the document language ([51d816c](https://github.com/Endika/mintza/commit/51d816c303ddd38706b30416a1b88b76ab95e241))
+* serialize leave checks and ignore restored hashes in the router ([3f4aefa](https://github.com/Endika/mintza/commit/3f4aefaf76e2840f93619baadc2a5a05402b2570))
+* settings quality list and save strip ([e06c77d](https://github.com/Endika/mintza/commit/e06c77d24d9efae876c6ad7295e51ae9d5a63d8e))
+* tighten home layout, motion and status handling ([528741c](https://github.com/Endika/mintza/commit/528741c16406d977a80e3c0f8667a764f85e34c9))
+* tighten translated copy and match search on translated template names ([d1d8603](https://github.com/Endika/mintza/commit/d1d860394f11041519848a7e8ef285c3075a221a))
+* track the latest route target so going back mid-navigation is not dropped ([9c04b80](https://github.com/Endika/mintza/commit/9c04b80315b2f99da28ff7d59dde9dab5eac5297))
+* translate default meeting titles, show custom template names and fix plural copy ([7499f81](https://github.com/Endika/mintza/commit/7499f81e58c9400e1d021454468f1cb48fe456cd))
+* wrap meta values without separators and keep the regenerate status live ([283d1bb](https://github.com/Endika/mintza/commit/283d1bb78195f7f7244cdd5e0bc1cf6994bdc8d5))
+
 ## [1.21.3](https://github.com/Endika/mintza/compare/v1.21.2...v1.21.3) (2026-09-25)
 
 
