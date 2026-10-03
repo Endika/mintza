@@ -14,6 +14,7 @@ import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
+import { languageName } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import { Router, type Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
@@ -141,7 +142,7 @@ export class MeetingDetailPage implements Page {
     target.innerHTML = `
       <header class="mb-6">
         <h1 class="break-words text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(meeting.title)}</h1>
-        <p class="mt-2 text-sm text-fg-muted">${escapeHtml(when)} · ${escapeHtml(templateDisplayName(meeting.template, t))}</p>
+        <p class="mt-2 text-sm text-fg-muted">${escapeHtml(when)} · ${escapeHtml(templateDisplayName(meeting.template, t))} · ${languageName(meeting.language.code)}</p>
         <div id="detail-meta" class="mt-0.5"></div>
       </header>
 
@@ -179,6 +180,10 @@ export class MeetingDetailPage implements Page {
             <h3 class="mb-3 text-lg font-semibold">${t.t('home.statistics')}</h3>
             <div id="detail-stats"></div>
           </section>
+          <section class="card">
+            <h3 class="mb-3 text-lg font-semibold">${t.t('detail.cost')}</h3>
+            <div id="detail-cost"></div>
+          </section>
           <div id="detail-export"></div>
         </div>
       </section>
@@ -203,6 +208,11 @@ export class MeetingDetailPage implements Page {
       );
     }
     this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting, t);
+    this.costCounter.renderBreakdown(
+      target.querySelector<HTMLElement>('#detail-cost')!,
+      meeting,
+      t,
+    );
     this.exportMenu.render(
       target.querySelector<HTMLElement>('#detail-export')!,
       () => this.meeting,
@@ -305,6 +315,7 @@ export class MeetingDetailPage implements Page {
     });
     this.meeting = transient;
     this.renderMeeting(transient);
+    this.root.querySelector<HTMLButtonElement>('#btn-regen')?.focus();
     this.setRegenStatus(
       this.t.t('home.summaries_result', { ok: output.successCount, failed: output.failureCount }),
     );

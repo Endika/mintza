@@ -71,6 +71,23 @@ describe('MeetingDetailPage', () => {
     expect(root.querySelector('label[for="regen-template"]')?.textContent).toBe('Regenerate with');
   });
 
+  it('breaks the cost down by provider for people paying with their own keys', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({
+      title: 'Budget review',
+      seconds: 600,
+      transcript: 'We kept the budget flat.',
+      summaries: { decisions: '- keep it flat' },
+    });
+    await repo.save(meeting);
+    const root = await renderDetail(repo, meeting.id.value);
+
+    const rows = [...root.querySelectorAll('#detail-cost dt')].map((dt) => dt.textContent);
+    expect(rows).toEqual(['Whisper', 'GPT', 'Total']);
+    expect(root.querySelector('#detail-cost')?.textContent).toContain('$0.060');
+    expect(root.querySelector('header')?.textContent).toContain('English');
+  });
+
   it('shows the sentiment as the gauge, not as a text result', async () => {
     const repo = new InMemoryMeetingRepository();
     const meeting = finishedMeeting({

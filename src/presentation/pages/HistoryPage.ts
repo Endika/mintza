@@ -51,7 +51,7 @@ export class HistoryPage implements Page {
     const t = this.t;
     root.innerHTML = `
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
-        <h1 class="mb-5 text-3xl font-semibold tracking-tight sm:mb-6 sm:text-4xl">${t.t('history.title')}</h1>
+        <h1 tabindex="-1" class="mb-5 text-3xl font-semibold tracking-tight sm:mb-6 sm:text-4xl">${t.t('history.title')}</h1>
         <div id="filters" class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center hidden">
           <label for="search" class="sr-only">${t.t('history.search_label')}</label>
           <input
@@ -207,25 +207,38 @@ export class HistoryPage implements Page {
     } catch {
       return;
     }
+    const button = this.starButton(idValue);
+    if (button) button.disabled = true;
+    const starred = await this.toggleStar(id);
+    if (starred === null) {
+      if (button) button.disabled = false;
+      return;
+    }
+    this.all = this.all.map((m) => (m.id.value === idValue ? { ...m, starred } : m));
+    this.renderList();
+    this.starButton(idValue)?.focus();
+  }
+
+  private async toggleStar(id: MeetingId): Promise<boolean | null> {
     const found = await this.deps.getMeeting.execute({ id });
     const meeting = found.ok ? found.value : null;
     if (!meeting) {
       this.setStatus(this.t.t('history.star_failed'));
-      return;
+      return null;
     }
     meeting.toggleStar();
     const saved = await this.deps.saveMeeting.execute({ meeting });
     if (!saved.ok) {
       this.setStatus(`${this.t.t('history.star_failed')} ${saved.error.message}`);
-      return;
+      return null;
     }
-    this.all = this.all.map((m) =>
-      m.id.value === idValue ? { ...m, starred: meeting.starred } : m,
-    );
-    this.renderList();
-    [...this.qs<HTMLElement>('#list').querySelectorAll<HTMLElement>('[data-star]')]
-      .find((btn) => btn.dataset['star'] === idValue)
-      ?.focus();
+    return meeting.starred;
+  }
+
+  private starButton(idValue: string): HTMLButtonElement | undefined {
+    return [
+      ...this.qs<HTMLElement>('#list').querySelectorAll<HTMLButtonElement>('[data-star]'),
+    ].find((btn) => btn.dataset['star'] === idValue);
   }
 
   private async handleDelete(idValue: string): Promise<void> {

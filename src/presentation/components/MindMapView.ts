@@ -2,12 +2,13 @@ import type { MindMap } from '../../domain/mindmap/entities/MindMap';
 import type { MindMapNode } from '../../domain/mindmap/value-objects/MindMapNode';
 import { escapeHtml } from '../util/escapeHtml';
 
+// Neither the action green nor the live red: branches only need telling apart.
 const BRANCH_COLORS = [
-  'var(--color-action)',
+  'var(--color-fg)',
   'var(--color-warning)',
-  'var(--color-success)',
   'var(--color-fg-muted)',
-  'var(--color-live)',
+  'var(--color-success)',
+  'var(--color-edge)',
 ] as const;
 
 export class MindMapView {

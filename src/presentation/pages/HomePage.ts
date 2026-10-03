@@ -49,6 +49,7 @@ import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
 import { formatDuration } from '../util/formatDuration';
+import { LANGUAGE_NAMES, languageName } from '../i18n/languageName';
 import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
@@ -1084,14 +1085,6 @@ export class HomePage implements Page {
 
 const STEP_DOT = `<span class="size-2.5 rounded-full border-2 border-current"></span>`;
 const STEP_PULSE = `<span class="size-2.5 animate-rec-pulse rounded-full bg-fg motion-reduce:animate-none"></span>`;
-
-const LANGUAGE_NAMES: Record<LanguageCode, string> = {
-  en: 'English',
-  es: 'Español',
-  eu: 'Euskara',
-};
-
-const languageName = (code: LanguageCode): string => LANGUAGE_NAMES[code];
 
 const languageSelect = (current: LanguageCode): string => `
   <select id="lang-select" class="field">
