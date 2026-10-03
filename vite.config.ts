@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { bootDocumentScript } from './src/bootstrap/bootDocument';
+import { bootDocumentScript } from './src/bootstrap/bootDocument.ts';
 
 const r = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
