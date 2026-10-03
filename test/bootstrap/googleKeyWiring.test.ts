@@ -6,7 +6,6 @@ import { Language } from '../../src/domain/language/value-objects/Language';
 import { DEFAULT_CONFIG, type ApiKeys } from '../../src/domain/meeting/ports/ConfigRepository';
 import { Meeting } from '../../src/domain/meeting/entities/Meeting';
 import { Template } from '../../src/domain/meeting/value-objects/Template';
-import { CONFIG_STORAGE_KEY } from '../../src/shared/constants/storageKeys';
 
 interface Sent {
   readonly host: string;
@@ -17,7 +16,7 @@ const realFetch = globalThis.fetch;
 let sent: Sent[] = [];
 
 const answer = (url: string): unknown =>
-  url.includes('speech.googleapis.com')
+  new URL(url).host === 'speech.googleapis.com'
     ? { results: [{ alternatives: [{ transcript: 'kaixo denoi' }] }] }
     : { candidates: [{ content: { parts: [{ text: '- ok' }] } }] };
 
@@ -34,17 +33,14 @@ const stubFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Respon
 };
 
 const depsWith = async (apiKeys: ApiKeys): Promise<ReturnType<typeof buildAppDeps>> => {
-  window.localStorage.setItem(
-    CONFIG_STORAGE_KEY,
-    JSON.stringify({
-      ...DEFAULT_CONFIG,
-      transcriptionQuality: 'cheap',
-      summaryQuality: 'cheap',
-      apiKeys,
-    }),
-  );
   const deps = buildAppDeps();
   await deps.configStore.hydrate();
+  await deps.configStore.update({
+    ...DEFAULT_CONFIG,
+    transcriptionQuality: 'cheap',
+    summaryQuality: 'cheap',
+    apiKeys,
+  });
   return deps;
 };
 
