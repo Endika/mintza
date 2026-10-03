@@ -1,3 +1,4 @@
+import { PRICING } from '../../../shared/constants/pricing';
 import type { Meeting } from '../../meeting/entities/Meeting';
 import type { LLMProviderName } from '../../summary/value-objects/LLMProvider';
 import type { TranscriptionProviderName } from '../../transcription/value-objects/TranscriptionProvider';
@@ -11,7 +12,7 @@ export interface MeetingCostBreakdown {
   readonly total: Money;
 }
 
-/** Summaries saved before the model was recorded are priced at each provider's default. */
+/** Prices a summary whose model is unrecorded or missing from the price table. */
 const FALLBACK_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
   anthropic: 'claude-sonnet-4-5',
@@ -19,6 +20,9 @@ const FALLBACK_MODEL: Record<LLMProviderName, string> = {
 };
 
 const calculator = new CostCalculator();
+
+const pricedModel = (model: string | undefined, provider: LLMProviderName): string =>
+  model !== undefined && PRICING.llm[model] ? model : FALLBACK_MODEL[provider];
 
 export const meetingCost = (meeting: Meeting): MeetingCostBreakdown => {
   const transcription = new Map<TranscriptionProviderName, Money>();
@@ -31,13 +35,14 @@ export const meetingCost = (meeting: Meeting): MeetingCostBreakdown => {
   }
   const llm = new Map<LLMProviderName, Money>();
   for (const summary of meeting.summaries.values()) {
-    const model = summary.model ?? FALLBACK_MODEL[summary.provider];
+    const model = pricedModel(summary.model, summary.provider);
     const cost = calculator.llmCost(model, summary.tokensIn, summary.tokensOut);
     llm.set(summary.provider, (llm.get(summary.provider) ?? Money.zero()).add(cost));
   }
   const usage = meeting.mindMap?.usage;
+  // The mind map always runs on OpenAI.
   const mindMap = usage
-    ? calculator.llmCost(usage.model, usage.tokensIn, usage.tokensOut)
+    ? calculator.llmCost(pricedModel(usage.model, 'openai'), usage.tokensIn, usage.tokensOut)
     : Money.zero();
   const total = [...transcription.values(), ...llm.values()].reduce(
     (sum, cost) => sum.add(cost),
