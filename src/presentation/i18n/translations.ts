@@ -127,6 +127,10 @@ export type TranslationKey =
   | 'app.version'
   | 'home.summaries_result'
   | 'home.save_failed'
+  | 'home.summaries_save_failed'
+  | 'home.mind_map_save_failed'
+  | 'home.retry_save'
+  | 'home.stop_timed_out'
   | 'home.start_failed'
   | 'home.keep_awake_on'
   | 'home.progress'
@@ -372,6 +376,11 @@ const EN: Translations = {
   'app.version': 'Mintza version {version}',
   'home.summaries_result': '{ok} ready · {failed} failed',
   'home.save_failed': "Couldn't save this meeting.",
+  'home.summaries_save_failed': "The transcript is saved, but the summaries aren't.",
+  'home.mind_map_save_failed': "The meeting is saved, but the mind map isn't.",
+  'home.retry_save': 'Try saving again',
+  'home.stop_timed_out':
+    'The microphone took too long to stop, so the last few seconds may be missing.',
   'home.start_failed': "Couldn't start recording. Check that Mintza can use your microphone.",
   'home.keep_awake_on': 'Keep screen on',
   'home.progress': 'Transcribing… {done} of {total} parts',
@@ -622,6 +631,11 @@ const ES: Translations = {
   'app.version': 'Mintza, versión {version}',
   'home.summaries_result': '{ok} listos · {failed} fallidos',
   'home.save_failed': 'No se pudo guardar esta reunión.',
+  'home.summaries_save_failed': 'La transcripción está guardada, pero los resúmenes no.',
+  'home.mind_map_save_failed': 'La reunión está guardada, pero el mapa mental no.',
+  'home.retry_save': 'Volver a guardar',
+  'home.stop_timed_out':
+    'El micrófono tardó demasiado en parar; puede que falten los últimos segundos.',
   'home.start_failed': 'No se pudo empezar a grabar. Comprueba que Mintza puede usar tu micrófono.',
   'home.keep_awake_on': 'Mantener la pantalla encendida',
   'home.progress': 'Transcribiendo… {done} de {total} partes',
@@ -873,6 +887,11 @@ const EU: Translations = {
   'app.version': 'Mintza, {version} bertsioa',
   'home.summaries_result': '{ok} prest · {failed} hutsegite',
   'home.save_failed': 'Ezin izan da bilera hau gorde.',
+  'home.summaries_save_failed': 'Transkripzioa gordeta dago, baina laburpenak ez.',
+  'home.mind_map_save_failed': 'Bilera gordeta dago, baina buru-mapa ez.',
+  'home.retry_save': 'Saiatu berriro gordetzen',
+  'home.stop_timed_out':
+    'Mikrofonoak gehiegi behar izan du gelditzeko; azken segundoak falta litezke.',
   'home.start_failed':
     'Ezin izan da grabatzen hasi. Egiaztatu Mintzak zure mikrofonoa erabil dezakeela.',
   'home.keep_awake_on': 'Mantendu pantaila piztuta',
