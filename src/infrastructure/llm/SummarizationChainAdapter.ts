@@ -14,6 +14,8 @@ export interface NamedSummarizationPort {
 export type ProvidersResolver = () => readonly NamedSummarizationPort[];
 
 const RECOVERABLE_CODES = new Set(['API_KEY_INVALID', 'NETWORK_ERROR', 'CONFIG_INVALID']);
+/** Another provider may well answer what this one declined or couldn't fit. */
+const RECOVERABLE_REASONS = new Set(['refused', 'truncated']);
 
 export class SummarizationChainAdapter implements SummarizationPort {
   constructor(private readonly resolve: ProvidersResolver) {}
@@ -29,7 +31,7 @@ export class SummarizationChainAdapter implements SummarizationPort {
       if (result.ok) return result;
       const { code, message, reason } = result.error;
       attempts.push({ provider: name, code, message, ...(reason ? { reason } : {}) });
-      if (!RECOVERABLE_CODES.has(result.error.code)) break;
+      if (!RECOVERABLE_CODES.has(code) && !RECOVERABLE_REASONS.has(reason ?? '')) break;
     }
     return err(
       new AppError(

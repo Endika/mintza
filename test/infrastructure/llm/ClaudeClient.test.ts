@@ -10,11 +10,13 @@ import {
 } from '../../../src/infrastructure/http/HttpClient';
 import { ClaudeClient } from '../../../src/infrastructure/llm/ClaudeClient';
 import { ClaudeSummarizationAdapter } from '../../../src/infrastructure/llm/ClaudeSummarizationAdapter';
+import { SummarizationChainAdapter } from '../../../src/infrastructure/llm/SummarizationChainAdapter';
 import { reasonText } from '../../../src/presentation/i18n/errorText';
 import { Translator } from '../../../src/presentation/i18n/Translator';
 import { PRICING } from '../../../src/shared/constants/pricing';
 import type { AppError } from '../../../src/shared/errors/AppError';
 import { ok, type Result } from '../../../src/shared/result/Result';
+import { FakeSummarizationPort } from '../../fakes/FakeSummarizationPort';
 
 class CannedHttp extends HttpClient {
   readonly sent: HttpRequest[] = [];
@@ -130,9 +132,58 @@ describe('Claude summaries on Sonnet 5.5', () => {
     expect(result.error.reason).toBe('refused');
   });
 
-  it('explains a refusal in every language', () => {
+  it('turns a reply cut off at max_tokens into a failure', async () => {
+    const http = new CannedHttp({
+      ...answer,
+      stop_reason: 'max_tokens',
+      content: [{ type: 'text', text: '- ship on Mon' }],
+    });
+    const result = await new ClaudeClient(http, key).chat({ model: 'm', system: 's', user: 'u' });
+    if (result.ok) throw new Error('expected a truncated reply');
+    expect(result.error.reason).toBe('truncated');
+  });
+
+  it.each(['refusal', 'max_tokens'])(
+    'moves on to the next provider when Claude stops at %s',
+    async (stopReason) => {
+      const claude = new ClaudeSummarizationAdapter(
+        new ClaudeClient(new CannedHttp({ ...answer, stop_reason: stopReason, content: [] }), key),
+      );
+      const next = new FakeSummarizationPort({
+        kind: 'success',
+        content: '- ship',
+        provider: 'openai',
+      });
+      const chain = new SummarizationChainAdapter(() => [
+        { name: 'Claude', port: claude },
+        { name: 'OpenAI', port: next },
+      ]);
+      const result = await chain.summarize(request);
+      expect(result.ok && result.value.provider).toBe('openai');
+      expect(next.calls).toHaveLength(1);
+    },
+  );
+
+  it('keeps each refusal in the attempts when every provider fails', async () => {
+    const refusing = (): ClaudeSummarizationAdapter =>
+      new ClaudeSummarizationAdapter(
+        new ClaudeClient(new CannedHttp({ ...answer, stop_reason: 'refusal', content: [] }), key),
+      );
+    const chain = new SummarizationChainAdapter(() => [
+      { name: 'Claude', port: refusing() },
+      { name: 'Claude again', port: refusing() },
+    ]);
+    const result = await chain.summarize(request);
+    if (result.ok) throw new Error('expected the chain to fail');
+    expect(result.error.attempts.map((a) => [a.provider, a.reason])).toEqual([
+      ['Claude', 'refused'],
+      ['Claude again', 'refused'],
+    ]);
+  });
+
+  it.each(['refused', 'truncated'] as const)('explains %s in every language', (reason) => {
     for (const lang of ['en', 'es', 'eu'] as const) {
-      const text = reasonText('refused', (k) => new Translator(lang).t(k));
+      const text = reasonText(reason, (k) => new Translator(lang).t(k));
       expect(text).not.toBe(reasonText('unknown', (k) => new Translator(lang).t(k)));
       expect(text.length).toBeGreaterThan(0);
     }

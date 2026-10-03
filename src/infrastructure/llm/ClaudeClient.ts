@@ -76,6 +76,17 @@ export class ClaudeClient {
           new AppError('SUMMARIZATION_FAILED', 'Claude: refused', undefined, [], 'refused'),
         );
       }
+      if (parsed.stop_reason === 'max_tokens') {
+        return err(
+          new AppError(
+            'SUMMARIZATION_FAILED',
+            'Claude: reply cut off at max_tokens',
+            undefined,
+            [],
+            'truncated',
+          ),
+        );
+      }
       const text = parsed.content
         .filter((c) => c.type === 'text')
         .map((c) => c.text ?? '')

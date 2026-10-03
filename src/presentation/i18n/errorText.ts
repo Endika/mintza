@@ -15,6 +15,7 @@ const REASON_TEXT: Record<ErrorReason, TranslationKey> = {
   no_speech: 'error.no_speech',
   bad_response: 'error.bad_response',
   refused: 'error.refused',
+  truncated: 'error.truncated',
   unknown: 'error.unknown',
 };
 

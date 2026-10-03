@@ -67,11 +67,11 @@ describe('LLM adapters record the model that ran', () => {
       usage: { input_tokens: 10, output_tokens: 5 },
     });
     const adapter = new ClaudeSummarizationAdapter(new ClaudeClient(http, key), {
-      model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-5-5',
     });
     const result = await adapter.summarize(request);
     if (!result.ok) throw new Error('expected a summary');
-    expect(result.value.model).toBe('claude-sonnet-4-5');
+    expect(result.value.model).toBe('claude-sonnet-5-5');
   });
 
   it('stamps a Gemini summary with its model', async () => {
