@@ -97,11 +97,11 @@ export class MeetingDetailPage implements Page {
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <a href="#/history" class="btn-ghost -ml-3 mb-3 px-3">${ICON_BACK}<span>${t.t('nav.history')}</span></a>
         <div id="detail-body"></div>
-        <p id="regen-status" role="status" aria-live="polite" class="mt-2 text-sm text-fg-muted empty:sr-only"></p>
+        <p id="regen-status" role="status" class="mt-2 text-sm text-fg-muted empty:sr-only"></p>
         <div id="detail-rest"></div>
         <div class="mt-10 border-t border-line pt-6">
           <button type="button" id="btn-delete" class="btn-ghost -ml-3 text-danger">${ICON_TRASH}<span>${t.t('detail.delete_meeting')}</span></button>
-          <p id="delete-status" class="mt-2 text-sm text-danger hidden" role="status"></p>
+          <p id="delete-status" class="mt-2 text-sm text-danger empty:sr-only" role="status"></p>
         </div>
       </div>
     `;
@@ -137,7 +137,6 @@ export class MeetingDetailPage implements Page {
     const status = this.root?.querySelector<HTMLElement>('#delete-status');
     if (status) {
       status.textContent = `${this.t.t('meeting.delete_failed')} ${result.error.message}`;
-      status.classList.remove('hidden');
     }
   }
 
@@ -261,6 +260,7 @@ export class MeetingDetailPage implements Page {
                   kind,
                   label: escapeHtml(this.summaryLabel(meeting.template, kind)),
                   bodyHtml: this.summaryHtml(meeting, kind, REST_HEADING_OFFSET),
+                  landmark: true,
                 }),
               )
               .join('')}

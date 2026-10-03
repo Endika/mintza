@@ -94,7 +94,9 @@ describe('MeetingDetailPage', () => {
 
     expect(root.querySelector('#detail-body details, #detail-body summary')).toBeNull();
     const toggle = root.querySelector<HTMLButtonElement>('div[data-kind="action_items"] button')!;
-    expectCollapsibleResult(root, toggle, 'Action items', 'Ana books the room');
+    expectCollapsibleResult(root, toggle, 'Action items', 'Ana books the room', {
+      region: true,
+    });
 
     root.querySelector<HTMLButtonElement>('#btn-regen')!.click();
     await settle();
@@ -103,6 +105,7 @@ describe('MeetingDetailPage', () => {
       root.querySelector<HTMLButtonElement>('div[data-kind="action_items"] button')!,
       'Action items',
       'x',
+      { region: true },
     );
   });
 

@@ -76,7 +76,7 @@ export class HistoryPage implements Page {
             </select>
           </div>
         </div>
-        <p id="history-status" class="mb-4 text-sm text-danger hidden" role="status"></p>
+        <p id="history-status" class="mb-4 text-sm text-danger empty:sr-only" role="status"></p>
         <div id="list">
           <p class="text-fg-muted">${t.t('history.loading')}</p>
         </div>
@@ -287,7 +287,6 @@ export class HistoryPage implements Page {
   private setStatus(message: string): void {
     const el = this.qs<HTMLElement>('#history-status');
     el.textContent = message;
-    el.classList.remove('hidden');
   }
 
   private qs<T extends HTMLElement>(selector: string): T {

@@ -161,7 +161,7 @@ export class SettingsPage implements Page {
             <div class="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:px-0 md:pt-5 md:pb-0">
               <div class="min-w-0 flex-1 text-sm">
                 <p id="dirty-indicator" hidden class="flex items-center gap-2 font-semibold text-warning">${ICON_ALERT}<span>${t('settings.unsaved')}</span></p>
-                <p id="settings-status" role="status" class="text-fg-muted empty:hidden"></p>
+                <p id="settings-status" role="status" class="text-fg-muted empty:sr-only"></p>
               </div>
               <button type="submit" id="btn-save" class="btn-action shrink-0" disabled>${t('settings.btn_save')}</button>
             </div>
@@ -409,7 +409,7 @@ const keyRow = (
         ? `<span class="rounded-full bg-raised px-2.5 py-0.5 text-xs font-semibold text-fg">${t('settings.required')}</span>`
         : ''
     }<span>${use}</span></p>
-    <div id="key-${name}-result" data-status="${name}" aria-live="polite" class="flex flex-col gap-1 text-sm empty:hidden"></div>
+    <div id="key-${name}-result" data-status="${name}" aria-live="polite" class="flex flex-col gap-1 text-sm empty:sr-only"></div>
     ${
       options.getKey
         ? `<a href="${OPENAI_KEYS_URL}" target="_blank" rel="noopener" class="btn-ghost -ml-3 self-start text-sm">${t('home.connect_get_key')}${ICON_EXTERNAL}</a>`

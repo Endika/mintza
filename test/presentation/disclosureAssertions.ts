@@ -6,13 +6,20 @@ export const expectCollapsibleResult = (
   toggle: HTMLButtonElement,
   label: string,
   content: string,
+  { region: landmark }: { region: boolean },
 ): void => {
   expect(toggle.type).toBe('button');
   expect(toggle.parentElement?.tagName).toBe('H3');
   expect(toggle.parentElement?.textContent?.trim()).toBe(label);
-  const region = root.querySelector<HTMLElement>(`#${toggle.getAttribute('aria-controls')}`)!;
-  expect(region.getAttribute('role')).toBe('region');
-  expect(region.getAttribute('aria-labelledby')).toBe(toggle.id);
+  const region = document.getElementById(toggle.getAttribute('aria-controls')!)!;
+  expect(root.contains(region)).toBe(true);
+  if (landmark) {
+    expect(region.getAttribute('role')).toBe('region');
+    expect(region.getAttribute('aria-labelledby')).toBe(toggle.id);
+  } else {
+    expect(region.hasAttribute('role')).toBe(false);
+    expect(region.hasAttribute('aria-labelledby')).toBe(false);
+  }
   expect(region.textContent).toContain(content);
   expect(toggle.getAttribute('aria-expanded')).toBe('false');
   expect(region.hidden).toBe(true);

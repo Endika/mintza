@@ -325,7 +325,7 @@ export class HomePage implements Page {
     const t = (key: TranslationKey): string => this.t.t(key);
     const notes = `
       <div id="card-notes" class="flex flex-col gap-1">
-        <p id="status" role="status" aria-live="polite" class="text-sm text-fg-muted empty:hidden"></p>
+        <p id="status" role="status" class="text-sm text-fg-muted empty:sr-only"></p>
         <p id="progress" class="hidden text-sm text-fg-muted tabular"></p>
         <div id="last-error" class="hidden text-sm text-danger"></div>
         <p id="stop-note" class="hidden text-sm text-fg-muted"></p>
