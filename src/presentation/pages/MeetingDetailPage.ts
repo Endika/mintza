@@ -18,6 +18,8 @@ import { languageName } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import { Router, type Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
+import { meetingTitle } from '../util/meetingTitle';
+import { metaLine } from '../util/metaLine';
 import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
 
@@ -141,8 +143,8 @@ export class MeetingDetailPage implements Page {
 
     target.innerHTML = `
       <header class="mb-6">
-        <h1 class="break-words text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(meeting.title)}</h1>
-        <p class="mt-2 text-sm text-fg-muted">${escapeHtml(when)} · ${escapeHtml(templateDisplayName(meeting.template, t))} · ${languageName(meeting.language.code)}</p>
+        <h1 class="break-words text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(meetingTitle(meeting, t))}</h1>
+        <p class="mt-2 text-sm text-fg-muted">${metaLine([when, templateDisplayName(meeting.template, t), languageName(meeting.language.code)])}</p>
         <div id="detail-meta" class="mt-0.5"></div>
       </header>
 

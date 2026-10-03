@@ -27,6 +27,10 @@ export interface MeetingState {
   totalPausedMs: number;
 }
 
+/** The title a meeting gets when nobody names it; presentation spots it to show a localized one. */
+export const defaultMeetingTitle = (startedAt: Date): string =>
+  `Meeting ${startedAt.toISOString().slice(0, 16).replace('T', ' ')}`;
+
 export class Meeting {
   private constructor(private readonly state: MeetingState) {}
 
@@ -39,7 +43,7 @@ export class Meeting {
     const startedAt = params.now ?? new Date();
     return new Meeting({
       id: MeetingId.generate(),
-      title: params.title ?? `Meeting ${startedAt.toISOString().slice(0, 16).replace('T', ' ')}`,
+      title: params.title ?? defaultMeetingTitle(startedAt),
       template: params.template,
       language: params.language,
       startedAt,

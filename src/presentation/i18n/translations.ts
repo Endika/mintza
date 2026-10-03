@@ -1,6 +1,13 @@
 import type { LanguageCode } from '../../domain/language/value-objects/Language';
 
 export type TranslationKey =
+  | 'meeting.default_title'
+  | 'templates.used_in_one'
+  | 'templates.in_use_block_one'
+  | 'cost.words_one'
+  | 'home.progress_one'
+  | 'home.progress_skipped_one'
+  | 'home.progress_failed_one'
   | 'sentiment.sentence_very_negative'
   | 'sentiment.sentence_negative'
   | 'sentiment.sentence_neutral'
@@ -237,6 +244,13 @@ export type TranslationKey =
 export type Translations = Record<TranslationKey, string>;
 
 const EN: Translations = {
+  'meeting.default_title': 'Meeting',
+  'templates.used_in_one': 'Used in 1 meeting',
+  'templates.in_use_block_one': "Used in 1 meeting, so it can't be deleted",
+  'cost.words_one': '{count} word',
+  'home.progress_one': 'Transcribing… {done} of 1 part',
+  'home.progress_skipped_one': '{count} skipped',
+  'home.progress_failed_one': '{count} failed',
   'sentiment.sentence_very_negative': 'The tone was tense for most of the meeting.',
   'sentiment.sentence_negative': 'The tone leaned negative.',
   'sentiment.sentence_neutral': 'The tone stayed even, neither positive nor negative.',
@@ -345,8 +359,8 @@ const EN: Translations = {
   'templates.cancel': 'Cancel',
   'templates.save': 'Save template',
   'templates.confirm_delete': 'Delete this template?',
-  'templates.in_use_block': "Used in {count} meeting(s), so it can't be deleted",
-  'templates.used_in': 'Used in {count} meeting(s)',
+  'templates.in_use_block': "Used in {count} meetings, so it can't be deleted",
+  'templates.used_in': 'Used in {count} meetings',
   'meeting.regenerate': 'Regenerate with',
   'meeting.regenerating': 'Regenerating summaries…',
   'meeting.delete_failed': "Couldn't delete this meeting.",
@@ -480,6 +494,13 @@ const EN: Translations = {
 };
 
 const ES: Translations = {
+  'meeting.default_title': 'Reunión',
+  'templates.used_in_one': 'Usada en 1 reunión',
+  'templates.in_use_block_one': 'Se usa en 1 reunión, así que no se puede borrar',
+  'cost.words_one': '{count} palabra',
+  'home.progress_one': 'Transcribiendo… {done} de 1 parte',
+  'home.progress_skipped_one': '{count} omitida',
+  'home.progress_failed_one': '{count} fallida',
   'sentiment.sentence_very_negative': 'El tono fue tenso durante casi toda la reunión.',
   'sentiment.sentence_negative': 'El tono tiró más bien a negativo.',
   'sentiment.sentence_neutral': 'El tono fue neutro, ni positivo ni negativo.',
@@ -588,8 +609,8 @@ const ES: Translations = {
   'templates.cancel': 'Cancelar',
   'templates.save': 'Guardar plantilla',
   'templates.confirm_delete': '¿Borrar esta plantilla?',
-  'templates.in_use_block': 'Se usa en {count} reunión(es), así que no se puede borrar',
-  'templates.used_in': 'Usada en {count} reunión(es)',
+  'templates.in_use_block': 'Se usa en {count} reuniones, así que no se puede borrar',
+  'templates.used_in': 'Usada en {count} reuniones',
   'meeting.regenerate': 'Regenerar con',
   'meeting.regenerating': 'Regenerando resúmenes…',
   'meeting.delete_failed': 'No se pudo borrar esta reunión.',
@@ -723,6 +744,13 @@ const ES: Translations = {
 };
 
 const EU: Translations = {
+  'meeting.default_title': 'Bilera',
+  'templates.used_in_one': 'Bilera batean erabilia',
+  'templates.in_use_block_one': 'Bilera batean erabiltzen da; ezin da ezabatu',
+  'cost.words_one': 'hitz {count}',
+  'home.progress_one': 'Transkribatzen… {done}/1 zati',
+  'home.progress_skipped_one': '{count} saltatuta',
+  'home.progress_failed_one': '{count} hutsegite',
   'sentiment.sentence_very_negative': 'Tonua tirabiratsua izan zen bileraren zatirik handienean.',
   'sentiment.sentence_negative': 'Tonua negatiborantz jo zuen.',
   'sentiment.sentence_neutral': 'Tonua orekatua izan zen, ez positiboa ez negatiboa.',

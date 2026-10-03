@@ -3,6 +3,7 @@ import { meetingCost } from '../../domain/tokens/services/MeetingCost';
 import { Money } from '../../domain/tokens/value-objects/Money';
 import type { Translator } from '../i18n/Translator';
 import { formatDuration } from '../util/formatDuration';
+import { metaLine } from '../util/metaLine';
 import { LLM_LABEL, TRANSCRIPTION_LABEL } from './providerLabels';
 
 export class CostCounter {
@@ -34,11 +35,11 @@ export class CostCounter {
     this.stop();
     const { total } = meetingCost(meeting);
     target.innerHTML = `
-      <p class="flex flex-wrap gap-x-2 text-sm text-fg-muted">
-        <span class="tabular">${formatDuration(meeting.durationMs / 1000, translator.language)}</span><span aria-hidden="true">·</span>
-        <span>${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span><span aria-hidden="true">·</span>
-        <span class="tabular">${translator.t('cost.total')} ${total.format(total.toUsd() >= 0.1 ? 2 : 3)}</span>
-      </p>
+      <p class="text-sm text-fg-muted tabular">${metaLine([
+        formatDuration(meeting.durationMs / 1000, translator.language),
+        wordCount(meeting, translator),
+        `${translator.t('cost.total')} ${total.format(total.toUsd() >= 0.1 ? 2 : 3)}`,
+      ])}</p>
     `;
   }
 
@@ -91,9 +92,14 @@ export class CostCounter {
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
     if (transcribedMs === 0) return translator.t('home.chunks_wait');
     const soFar = sumAll(meetingCost(meeting).transcription.values());
-    return `${translator.t('cost.so_far', { amount: soFar.format(3) })} · ${translator.t('cost.words', { count: meeting.fullText().wordCount() })}`;
+    return `${translator.t('cost.so_far', { amount: soFar.format(3) })} ·\u00a0${wordCount(meeting, translator)}`;
   }
 }
+
+const wordCount = (meeting: Meeting, translator: Translator): string => {
+  const count = meeting.fullText().wordCount();
+  return translator.t(count === 1 ? 'cost.words_one' : 'cost.words', { count });
+};
 
 const costRow = (label: string, amount: string, emphasis = ''): string => `
   <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0 last:pb-0 ${emphasis}">

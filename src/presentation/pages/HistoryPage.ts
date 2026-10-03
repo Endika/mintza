@@ -2,6 +2,7 @@ import type { ClearMeetingsUseCase } from '../../application/use-cases/ClearMeet
 import type { DeleteMeetingUseCase } from '../../application/use-cases/DeleteMeetingUseCase';
 import type { GetMeetingUseCase } from '../../application/use-cases/GetMeetingUseCase';
 import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
+import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
 import type { MeetingListItem } from '../../domain/meeting/ports/MeetingRepository';
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
@@ -13,9 +14,12 @@ import type { TranslationKey } from '../i18n/translations';
 import type { Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
 import { formatDuration } from '../util/formatDuration';
+import { meetingTitle } from '../util/meetingTitle';
+import { metaLine } from '../util/metaLine';
 
 export interface HistoryPageDeps {
   readonly listMeetings: ListMeetingsUseCase;
+  readonly listTemplates: Pick<ListTemplatesUseCase, 'execute'>;
   readonly getMeeting: GetMeetingUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
@@ -37,6 +41,7 @@ const ICON_BUTTON = 'btn-ghost size-11 shrink-0 px-0';
 export class HistoryPage implements Page {
   private root: HTMLElement | null = null;
   private all: MeetingListItem[] = [];
+  private templates: readonly Template[] = [];
   private query = '';
   private sort: SortMode = 'recent';
 
@@ -95,7 +100,11 @@ export class HistoryPage implements Page {
   }
 
   private async load(): Promise<void> {
-    const result = await this.deps.listMeetings.execute();
+    const [result, templates] = await Promise.all([
+      this.deps.listMeetings.execute(),
+      this.deps.listTemplates.execute(),
+    ]);
+    if (templates.ok) this.templates = templates.value;
     if (!result.ok) {
       this.qs<HTMLElement>('#list').innerHTML = `
         <div class="card">
@@ -149,39 +158,41 @@ export class HistoryPage implements Page {
   private rowHtml(m: MeetingListItem): string {
     const t = this.t;
     const id = escapeHtml(m.id.value);
-    const title = escapeHtml(m.title);
+    const display = meetingTitle(m, t);
+    const title = escapeHtml(display);
     return `
       <li class="card flex items-center gap-1 p-2 sm:p-2">
         <a href="#/meeting?id=${id}" class="min-w-0 flex-1 rounded-[calc(var(--radius-card)-0.5rem)] px-3 py-2.5 transition-colors duration-150 hover:bg-raised">
           <h2 class="line-clamp-2 break-words font-semibold">${title}</h2>
           <p class="mt-0.5 text-sm text-fg-muted tabular">${this.metaHtml(m)}</p>
         </a>
-        <button type="button" data-star="${id}" aria-pressed="${m.starred}" aria-label="${escapeHtml(t.t('history.star_named', { title: m.title }))}" class="${ICON_BUTTON} ${m.starred ? 'text-fg' : 'text-fg-muted'}">${m.starred ? ICON_STAR_FILLED : ICON_STAR}</button>
-        <button type="button" data-delete="${id}" aria-label="${escapeHtml(t.t('history.delete_named', { title: m.title }))}" class="${ICON_BUTTON} text-fg-muted hover:text-danger">${ICON_TRASH}</button>
+        <button type="button" data-star="${id}" aria-pressed="${m.starred}" aria-label="${escapeHtml(t.t('history.star_named', { title: display }))}" class="${ICON_BUTTON} ${m.starred ? 'text-fg' : 'text-fg-muted'}">${m.starred ? ICON_STAR_FILLED : ICON_STAR}</button>
+        <button type="button" data-delete="${id}" aria-label="${escapeHtml(t.t('history.delete_named', { title: display }))}" class="${ICON_BUTTON} text-fg-muted hover:text-danger">${ICON_TRASH}</button>
       </li>`;
   }
 
   private metaHtml(m: MeetingListItem): string {
     const lang = this.t.language;
     const when = m.startedAt.toLocaleString(lang, { dateStyle: 'medium', timeStyle: 'short' });
-    return [when, formatDuration(m.durationMs / 1000, lang), this.templateLabel(m.templateKind)]
-      .map(
-        (part, i, all) =>
-          `<span class="whitespace-nowrap">${escapeHtml(part)}${i < all.length - 1 ? ' ·' : ''}</span>`,
-      )
-      .join(' ');
+    const parts = [when, formatDuration(m.durationMs / 1000, lang)];
+    const template = this.templateLabel(m.templateKind);
+    if (template) parts.push(template);
+    return metaLine(parts);
   }
 
+  /** A deleted custom template has no name left to show, and its id means nothing to people. */
   private templateLabel(kind: string): string {
-    return Template.isBuiltInId(kind) ? templateDisplayName(Template.of(kind), this.t) : kind;
+    const template =
+      this.templates.find((tpl) => tpl.id === kind) ??
+      (Template.isBuiltInId(kind) ? Template.of(kind) : undefined);
+    return template ? templateDisplayName(template, this.t) : '';
   }
 
   private applyFilter(items: readonly MeetingListItem[]): MeetingListItem[] {
     if (this.query.length === 0) return [...items];
     return items.filter(
       (m) =>
-        m.title.toLowerCase().includes(this.query) ||
-        m.templateKind.toLowerCase().includes(this.query) ||
+        meetingTitle(m, this.t).toLowerCase().includes(this.query) ||
         this.templateLabel(m.templateKind).toLowerCase().includes(this.query),
     );
   }
@@ -196,7 +207,9 @@ export class HistoryPage implements Page {
       case 'longest':
         return sorted.sort((a, b) => b.durationMs - a.durationMs);
       case 'title':
-        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+        return sorted.sort((a, b) =>
+          meetingTitle(a, this.t).localeCompare(meetingTitle(b, this.t)),
+        );
     }
   }
 

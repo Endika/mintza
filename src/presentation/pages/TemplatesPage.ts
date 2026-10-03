@@ -98,9 +98,11 @@ export class TemplatesPage implements Page {
         const count = tpl.summaryKinds.length;
         const usageId = `tpl-usage-${i}`;
         const usageText = inUse
-          ? t.t('templates.in_use_block', { count: usage })
+          ? t.t(usage === 1 ? 'templates.in_use_block_one' : 'templates.in_use_block', {
+              count: usage,
+            })
           : usage > 0
-            ? t.t('templates.used_in', { count: usage })
+            ? t.t(usage === 1 ? 'templates.used_in_one' : 'templates.used_in', { count: usage })
             : '';
         return `
           <article class="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
