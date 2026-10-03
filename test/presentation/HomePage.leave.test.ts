@@ -330,4 +330,51 @@ describe('HomePage leaving a recording', () => {
     expect(root.querySelector('#btn-record')!.hasAttribute('disabled')).toBe(false);
     expect(unload().defaultPrevented).toBe(false);
   });
+  it('stops the capture and stores the transcript when leaving mid-recording is confirmed', async () => {
+    const { page, audio, meetings } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+    );
+    audio.emit(chunk());
+    await settle();
+    expect(audio.state()).toBe('recording');
+    window.confirm = () => true;
+
+    const left = await page.canLeave();
+    await settle();
+
+    expect(left).toBe(true);
+    expect(audio.state()).toBe('stopped');
+    const listed = await meetings.list();
+    expect(listed.ok && listed.value).toHaveLength(1);
+    expect(meetings.saves.at(-1)!.fullText().value).toContain('hello team');
+  });
+
+  it('keeps recording when leaving mid-recording is cancelled', async () => {
+    const { page, shell, audio, meetings } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+    );
+    audio.emit(chunk());
+    await settle();
+    window.confirm = () => false;
+
+    const left = await page.canLeave();
+    await settle();
+
+    expect(left).toBe(false);
+    expect(audio.state()).toBe('recording');
+    expect(meetings.saves).toHaveLength(0);
+    expect(shell.busy).toBe(true);
+  });
+
+  it('stops the audio when disposed mid-recording', async () => {
+    const { page, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+    );
+    expect(audio.state()).toBe('recording');
+
+    page.dispose();
+    await settle();
+
+    expect(audio.state()).toBe('stopped');
+  });
 });
