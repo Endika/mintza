@@ -80,7 +80,8 @@ export class Router {
     this.current = undefined;
     const raw = target.replace(/^#/, '') || '/';
     const path = (raw.split('?')[0] ?? '/').toLowerCase();
-    const page = await (this.routes.get(path) ?? this.fallback)();
+    const factory = this.routes.get(path);
+    const page = await (typeof factory === 'function' ? factory : this.fallback)();
     if (generation !== this.generation) return;
     this.current = page;
     this.currentHash = target;
