@@ -12,11 +12,14 @@ export interface MeetingCostBreakdown {
   readonly total: Money;
 }
 
-/** Prices a summary whose model is unrecorded or missing from the price table. */
+/**
+ * Prices a summary whose model is unrecorded or missing from the price table. Unrecorded
+ * summaries predate model tracking, so these stay the models that ran back then.
+ */
 const FALLBACK_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
-  anthropic: 'claude-sonnet-5-5',
-  gemini: 'gemini-3.1-flash-lite',
+  anthropic: 'claude-sonnet-4-5',
+  gemini: 'gemini-2.0-flash',
 };
 
 const calculator = new CostCalculator();
