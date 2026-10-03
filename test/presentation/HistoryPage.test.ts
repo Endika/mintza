@@ -183,4 +183,109 @@ describe('HistoryPage', () => {
     expect(parts.slice(1)).toEqual(['42 min', 'Work']);
     expect(row.textContent).not.toContain('·');
   });
+
+  it('finds a meeting by the translated name of its built-in template', async () => {
+    const repo = new InMemoryMeetingRepository();
+    await repo.save(finishedMeeting({ title: 'Monday', seconds: 600 }));
+    await repo.save(
+      finishedMeeting({ title: 'Tuesday', seconds: 600, template: Template.interview() }),
+    );
+    const { root } = await renderHistory(repo, 'es');
+    const titles = (): (string | undefined)[] =>
+      [...root.querySelectorAll('#list li')].map((li) => li.querySelector('h2')?.textContent);
+
+    await search(root, 'trabajo');
+    expect(titles()).toEqual(['Monday']);
+    await search(root, 'entrevista');
+    expect(titles()).toEqual(['Tuesday']);
+    await search(root, 'work');
+    expect(titles()).toEqual([]);
+  });
+
+  describe('Clear all', () => {
+    const answering = async (answer: boolean, act: () => Promise<void>): Promise<string[]> => {
+      const asked: string[] = [];
+      const original = Object.getOwnPropertyDescriptor(window, 'confirm');
+      Object.defineProperty(window, 'confirm', {
+        value: (message: string) => {
+          asked.push(message);
+          return answer;
+        },
+        configurable: true,
+      });
+      try {
+        await act();
+      } finally {
+        if (original) Object.defineProperty(window, 'confirm', original);
+        else Reflect.deleteProperty(window, 'confirm');
+      }
+      return asked;
+    };
+
+    const seeded = async (): Promise<{ root: HTMLElement; repo: InMemoryMeetingRepository }> => {
+      const repo = new InMemoryMeetingRepository();
+      await repo.save(finishedMeeting({ title: 'One', seconds: 60 }));
+      await repo.save(finishedMeeting({ title: 'Two', seconds: 60 }));
+      return renderHistory(repo);
+    };
+
+    const stored = async (repo: InMemoryMeetingRepository): Promise<number> => {
+      const all = await repo.list();
+      return all.ok ? all.value.length : -1;
+    };
+
+    it('keeps every meeting when the question is cancelled', async () => {
+      const { root, repo } = await seeded();
+
+      const asked = await answering(false, async () => {
+        root.querySelector<HTMLButtonElement>('#btn-clear')!.click();
+        await settle();
+      });
+
+      expect(asked).toHaveLength(1);
+      expect(root.querySelectorAll('#list li')).toHaveLength(2);
+      expect(await stored(repo)).toBe(2);
+    });
+
+    it('removes every meeting once confirmed', async () => {
+      const { root, repo } = await seeded();
+
+      const asked = await answering(true, async () => {
+        root.querySelector<HTMLButtonElement>('#btn-clear')!.click();
+        await settle();
+      });
+
+      expect(asked).toHaveLength(1);
+      expect(root.querySelectorAll('#list li')).toHaveLength(0);
+      expect(root.textContent).toContain('Your meetings will appear here.');
+      expect(await stored(repo)).toBe(0);
+    });
+  });
+
+  it('disables the star button while the meeting is being saved', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    class SlowSaveRepository extends InMemoryMeetingRepository {
+      override async save(meeting: Meeting): Promise<Result<void, AppError>> {
+        if (this.saves.length > 0) await gate;
+        return super.save(meeting);
+      }
+    }
+    const repo = new SlowSaveRepository();
+    await repo.save(finishedMeeting({ title: 'Standup', seconds: 300 }));
+    const { root } = await renderHistory(repo);
+
+    const star = root.querySelector<HTMLButtonElement>('[data-star]')!;
+    star.click();
+    await settle();
+    expect(star.disabled).toBe(true);
+
+    release();
+    await settle();
+    const after = root.querySelector<HTMLButtonElement>('[data-star]')!;
+    expect(after.disabled).toBe(false);
+    expect(after.getAttribute('aria-pressed')).toBe('true');
+  });
 });

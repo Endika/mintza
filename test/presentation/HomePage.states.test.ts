@@ -384,4 +384,30 @@ describe('HomePage states', () => {
       expect(row.querySelector('[data-step-error]')!.textContent).toBe('bad key');
     });
   });
+
+  it('renders a hostile template name as text in the chips and the select', async () => {
+    const name = 'Retro"><img src=x onerror=alert(1)>';
+    const custom = (id: string, label: string): object => ({
+      id,
+      name: label,
+      systemRole: 'You summarise.',
+      mindMapStructure: 'topics',
+      summaryKinds: ['decisions'],
+      featuredOrder: ['decisions'],
+      kindLabels: {},
+      promptOverrides: {},
+    });
+    const { root } = await mount('sk-test', undefined, [
+      custom('retro-1', name),
+      custom('other-1', 'Other'),
+    ]);
+
+    expect(root.querySelector('img')).toBeNull();
+    const chip = root.querySelector('[data-template="retro-1"]')!;
+    expect(chip.textContent).toBe(name);
+    const option = [...root.querySelectorAll<HTMLOptionElement>('#template-more option')].find(
+      (o) => o.value === 'retro-1',
+    );
+    expect(option?.textContent).toBe(name);
+  });
 });

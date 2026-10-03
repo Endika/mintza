@@ -4,7 +4,10 @@ import { ListMeetingsUseCase } from '../../src/application/use-cases/ListMeeting
 import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTemplatesUseCase';
 import { SaveTemplateUseCase } from '../../src/application/use-cases/SaveTemplateUseCase';
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
-import { BUILT_IN_TEMPLATES } from '../../src/domain/meeting/value-objects/Template';
+import {
+  BUILT_IN_TEMPLATES,
+  type TemplateDefinition,
+} from '../../src/domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS } from '../../src/domain/summary/value-objects/SummaryKind';
 import { LocalStorageTemplateRepository } from '../../src/infrastructure/persistence/LocalStorageTemplateRepository';
 import { Translator } from '../../src/presentation/i18n/Translator';
@@ -15,9 +18,12 @@ const settle = async (): Promise<void> => {
   for (let i = 0; i < 10; i++) await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
-const setup = async (): Promise<{ root: HTMLElement; repo: LocalStorageTemplateRepository }> => {
+const setup = async (
+  seed: TemplateDefinition[] = [],
+): Promise<{ root: HTMLElement; repo: LocalStorageTemplateRepository }> => {
   window.localStorage.clear();
   const repo = new LocalStorageTemplateRepository(window.localStorage);
+  for (const def of seed) await repo.save(def);
   const registry = new TemplateRegistry(repo);
   const meetings = new InMemoryMeetingRepository();
   const page = new TemplatesPage({
@@ -102,6 +108,32 @@ describe('TemplatesPage', () => {
     expect(root.querySelector<HTMLElement>('#tpl-main')!.hidden).toBe(false);
     expect(options()).toEqual(['action_items']);
     expect(select.value).toBe('action_items');
+    root.remove();
+  });
+
+  it('renders a hostile template name as text in the list and the editor', async () => {
+    const name = 'Retro"><img src=x onerror=alert(1)>';
+    const { root } = await setup([
+      {
+        id: 'retro-1',
+        name,
+        builtIn: false,
+        systemRole: 'a retro',
+        mindMapStructure: 'Team',
+        summaryKinds: SUMMARY_KINDS,
+        featuredOrder: SUMMARY_KINDS,
+        kindLabels: {},
+        promptOverrides: {},
+      },
+    ]);
+
+    expect(root.querySelector('img')).toBeNull();
+    const titles = [...root.querySelectorAll('#list h2')].map((h) => h.textContent);
+    expect(titles).toContain(name);
+
+    root.querySelector<HTMLButtonElement>('[data-edit="retro-1"]')!.click();
+    expect(root.querySelector('img')).toBeNull();
+    expect(root.querySelector<HTMLInputElement>('input[name="name"]')!.value).toBe(name);
     root.remove();
   });
 });
