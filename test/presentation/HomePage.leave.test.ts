@@ -12,6 +12,7 @@ import type {
   AudioCapturePort,
   AudioChunkHandler,
   RecordingState,
+  StopOutcome,
   Unsubscribe,
 } from '../../src/domain/audio/ports/AudioCapturePort';
 import { AudioChunk } from '../../src/domain/audio/value-objects/AudioChunk';
@@ -66,9 +67,9 @@ class FakeAudio implements AudioCapturePort {
     this.status = 'recording';
     return Promise.resolve();
   }
-  stop(): Promise<void> {
+  stop(): Promise<StopOutcome> {
     this.status = 'stopped';
-    return Promise.resolve();
+    return Promise.resolve({ timedOut: false });
   }
   state(): RecordingState {
     return this.status;
@@ -169,8 +170,8 @@ class FlakyMeetingRepository extends InMemoryMeetingRepository {
 }
 
 class StuckAudio extends FakeAudio {
-  override stop(): Promise<void> {
-    return new Promise<void>(() => undefined);
+  override stop(): Promise<StopOutcome> {
+    return new Promise<StopOutcome>(() => undefined);
   }
 }
 

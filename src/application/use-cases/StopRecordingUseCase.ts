@@ -41,7 +41,7 @@ export class StopRecordingUseCase {
       timer = setTimeout(() => resolve(true), ms);
     });
     try {
-      return await Promise.race([this.audio.stop().then(() => false), timeout]);
+      return await Promise.race([this.audio.stop().then((outcome) => outcome.timedOut), timeout]);
     } finally {
       clearTimeout(timer);
     }

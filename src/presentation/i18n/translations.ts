@@ -897,7 +897,7 @@ const EU: Translations = {
   'home.mind_map_save_failed': 'Bilera gordeta dago, baina buru-mapa ez.',
   'home.retry_save': 'Saiatu berriro gordetzen',
   'home.stop_timed_out':
-    'Mikrofonoak gehiegi behar izan du gelditzeko; azken segundoak falta litezke.',
+    'Mikrofonoak denbora gehiegi behar izan du gelditzeko; azken segundoak falta daitezke.',
   'home.start_failed':
     'Ezin izan da grabatzen hasi. Egiaztatu Mintzak zure mikrofonoa erabil dezakeela.',
   'home.keep_awake_on': 'Mantendu pantaila piztuta',
