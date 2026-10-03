@@ -33,6 +33,7 @@ import { FakeMindMapPort } from '../fakes/FakeMindMapPort';
 import { FakeSummarizationPort } from '../fakes/FakeSummarizationPort';
 import { FakeTranscriptionPort } from '../fakes/FakeTranscriptionPort';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
+import { expectCollapsibleResult } from './disclosureAssertions';
 
 class ConfigRepo implements ConfigRepository {
   constructor(private readonly config: AppConfig) {}
@@ -303,11 +304,24 @@ describe('HomePage states', () => {
 
     expect(visible(root, '#panel-done')).toBe(true);
     expect(root.querySelector('#primary-summary h3')!.textContent).toBe('Decisions');
-    const rest = [...root.querySelectorAll('#rest-summaries details h3')].map((h) => h.textContent);
+    const rest = [...root.querySelectorAll('#rest-summaries h3')].map((h) => h.textContent?.trim());
     expect(rest).toHaveLength(7);
     expect(rest).not.toContain('Decisions');
-    expect(root.querySelector('#rest-summaries details[open]')).toBeNull();
+    expect(root.querySelector('#rest-summaries [aria-expanded="true"]')).toBeNull();
+    expect(root.querySelector('#rest-summaries details, #rest-summaries summary')).toBeNull();
     expect(root.querySelector('#status')!.textContent).toContain('Saved to History');
+  });
+
+  it('folds each other result under a heading whose button shows and hides it', async () => {
+    const { root, audio } = await mount('sk-test');
+    root.querySelector<HTMLButtonElement>('[data-template="work"]')!.click();
+
+    await recordAndStop(root, audio);
+
+    const toggle = root.querySelector<HTMLButtonElement>(
+      '#rest-summaries [data-kind="action_items"] button',
+    )!;
+    expectCollapsibleResult(root, toggle, 'Action items', 'ok');
   });
 
   it('leaves sentiment to the gauge instead of repeating it as a text row', async () => {

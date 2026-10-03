@@ -15,6 +15,7 @@ import { Translator } from '../../src/presentation/i18n/Translator';
 import { MeetingDetailPage } from '../../src/presentation/pages/MeetingDetailPage';
 import { FakeSummarizationPort } from '../fakes/FakeSummarizationPort';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
+import { expectCollapsibleResult } from './disclosureAssertions';
 import { finishedMeeting, settle } from './meetingFixtures';
 
 const renderDetail = async (repo: InMemoryMeetingRepository, id: string): Promise<HTMLElement> =>
@@ -70,15 +71,39 @@ describe('MeetingDetailPage', () => {
     expect(primary.getAttribute('data-kind')).toBe('decisions');
     expect(primary.querySelector('h2')?.textContent).toBe('Decisions');
     expect(primary.querySelector('h3')?.textContent).toBe('Agreed');
-    const folded = [...root.querySelectorAll('details[data-kind]')].map((d) =>
+    const folded = [...root.querySelectorAll('div[data-kind]')].map((d) =>
       d.getAttribute('data-kind'),
     );
     expect(folded).toEqual(['action_items', 'bullet_points']);
-    expect(primary.compareDocumentPosition(root.querySelector('details[data-kind]')!)).toBe(
+    expect(primary.compareDocumentPosition(root.querySelector('div[data-kind]')!)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
     expect(root.querySelector('#btn-delete')).not.toBeNull();
     expect(root.querySelector('label[for="regen-template"]')?.textContent).toBe('Regenerate with');
+  });
+
+  it('folds each other result under a heading whose button shows and hides it', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const meeting = finishedMeeting({
+      title: 'Roadmap sync',
+      seconds: 600,
+      summaries: { decisions: '- launch', action_items: '- Ana books the room' },
+    });
+    await repo.save(meeting);
+    const root = await renderDetail(repo, meeting.id.value);
+
+    expect(root.querySelector('#detail-body details, #detail-body summary')).toBeNull();
+    const toggle = root.querySelector<HTMLButtonElement>('div[data-kind="action_items"] button')!;
+    expectCollapsibleResult(root, toggle, 'Action items', 'Ana books the room');
+
+    root.querySelector<HTMLButtonElement>('#btn-regen')!.click();
+    await settle();
+    expectCollapsibleResult(
+      root,
+      root.querySelector<HTMLButtonElement>('div[data-kind="action_items"] button')!,
+      'Action items',
+      'x',
+    );
   });
 
   it('breaks the cost down by provider for people paying with their own keys', async () => {
@@ -171,9 +196,14 @@ describe('MeetingDetailPage', () => {
     });
     await repo.save(meeting);
     const root = await renderDetail(repo, meeting.id.value);
-    const region = root.querySelector('#regen-status');
+    const region = root.querySelector<HTMLElement>('#regen-status')!;
+    expect(region.getAttribute('role')).toBe('status');
+    expect(region.hidden).toBe(false);
+    expect(region.className).not.toMatch(/(^|\s|:)hidden(\s|$)/);
 
     root.querySelector<HTMLButtonElement>('#btn-regen')!.click();
+    expect(root.querySelector('#regen-status')).toBe(region);
+    expect(region.textContent).toBe('Regenerating summaries…');
     await settle();
 
     expect(root.querySelector('#regen-status')).toBe(region);

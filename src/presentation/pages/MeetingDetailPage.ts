@@ -7,6 +7,7 @@ import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import type { Template } from '../../domain/meeting/value-objects/Template';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { CostCounter } from '../components/CostCounter';
+import { bindDisclosures, disclosureHtml } from '../components/Disclosure';
 import { ExportMenu } from '../components/ExportMenu';
 import { ICON_BACK, ICON_CHEVRON, ICON_TRASH } from '../components/icons';
 import { MindMapView } from '../components/MindMapView';
@@ -96,7 +97,7 @@ export class MeetingDetailPage implements Page {
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <a href="#/history" class="btn-ghost -ml-3 mb-3 px-3">${ICON_BACK}<span>${t.t('nav.history')}</span></a>
         <div id="detail-body"></div>
-        <p id="regen-status" role="status" class="mt-2 text-sm text-fg-muted empty:hidden"></p>
+        <p id="regen-status" role="status" aria-live="polite" class="mt-2 text-sm text-fg-muted empty:sr-only"></p>
         <div id="detail-rest"></div>
         <div class="mt-10 border-t border-line pt-6">
           <button type="button" id="btn-delete" class="btn-ghost -ml-3 text-danger">${ICON_TRASH}<span>${t.t('detail.delete_meeting')}</span></button>
@@ -104,6 +105,7 @@ export class MeetingDetailPage implements Page {
         </div>
       </div>
     `;
+    bindDisclosures(root.querySelector<HTMLElement>('#detail-body')!);
     this.renderMeeting(this.meeting);
     root
       .querySelector<HTMLButtonElement>('#btn-delete')
@@ -253,15 +255,13 @@ export class MeetingDetailPage implements Page {
           <h2 id="rest-title" class="sr-only">${t.t('detail.other_results')}</h2>
           <div class="card divide-y divide-line overflow-hidden p-0 sm:p-0">
             ${rest
-              .map(
-                (kind) => `
-              <details class="group" data-kind="${kind}">
-                <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 sm:px-6 [&::-webkit-details-marker]:hidden">
-                  <h3 class="text-base font-semibold">${escapeHtml(this.summaryLabel(meeting.template, kind))}</h3>
-                  <span class="shrink-0 text-fg-muted transition-transform duration-150 group-open:rotate-90">${ICON_CHEVRON}</span>
-                </summary>
-                <div class="prose-summary px-5 pb-5 leading-relaxed sm:px-6">${this.summaryHtml(meeting, kind, REST_HEADING_OFFSET)}</div>
-              </details>`,
+              .map((kind) =>
+                disclosureHtml({
+                  id: `detail-result-${kind}`,
+                  kind,
+                  label: escapeHtml(this.summaryLabel(meeting.template, kind)),
+                  bodyHtml: this.summaryHtml(meeting, kind, REST_HEADING_OFFSET),
+                }),
               )
               .join('')}
           </div>
