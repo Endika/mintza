@@ -15,7 +15,7 @@ const MODEL_BY_PROFILE: Record<QualityProfile, string> = {
 
 /** One LLM call per summary the template asks for, plus the mind map. */
 export const estimateOpenAiHourlyCost = (profile: QualityProfile, summaryCalls: number): Money => {
-  const transcription = 60 * (PRICING.transcription.whisper?.perMinuteUsd ?? 0);
+  const transcription = 60 * (PRICING.transcription['gpt-transcribe']?.perMinuteUsd ?? 0);
   const transcriptTokens = (60 * WORDS_PER_MINUTE * CHARS_PER_WORD) / CHARS_PER_TOKEN;
   const llm = PRICING.llm[MODEL_BY_PROFILE[profile]];
   if (!llm) return Money.fromUsd(transcription);

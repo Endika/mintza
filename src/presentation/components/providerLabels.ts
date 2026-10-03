@@ -3,6 +3,7 @@ import type { TranscriptionProviderName } from '../../domain/transcription/value
 
 export const TRANSCRIPTION_LABEL: Record<TranscriptionProviderName, string> = {
   whisper: 'Whisper',
+  'gpt-transcribe': 'GPT Transcribe',
   google: 'Google Speech',
   azure: 'Azure Speech',
   webspeech: 'Web Speech',

@@ -10,6 +10,7 @@ import { MindMap } from '../../../src/domain/mindmap/entities/MindMap';
 import { MindMapNode } from '../../../src/domain/mindmap/value-objects/MindMapNode';
 import { Summary } from '../../../src/domain/summary/entities/Summary';
 import { TemperatureScore } from '../../../src/domain/temperature/value-objects/TemperatureScore';
+import { meetingCost } from '../../../src/domain/tokens/services/MeetingCost';
 import { TokenCount } from '../../../src/domain/tokens/value-objects/TokenCount';
 import { TranscriptSegment } from '../../../src/domain/transcription/entities/TranscriptSegment';
 import { TranscriptText } from '../../../src/domain/transcription/value-objects/TranscriptText';
@@ -247,4 +248,65 @@ describe('IndexedDBMeetingRepository', () => {
     expect(loaded.value.mindMap?.root.label).toBe('root');
     expect(loaded.value.mindMap?.usage).toBeUndefined();
   });
+
+  it('loads and prices a meeting transcribed with Whisper before the switch', async () => {
+    const factory = new IDBFactory();
+    repo = new IndexedDBMeetingRepository(factory);
+    await repo.list();
+    await putRaw(factory, {
+      id: '6f1d2b3c-4e5a-4b6c-8d7e-9f0a1b2c3d4e',
+      title: 'Whisper era',
+      template: 'work',
+      language: 'es',
+      startedAt: '2026-08-01T09:00:00.000Z',
+      endedAt: '2026-08-01T09:01:00.000Z',
+      segments: [{ id: 's1', startMs: 0, endMs: 60_000, text: 'hola', provider: 'whisper' }],
+      summaries: [],
+      costMicroUsd: 6000,
+      starred: false,
+      tags: [],
+    });
+
+    const loaded = await repo.findById(MeetingId.restore('6f1d2b3c-4e5a-4b6c-8d7e-9f0a1b2c3d4e'));
+    if (!loaded.ok || !loaded.value) throw new Error('expected meeting');
+    expect(loaded.value.segments[0]?.provider).toBe('whisper');
+    expect(meetingCost(loaded.value).transcription.get('whisper')!.toUsd()).toBeCloseTo(0.006, 6);
+  });
+
+  it('keeps gpt-transcribe as the provider of new parts', async () => {
+    const meeting = Meeting.start({ template: Template.work(), language: Language.of('eu') });
+    meeting.appendSegment(
+      new TranscriptSegment({
+        id: 's1',
+        startMs: 0,
+        endMs: 60_000,
+        text: TranscriptText.of('kaixo'),
+        provider: 'gpt-transcribe',
+      }),
+    );
+    await repo.save(meeting);
+
+    const loaded = await repo.findById(meeting.id);
+    if (!loaded.ok || !loaded.value) throw new Error('expected meeting');
+    expect(loaded.value.segments[0]?.provider).toBe('gpt-transcribe');
+    expect(meetingCost(loaded.value).transcription.get('gpt-transcribe')!.toUsd()).toBeCloseTo(
+      0.0045,
+      6,
+    );
+  });
 });
+
+const putRaw = (factory: IDBFactory, record: object): Promise<void> =>
+  new Promise<void>((resolve, reject) => {
+    const open = factory.open('mintza-db', 1);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('meetings', 'readwrite');
+      tx.objectStore('meetings').put(record);
+      tx.oncomplete = () => {
+        open.result.close();
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error ?? new Error('put failed'));
+    };
+    open.onerror = () => reject(open.error ?? new Error('open failed'));
+  });

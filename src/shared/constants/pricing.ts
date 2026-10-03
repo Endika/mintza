@@ -9,7 +9,9 @@ export interface TranscriptionPricing {
 
 export const PRICING = {
   transcription: {
+    // whisper-1, removed 2027-02-26; kept so meetings transcribed with it still price correctly.
     whisper: { perMinuteUsd: 0.006 },
+    'gpt-transcribe': { perMinuteUsd: 0.0045 },
     google: { perMinuteUsd: 0.004 },
     azure: { perMinuteUsd: 0.005 },
     webspeech: { perMinuteUsd: 0 },

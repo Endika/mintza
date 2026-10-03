@@ -7,10 +7,10 @@ import { TranscriptSegment } from '../../domain/transcription/entities/Transcrip
 import { TranscriptText } from '../../domain/transcription/value-objects/TranscriptText';
 import type { AppError } from '../../shared/errors/AppError';
 import { ok, type Result } from '../../shared/result/Result';
-import type { WhisperClient } from './WhisperClient';
+import type { OpenAITranscriptionClient } from './OpenAITranscriptionClient';
 
-export class WhisperTranscriptionAdapter implements TranscriptionPort {
-  constructor(private readonly client: WhisperClient) {}
+export class OpenAITranscriptionAdapter implements TranscriptionPort {
+  constructor(private readonly client: OpenAITranscriptionClient) {}
 
   async transcribe(request: TranscriptionRequest): Promise<Result<TranscriptSegment, AppError>> {
     const result = await this.client.transcribe(request.chunk.blob, request.language);
@@ -25,5 +25,5 @@ const toSegment = (chunk: AudioChunk, text: string): TranscriptSegment =>
     startMs: chunk.startMs,
     endMs: chunk.endMs,
     text: TranscriptText.of(text),
-    provider: 'whisper',
+    provider: 'gpt-transcribe',
   });
