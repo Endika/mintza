@@ -5,6 +5,25 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.22.1](https://github.com/Endika/mintza/compare/v1.22.0...v1.22.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* animate the button press and keep domain code out of the build config ([6956b4c](https://github.com/Endika/mintza/commit/6956b4c4ed70549abfa244542a95ddc1394466e1))
+* ask before a same-route navigation and undo refused pushes ([2c96718](https://github.com/Endika/mintza/commit/2c96718b4401d4c12aabc1b4f2b76d23bfe25d84))
+* escape every script-breaking character in the boot script ([92a5c1e](https://github.com/Endika/mintza/commit/92a5c1ec881dd969d3b31b3d4757b9f24310e6ee))
+* export with the translated meeting title ([86dd838](https://github.com/Endika/mintza/commit/86dd838db30990a5e280c26a041d43a6941402a3))
+* ignore foreign navigations, always release the microphone and word the summaries prompt truthfully ([033a616](https://github.com/Endika/mintza/commit/033a6168b16259c4602492d2655890bf03782916))
+* keep every empty live region announceable and label only the meeting page's result rows as regions ([ca0674f](https://github.com/Endika/mintza/commit/ca0674f8f662d00b81e7a6eeb1aa7aee32add8ae))
+* keep result headings intact with disclosure buttons and an always-present regenerate status ([bb74906](https://github.com/Endika/mintza/commit/bb74906f490806e85d8e6053fb09bbd0dbe56cb5))
+* keep the docked Record out of the card morph and inline on short landscape phones ([8e0d82b](https://github.com/Endika/mintza/commit/8e0d82ba86a6c7352f2543dcaa9d096ed526e080))
+* never hang leaving a recording and tell when results weren't saved ([a5ec15b](https://github.com/Endika/mintza/commit/a5ec15b9243dd403f1355479354335e5c6cbd76b))
+* price unknown models with the provider default and show a dash before the first cost ([5e1fe21](https://github.com/Endika/mintza/commit/5e1fe21249ddcdfe05feb491a2e6a67b231ebfcf))
+* send Google keys in a header instead of the URL ([6db9e23](https://github.com/Endika/mintza/commit/6db9e239a14e8153e7fd23853561b0f89660b0ea))
+* set the page language and title from the stored config before the app loads ([1c1f6d6](https://github.com/Endika/mintza/commit/1c1f6d6e2d4e1149f8ff5a136b29169376114f84))
+* tell when the microphone needed too long to stop and pin summarize-now kinds ([83b4711](https://github.com/Endika/mintza/commit/83b4711bd3dd10f17c1fd94dab02ced3ef8ebc28))
+
 ## [1.22.0](https://github.com/Endika/mintza/compare/v1.21.3...v1.22.0) (2026-10-03)
 
 
