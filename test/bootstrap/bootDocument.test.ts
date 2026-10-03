@@ -104,8 +104,8 @@ describe('the inline boot script', () => {
       );
 
     expect(runtimeImports('src/bootstrap/bootDocument.ts').sort()).toEqual([
-      '../presentation/i18n/translations',
-      '../shared/constants/storageKeys',
+      '../presentation/i18n/translations.ts',
+      '../shared/constants/storageKeys.ts',
     ]);
     expect(runtimeImports('src/presentation/i18n/translations.ts')).toEqual([]);
     expect(runtimeImports('src/shared/constants/storageKeys.ts')).toEqual([]);

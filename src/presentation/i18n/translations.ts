@@ -1,4 +1,4 @@
-import type { LanguageCode } from '../../domain/language/value-objects/Language';
+import type { LanguageCode } from '../../domain/language/value-objects/Language.ts';
 
 export type TranslationKey =
   | 'meeting.default_title'
