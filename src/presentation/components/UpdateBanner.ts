@@ -1,4 +1,5 @@
 import type { Translator } from '../i18n/Translator';
+import { ICON_CLOSE } from './icons';
 
 export class UpdateBanner {
   private banner: HTMLElement | null = null;
@@ -9,17 +10,11 @@ export class UpdateBanner {
     node.setAttribute('role', 'status');
     node.setAttribute('aria-live', 'polite');
     node.className =
-      'fixed top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-full ' +
-      'border border-line bg-surface/95 px-4 py-2 shadow-lg text-sm text-fg backdrop-blur-sm';
+      'card fixed inset-x-4 top-3 z-50 mx-auto flex max-w-md items-center gap-2 py-2 pr-2 pl-4 sm:py-2 sm:pr-2 sm:pl-5';
     node.innerHTML = `
-      <span class="inline-flex items-center gap-2">
-        <span class="inline-block h-1.5 w-1.5 rounded-full bg-action"></span>
-        <span class="font-medium">${translator.t('update.title')}</span>
-      </span>
-      <button type="button" data-reload class="rounded-full bg-action px-3 py-1 text-xs font-semibold text-on-action hover:bg-action-hover transition-colors">
-        ${translator.t('update.reload')}
-      </button>
-      <button type="button" data-dismiss aria-label="${translator.t('update.dismiss')}" class="text-fg-muted hover:text-fg transition-colors text-base leading-none">×</button>
+      <span class="min-w-0 flex-1 font-medium">${translator.t('update.title')}</span>
+      <button type="button" data-reload class="btn-action shrink-0 px-4">${translator.t('update.reload')}</button>
+      <button type="button" data-dismiss aria-label="${translator.t('update.dismiss')}" class="btn-ghost size-11 shrink-0 px-0 text-fg-muted">${ICON_CLOSE}</button>
     `;
     node
       .querySelector<HTMLButtonElement>('[data-reload]')

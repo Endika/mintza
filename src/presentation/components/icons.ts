@@ -30,3 +30,17 @@ export const ICON_EXTERNAL = icon(
   '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   18,
 );
+export const ICON_STAR = icon(
+  '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  20,
+);
+export const ICON_STAR_FILLED = icon(
+  '<path fill="currentColor" d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  20,
+);
+export const ICON_TRASH = icon(
+  '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+  20,
+);
+export const ICON_CLOSE = icon('<path d="M6 6l12 12M18 6L6 18"/>', 20);
+export const ICON_DOWNLOAD = icon('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', 20);

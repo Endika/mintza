@@ -2,50 +2,39 @@ import type { Meeting } from '../../domain/meeting/entities/Meeting';
 import { StatisticsCalculator } from '../../domain/statistics/services/StatisticsCalculator';
 import type { Translator } from '../i18n/Translator';
 import { escapeHtml } from '../util/escapeHtml';
+import { formatDuration } from '../util/formatDuration';
 
 export class StatisticsPanel {
   private readonly calculator = new StatisticsCalculator();
 
   render(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     const stats = this.calculator.calculate(meeting);
+    const number = new Intl.NumberFormat(translator.language);
     target.innerHTML = `
-      <dl class="grid grid-cols-2 gap-4 md:grid-cols-4">
-        ${stat(translator.t('stats.duration'), formatDuration(stats.durationMs))}
-        ${stat(translator.t('stats.words'), String(stats.wordCount))}
-        ${stat(translator.t('stats.words_per_minute'), String(stats.wordsPerMinute))}
-        ${stat(translator.t('stats.providers'), stats.providersUsed.join(', ') || '—')}
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4">
+        ${stat(translator.t('stats.duration'), formatDuration(stats.durationMs / 1000, translator.language))}
+        ${stat(translator.t('stats.words'), number.format(stats.wordCount))}
+        ${stat(translator.t('stats.words_per_minute'), number.format(stats.wordsPerMinute))}
+        ${stat(translator.t('stats.providers'), escapeHtml(stats.providersUsed.join(', ') || '—'))}
       </dl>
-      <div class="mt-4">
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('stats.top_keywords')}</h3>
-        <div class="flex flex-wrap gap-2">
-          ${
-            stats.topKeywords.length === 0
-              ? `<em class="text-sm text-fg-muted">${translator.t('stats.no_keywords')}</em>`
-              : stats.topKeywords
-                  .map(
-                    (k) =>
-                      `<span class="rounded-full bg-raised px-3 py-0.5 text-xs">${escapeHtml(k.term)} · ${k.count}</span>`,
-                  )
-                  .join('')
-          }
-        </div>
-      </div>
+      <h4 class="mt-5 mb-2 text-sm font-medium text-fg-muted">${translator.t('stats.top_keywords')}</h4>
+      ${
+        stats.topKeywords.length === 0
+          ? `<p class="text-sm text-fg-muted">${translator.t('stats.no_keywords')}</p>`
+          : `<ul class="flex flex-wrap gap-2">${stats.topKeywords
+              .map(
+                (k) =>
+                  `<li class="inline-flex items-center gap-1.5 rounded-full bg-raised px-3 py-1 text-sm">${escapeHtml(k.term)}<span class="text-fg-muted tabular">${k.count}</span></li>`,
+              )
+              .join('')}</ul>`
+      }
     `;
   }
 }
 
 const stat = (label: string, value: string): string => `
-  <div>
-    <dt class="text-xs font-semibold uppercase tracking-wide text-fg-muted">${label}</dt>
-    <dd class="mt-1 text-lg font-medium">${value}</dd>
+  <div class="min-w-0">
+    <dt class="text-sm text-fg-muted">${label}</dt>
+    <dd class="mt-0.5 break-words text-lg font-semibold tabular">${value}</dd>
   </div>
 `;
-
-const formatDuration = (ms: number): string => {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const pad = (n: number): string => String(n).padStart(2, '0');
-  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
-};

@@ -4,6 +4,10 @@ import { TRANSLATIONS, type TranslationKey } from './translations';
 export class Translator {
   constructor(private current: LanguageCode = 'en') {}
 
+  get language(): LanguageCode {
+    return this.current;
+  }
+
   setLanguage(code: LanguageCode): void {
     this.current = code;
   }

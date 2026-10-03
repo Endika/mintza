@@ -194,7 +194,14 @@ export type TranslationKey =
   | 'sentiment.neutral'
   | 'sentiment.positive'
   | 'sentiment.very_positive'
-  | 'export.pdf';
+  | 'export.pdf'
+  | 'history.search_label'
+  | 'history.star_named'
+  | 'history.star_failed'
+  | 'detail.back_to_history'
+  | 'detail.other_results'
+  | 'detail.delete_meeting'
+  | 'sentiment.overall';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -280,7 +287,7 @@ const EN: Translations = {
   'settings.clear_failed': "Couldn't clear your keys.",
   'history.title': 'History',
   'history.loading': 'Loading…',
-  'history.empty': 'No meetings saved yet.',
+  'history.empty': 'Your meetings will appear here.',
   'history.search_placeholder': 'Search meetings…',
   'history.sort_label': 'Sort',
   'history.sort_recent': 'Newest first',
@@ -310,7 +317,7 @@ const EN: Translations = {
   'meeting.regenerate': 'Regenerate with',
   'meeting.regenerating': 'Regenerating summaries…',
   'meeting.delete_failed': "Couldn't delete this meeting.",
-  'export.label': 'Export:',
+  'export.label': 'Export',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
   'export.txt': 'TXT',
@@ -359,7 +366,7 @@ const EN: Translations = {
   'detail.invalid_id': "This meeting link isn't valid.",
   'detail.delete': 'Delete',
   'detail.load_failed': "Couldn't load this meeting.",
-  'detail.not_found': 'Meeting not found.',
+  'detail.not_found': "This meeting doesn't exist or was deleted.",
   'detail.confirm_delete': "Delete this meeting? This can't be undone.",
   'detail.no_transcript': 'No transcript.',
   'detail.no_summaries': 'No summaries.',
@@ -398,6 +405,13 @@ const EN: Translations = {
   'sentiment.positive': 'Positive',
   'sentiment.very_positive': 'Very positive',
   'export.pdf': 'PDF',
+  'history.search_label': 'Search meetings',
+  'history.star_named': 'Star {title}',
+  'history.star_failed': "Couldn't update that meeting.",
+  'detail.back_to_history': 'Back to History',
+  'detail.other_results': 'Other results',
+  'detail.delete_meeting': 'Delete meeting',
+  'sentiment.overall': 'Overall tone',
 };
 
 const ES: Translations = {
@@ -482,7 +496,7 @@ const ES: Translations = {
   'settings.clear_failed': 'No se pudieron borrar las claves.',
   'history.title': 'Historial',
   'history.loading': 'Cargando…',
-  'history.empty': 'Aún no hay reuniones guardadas.',
+  'history.empty': 'Tus reuniones aparecerán aquí.',
   'history.search_placeholder': 'Buscar reuniones…',
   'history.sort_label': 'Orden',
   'history.sort_recent': 'Más recientes primero',
@@ -512,7 +526,7 @@ const ES: Translations = {
   'meeting.regenerate': 'Regenerar con',
   'meeting.regenerating': 'Regenerando resúmenes…',
   'meeting.delete_failed': 'No se pudo borrar esta reunión.',
-  'export.label': 'Exportar:',
+  'export.label': 'Exportar',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
   'export.txt': 'TXT',
@@ -561,7 +575,7 @@ const ES: Translations = {
   'detail.invalid_id': 'Este enlace de reunión no es válido.',
   'detail.delete': 'Borrar',
   'detail.load_failed': 'No se pudo cargar esta reunión.',
-  'detail.not_found': 'No se encontró la reunión.',
+  'detail.not_found': 'Esta reunión no existe o se ha borrado.',
   'detail.confirm_delete': '¿Borrar esta reunión? No se puede deshacer.',
   'detail.no_transcript': 'Sin transcripción.',
   'detail.no_summaries': 'Sin resúmenes.',
@@ -600,6 +614,13 @@ const ES: Translations = {
   'sentiment.positive': 'Positivo',
   'sentiment.very_positive': 'Muy positivo',
   'export.pdf': 'PDF',
+  'history.search_label': 'Buscar reuniones',
+  'history.star_named': 'Destacar {title}',
+  'history.star_failed': 'No se pudo actualizar esa reunión.',
+  'detail.back_to_history': 'Volver al historial',
+  'detail.other_results': 'Otros resultados',
+  'detail.delete_meeting': 'Borrar reunión',
+  'sentiment.overall': 'Tono general',
 };
 
 const EU: Translations = {
@@ -685,7 +706,7 @@ const EU: Translations = {
   'settings.clear_failed': 'Ezin izan dira gakoak garbitu.',
   'history.title': 'Historia',
   'history.loading': 'Kargatzen…',
-  'history.empty': 'Oraindik ez dago gordetako bilerarik.',
+  'history.empty': 'Zure bilerak hemen agertuko dira.',
   'history.search_placeholder': 'Bilatu bilerak…',
   'history.sort_label': 'Ordena',
   'history.sort_recent': 'Berrienak lehenengo',
@@ -715,7 +736,7 @@ const EU: Translations = {
   'meeting.regenerate': 'Birsortu honekin',
   'meeting.regenerating': 'Laburpenak birsortzen…',
   'meeting.delete_failed': 'Ezin izan da bilera hau ezabatu.',
-  'export.label': 'Esportatu:',
+  'export.label': 'Esportatu',
   'export.markdown': 'Markdown',
   'export.json': 'JSON',
   'export.txt': 'TXT',
@@ -766,7 +787,7 @@ const EU: Translations = {
   'detail.invalid_id': 'Bilera-esteka hau ez da baliozkoa.',
   'detail.delete': 'Ezabatu',
   'detail.load_failed': 'Ezin izan da bilera hau kargatu.',
-  'detail.not_found': 'Ez da bilera aurkitu.',
+  'detail.not_found': 'Bilera hau ez dago edo ezabatu egin da.',
   'detail.confirm_delete': 'Bilera hau ezabatu? Ezin da desegin.',
   'detail.no_transcript': 'Ez dago transkripziorik.',
   'detail.no_summaries': 'Ez dago laburpenik.',
@@ -806,6 +827,13 @@ const EU: Translations = {
   'sentiment.positive': 'Positiboa',
   'sentiment.very_positive': 'Oso positiboa',
   'export.pdf': 'PDF',
+  'history.search_label': 'Bilatu bilerak',
+  'history.star_named': 'Nabarmendu {title}',
+  'history.star_failed': 'Ezin izan da bilera hori eguneratu.',
+  'detail.back_to_history': 'Itzuli historiara',
+  'detail.other_results': 'Beste emaitza batzuk',
+  'detail.delete_meeting': 'Ezabatu bilera',
+  'sentiment.overall': 'Tonu orokorra',
 };
 
 export const TRANSLATIONS: Record<LanguageCode, Translations> = {
