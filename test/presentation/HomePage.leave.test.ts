@@ -31,7 +31,7 @@ import { LocalStorageTemplateRepository } from '../../src/infrastructure/persist
 import { HomePage } from '../../src/presentation/pages/HomePage';
 import { ConfigStore } from '../../src/presentation/state/ConfigStore';
 import { AppError } from '../../src/shared/errors/AppError';
-import { ok, type Result } from '../../src/shared/result/Result';
+import { err, ok, type Result } from '../../src/shared/result/Result';
 import { FakeMindMapPort } from '../fakes/FakeMindMapPort';
 import { FakeSummarizationPort } from '../fakes/FakeSummarizationPort';
 import { FakeTranscriptionPort } from '../fakes/FakeTranscriptionPort';
@@ -111,6 +111,12 @@ class GatedTranscription implements TranscriptionPort {
   }
 }
 
+const unload = (): Event => {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event;
+};
+
 const settle = async (): Promise<void> => {
   for (let i = 0; i < 10; i++) await new Promise((resolve) => setTimeout(resolve, 0));
 };
@@ -125,12 +131,26 @@ interface Harness {
   readonly meetings: InMemoryMeetingRepository;
 }
 
-const setup = async (transcription: TranscriptionPort): Promise<Harness> => {
+class BrokenMeetingRepository extends InMemoryMeetingRepository {
+  constructor(private readonly mode: 'fail' | 'throw') {
+    super();
+  }
+  override save(): Promise<Result<void, AppError>> {
+    if (this.mode === 'throw') return Promise.reject(new Error('disk exploded'));
+    return Promise.resolve(err(new AppError('STORAGE_FAILED', 'quota exceeded')));
+  }
+}
+
+const pages: HomePage[] = [];
+
+const setup = async (
+  transcription: TranscriptionPort,
+  meetings: InMemoryMeetingRepository = new InMemoryMeetingRepository(),
+): Promise<Harness> => {
   window.localStorage.clear();
   const config = new ConfigStore(new KeyedConfigRepo());
   await config.hydrate();
   const audio = new FakeAudio();
-  const meetings = new InMemoryMeetingRepository();
   const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
   const mindMap = new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' });
   const registry = new TemplateRegistry(new LocalStorageTemplateRepository(window.localStorage));
@@ -153,6 +173,7 @@ const setup = async (transcription: TranscriptionPort): Promise<Harness> => {
     listTemplates: new ListTemplatesUseCase(registry),
     templateRegistry: registry,
   });
+  pages.push(page);
   const root = document.createElement('div');
   document.body.appendChild(root);
   await page.render(root);
@@ -167,6 +188,7 @@ describe('HomePage leaving a recording', () => {
   afterEach(() => {
     if (originalConfirm) Object.defineProperty(window, 'confirm', originalConfirm);
     else Reflect.deleteProperty(window, 'confirm');
+    pages.splice(0).forEach((page) => page.dispose());
     document.body.innerHTML = '';
   });
 
@@ -209,5 +231,55 @@ describe('HomePage leaving a recording', () => {
     const listed = await meetings.list();
     expect(listed.ok && listed.value).toHaveLength(1);
     expect(meetings.saves[0]!.fullText().value).toContain('hello team');
+  });
+
+  it('asks before leaving a finished meeting that no save could store', async () => {
+    const { page, root, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      new BrokenMeetingRepository('fail'),
+    );
+    audio.emit(chunk());
+    await settle();
+    root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
+    await settle();
+    expect(root.querySelector('#btn-new')!.classList.contains('hidden')).toBe(false);
+    expect(unload().defaultPrevented).toBe(true);
+
+    const asked: string[] = [];
+    let answer = false;
+    window.confirm = (message?: string) => {
+      asked.push(message ?? '');
+      return answer;
+    };
+
+    expect(await page.canLeave()).toBe(false);
+    expect(asked).toEqual(["This meeting isn't saved. Leave and lose it?"]);
+    answer = true;
+    expect(await page.canLeave()).toBe(true);
+  });
+
+  it('leaves processing and asks instead of trapping the user when stopping throws', async () => {
+    const { page, root, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      new BrokenMeetingRepository('throw'),
+    );
+    audio.emit(chunk());
+    await settle();
+    const asked: string[] = [];
+    window.confirm = (message?: string) => {
+      asked.push(message ?? '');
+      return true;
+    };
+
+    expect(await page.canLeave()).toBe(false);
+    await settle();
+    expect(root.querySelector('#status')!.textContent).toContain('disk exploded');
+    expect(root.querySelector('#btn-new')!.classList.contains('hidden')).toBe(false);
+
+    expect(await page.canLeave()).toBe(true);
+    expect(asked).toEqual([
+      'Stop and save this recording before leaving?',
+      "This meeting isn't saved. Leave and lose it?",
+    ]);
   });
 });

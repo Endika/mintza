@@ -128,6 +128,7 @@ export type TranslationKey =
   | 'home.progress_failed'
   | 'home.leave_recording'
   | 'home.leave_processing'
+  | 'home.leave_unsaved'
   | 'history.clear_all'
   | 'history.load_failed'
   | 'history.starred'
@@ -311,6 +312,7 @@ const EN: Translations = {
   'home.leave_recording': 'Stop and save this recording before leaving?',
   'home.leave_processing':
     "Mintza is still preparing your results. Leave anyway? They'll appear in History.",
+  'home.leave_unsaved': "This meeting isn't saved. Leave and lose it?",
   'history.clear_all': 'Clear all',
   'history.load_failed': "Couldn't load your meetings.",
   'history.starred': 'Starred',
@@ -494,6 +496,7 @@ const ES: Translations = {
   'home.leave_recording': '¿Parar y guardar la grabación antes de salir?',
   'home.leave_processing':
     'Mintza aún está preparando los resultados. ¿Salir igualmente? Aparecerán en el historial.',
+  'home.leave_unsaved': 'Esta reunión no se ha guardado. ¿Salir y perderla?',
   'history.clear_all': 'Borrar todo',
   'history.load_failed': 'No se pudieron cargar tus reuniones.',
   'history.starred': 'Destacada',
@@ -679,6 +682,7 @@ const EU: Translations = {
   'home.leave_recording': 'Grabazioa gelditu eta gorde irten aurretik?',
   'home.leave_processing':
     'Mintza oraindik emaitzak prestatzen ari da. Irten hala ere? Historian agertuko dira.',
+  'home.leave_unsaved': 'Bilera hau ez da gorde. Irten eta galdu?',
   'history.clear_all': 'Ezabatu guztiak',
   'history.load_failed': 'Ezin izan dira zure bilerak kargatu.',
   'history.starred': 'Nabarmendua',
