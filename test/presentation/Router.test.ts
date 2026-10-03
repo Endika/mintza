@@ -78,11 +78,18 @@ describe('Router', () => {
   });
 
   it('only shows the last of two quick navigations', async () => {
+    let started = 0;
+    class Late extends StubPage {
+      override render(r: HTMLElement): Promise<void> {
+        started++;
+        return super.render(r);
+      }
+    }
     router = new Router(
       root,
       new Map([
         ['/', () => new StubPage('Home')],
-        ['/history', () => new StubPage('History', true, 30)],
+        ['/history', () => new Late('History', true, 30)],
         ['/settings', () => new StubPage('Settings')],
       ]),
       () => new StubPage('Home'),
@@ -90,8 +97,12 @@ describe('Router', () => {
     router.start();
     await flush();
     window.location.hash = '#/history';
+    await flush(5);
+    expect(started).toBe(1);
     await go('#/settings', 60);
     expect(root.textContent).toBe('Settings');
+    expect(document.title).toBe('Settings · Mintza');
+    expect(root.textContent).not.toContain('History');
   });
 
   it('re-renders when navigating to the hash already shown', async () => {

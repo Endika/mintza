@@ -49,6 +49,7 @@ describe('SettingsPage language change', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     await page.render(root);
+    document.title = 'Settings · Mintza';
 
     root.querySelector<HTMLSelectElement>('select[name="language"]')!.value = 'es';
     root
@@ -57,6 +58,7 @@ describe('SettingsPage language change', () => {
     await settle();
 
     expect(shell.labels).toEqual(['Grabar']);
+    expect(document.title).toBe('Ajustes · Mintza');
     root.remove();
   });
 });

@@ -20,7 +20,7 @@ import { LANGUAGE_NAMES } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
 import { LeaveGuard, type Confirm } from '../lifecycle/LeaveGuard';
-import type { Page } from '../router/Router';
+import { titleFromHeading, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
 import { escapeHtml } from '../util/escapeHtml';
 
@@ -266,7 +266,10 @@ export class SettingsPage implements Page {
     }
     if (languageChanged) {
       this.deps.shell?.relabel();
-      if (this.root) await this.render(this.root);
+      if (this.root) {
+        await this.render(this.root);
+        titleFromHeading(this.root);
+      }
     } else {
       this.initialSpoken = this.deps.config.spokenLanguage();
       this.baseline = next;
