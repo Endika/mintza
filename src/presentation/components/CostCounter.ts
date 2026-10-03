@@ -107,10 +107,8 @@ export class CostCounter {
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
     if (transcribedMs === 0) return [translator.t('home.chunks_wait'), ''];
     const soFar = sumAll(meetingCost(meeting).transcription.values());
-    return [
-      translator.t('cost.so_far', { amount: soFar.format(3) }),
-      wordCount(meeting, translator),
-    ];
+    const amount = Math.round(soFar.toUsd() * 1000) > 0 ? soFar.format(3) : '—';
+    return [translator.t('cost.so_far', { amount }), wordCount(meeting, translator)];
   }
 }
 

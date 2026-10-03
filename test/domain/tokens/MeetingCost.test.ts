@@ -76,4 +76,29 @@ describe('meetingCost', () => {
     expect(meetingCost(meeting).mindMap.toUsd()).toBe(0);
     expect(meetingCost(meeting).total.toUsd()).toBe(0);
   });
+
+  it('prices a model missing from the table at the provider default instead of nothing', () => {
+    const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+    meeting.setSummary(
+      new Summary({
+        kind: 'decisions',
+        content: '- ship it',
+        tokensIn: MILLION,
+        tokensOut: TokenCount.zero(),
+        provider: 'anthropic',
+        model: 'claude-future-9',
+        generatedAt: new Date(),
+      }),
+    );
+    meeting.setMindMap(
+      new MindMap(new MindMapNode('root', []), {
+        model: 'gpt-future',
+        tokensIn: MILLION,
+        tokensOut: TokenCount.zero(),
+      }),
+    );
+    const cost = meetingCost(meeting);
+    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(3, 6);
+    expect(cost.mindMap.toUsd()).toBeCloseTo(0.15, 6);
+  });
 });
