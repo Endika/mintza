@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.2](https://github.com/Endika/mintza/compare/v1.23.1...v1.23.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* price GPT-4o at current rates ([7d07c8b](https://github.com/Endika/mintza/commit/7d07c8bf388230f23eda27f73ff9e2351cc4cfaf))
+* transcribe with gpt-transcribe before whisper-1 is removed ([e7dd515](https://github.com/Endika/mintza/commit/e7dd515c8af06da08b3ad5446232ee48eb12e28c))
+
 ## [1.23.1](https://github.com/Endika/mintza/compare/v1.23.0...v1.23.1) (2026-10-03)
 
 
