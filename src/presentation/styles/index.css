@@ -19,7 +19,7 @@
   --color-action: #0b6b4f;
   --color-action-hover: #08573f;
   --color-on-action: #ffffff;
-  --color-live: #c4271d;
+  --color-live: #bd261c;
   --color-on-live: #ffffff;
   --color-danger: #b42318;
   --color-warning: #8a5300;
@@ -70,7 +70,7 @@
 
 /* A utility rather than a component class so `@apply btn` keeps working in v4. */
 @utility btn {
-  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 font-semibold transition-[background-color,transform] duration-150 ease-smooth active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-100;
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 font-semibold transition-[background-color,transform] duration-150 ease-smooth not-disabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-100;
 }
 
 @keyframes rec-card-fade {

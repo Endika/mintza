@@ -12,7 +12,7 @@ export const TOKENS: Record<Theme, Record<string, string>> = {
     action: '#0b6b4f',
     'action-hover': '#08573f',
     'on-action': '#ffffff',
-    live: '#c4271d',
+    live: '#bd261c',
     'on-live': '#ffffff',
     danger: '#b42318',
     warning: '#8a5300',
