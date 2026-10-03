@@ -46,6 +46,7 @@ export class App {
       finalizeMeeting: this.deps.finalizeMeeting,
       saveMeeting: this.deps.saveMeeting,
       listTemplates: this.deps.listTemplates,
+      listMeetings: this.deps.listMeetings,
       templateRegistry: this.deps.templateRegistry,
       shell,
     });

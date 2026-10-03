@@ -7,10 +7,8 @@ export type TranslationKey =
   | 'nav.record'
   | 'nav.main'
   | 'home.new_meeting'
-  | 'home.ready'
   | 'home.requesting_mic'
   | 'home.recording'
-  | 'home.stopping'
   | 'home.generating'
   | 'home.done'
   | 'home.btn_record'
@@ -39,7 +37,6 @@ export type TranslationKey =
   | 'home.transcript'
   | 'home.transcript_placeholder'
   | 'home.summary'
-  | 'home.summary_placeholder'
   | 'home.statistics'
   | 'home.mind_map'
   | 'home.sentiment'
@@ -123,13 +120,33 @@ export type TranslationKey =
   | 'home.save_failed'
   | 'home.start_failed'
   | 'home.keep_awake_on'
-  | 'home.keep_awake_off'
   | 'home.progress'
   | 'home.progress_skipped'
   | 'home.progress_failed'
   | 'home.leave_recording'
   | 'home.leave_processing'
   | 'home.leave_unsaved'
+  | 'home.connect_title'
+  | 'home.connect_lede'
+  | 'home.connect_step_account'
+  | 'home.connect_step_key'
+  | 'home.connect_step_paste'
+  | 'home.connect_cost'
+  | 'home.connect_action'
+  | 'home.connect_get_key'
+  | 'home.new_tab'
+  | 'home.record_title'
+  | 'home.record_hint'
+  | 'home.template_more'
+  | 'home.last_meeting'
+  | 'home.live_transcript'
+  | 'home.processing_title'
+  | 'home.step_waiting'
+  | 'home.step_writing'
+  | 'home.step_ready'
+  | 'home.step_failed'
+  | 'home.saved_to_history'
+  | 'home.more_about'
   | 'history.clear_all'
   | 'history.load_failed'
   | 'history.starred'
@@ -165,7 +182,6 @@ export type TranslationKey =
   | 'templates.kinds_required'
   | 'cost.total'
   | 'cost.words'
-  | 'cost.transcribed'
   | 'cost.so_far'
   | 'stats.duration'
   | 'stats.words'
@@ -189,10 +205,8 @@ const EN: Translations = {
   'nav.record': 'Record',
   'nav.main': 'Main',
   'home.new_meeting': 'New meeting',
-  'home.ready': 'Ready to record.',
   'home.requesting_mic': 'Requesting microphone permission…',
   'home.recording': 'Recording…',
-  'home.stopping': 'Stopping…',
   'home.generating': 'Generating summaries…',
   'home.done': 'Done.',
   'home.btn_record': 'Record',
@@ -203,7 +217,7 @@ const EN: Translations = {
   'home.btn_summarize_now': 'Summarize now',
   'home.summarizing': 'Summarizing…',
   'home.paused': 'Paused — press Resume to continue.',
-  'home.rec': 'REC',
+  'home.rec': 'Recording',
   'home.rec_paused': 'Paused',
   'home.mic_level': 'Mic level',
   'home.mic_silent': 'Silent',
@@ -222,7 +236,6 @@ const EN: Translations = {
   'home.transcript': 'Transcript',
   'home.transcript_placeholder': 'The transcript will appear here while you talk.',
   'home.summary': 'Summary',
-  'home.summary_placeholder': 'Summaries are generated when you stop recording.',
   'home.statistics': 'Statistics',
   'home.mind_map': 'Mind map',
   'home.sentiment': 'Sentiment',
@@ -307,7 +320,6 @@ const EN: Translations = {
   'home.save_failed': "Couldn't save this meeting.",
   'home.start_failed': "Couldn't start recording. Check that Mintza can use your microphone.",
   'home.keep_awake_on': 'Keep screen on',
-  'home.keep_awake_off': 'Let screen sleep',
   'home.progress': 'Transcribing… {done} of {total} parts',
   'home.progress_skipped': '{count} skipped',
   'home.progress_failed': '{count} failed',
@@ -315,6 +327,28 @@ const EN: Translations = {
   'home.leave_processing':
     "Mintza is still preparing your results. Leave anyway? They'll appear in History.",
   'home.leave_unsaved': "This meeting isn't saved. Leave and lose it?",
+  'home.connect_title': 'Connect OpenAI to start',
+  'home.connect_lede':
+    "Mintza transcribes and summarises with your own OpenAI account. There's no Mintza account to create.",
+  'home.connect_step_account': 'Create an account at OpenAI.',
+  'home.connect_step_key': 'Create an API key and copy it.',
+  'home.connect_step_paste': 'Paste it in Settings.',
+  'home.connect_cost': 'About {cost} per hour of meeting, paid directly to OpenAI.',
+  'home.connect_action': 'Connect OpenAI',
+  'home.connect_get_key': 'Get a key',
+  'home.new_tab': '(opens in a new tab)',
+  'home.record_title': 'Record a meeting',
+  'home.record_hint': 'Mintza transcribes while you talk and writes up the results when you stop.',
+  'home.template_more': 'More…',
+  'home.last_meeting': 'Last meeting',
+  'home.live_transcript': 'Live transcript',
+  'home.processing_title': 'Writing your results',
+  'home.step_waiting': 'Waiting',
+  'home.step_writing': 'Writing…',
+  'home.step_ready': 'Ready',
+  'home.step_failed': 'Failed',
+  'home.saved_to_history': 'Saved to History',
+  'home.more_about': 'More about this meeting',
   'history.clear_all': 'Clear all',
   'history.load_failed': "Couldn't load your meetings.",
   'history.starred': 'Starred',
@@ -351,7 +385,6 @@ const EN: Translations = {
   'templates.kinds_required': 'Pick at least one summary section.',
   'cost.total': 'Total:',
   'cost.words': '{count} words',
-  'cost.transcribed': 'Transcribed {duration}',
   'cost.so_far': 'Cost so far: {amount}',
   'stats.duration': 'Duration',
   'stats.words': 'Words',
@@ -374,10 +407,8 @@ const ES: Translations = {
   'nav.record': 'Grabar',
   'nav.main': 'Principal',
   'home.new_meeting': 'Nueva reunión',
-  'home.ready': 'Listo para grabar.',
   'home.requesting_mic': 'Solicitando permiso de micrófono…',
   'home.recording': 'Grabando…',
-  'home.stopping': 'Parando…',
   'home.generating': 'Generando resúmenes…',
   'home.done': 'Listo.',
   'home.btn_record': 'Grabar',
@@ -388,7 +419,7 @@ const ES: Translations = {
   'home.btn_summarize_now': 'Resumir ahora',
   'home.summarizing': 'Resumiendo…',
   'home.paused': 'Pausado — pulsa Reanudar para continuar.',
-  'home.rec': 'GRABANDO',
+  'home.rec': 'Grabando',
   'home.rec_paused': 'Pausa',
   'home.mic_level': 'Nivel mic',
   'home.mic_silent': 'Silencio',
@@ -406,7 +437,6 @@ const ES: Translations = {
   'home.transcript': 'Transcripción',
   'home.transcript_placeholder': 'La transcripción aparecerá aquí mientras hablas.',
   'home.summary': 'Resumen',
-  'home.summary_placeholder': 'Los resúmenes se generan al parar la grabación.',
   'home.statistics': 'Estadísticas',
   'home.mind_map': 'Mapa mental',
   'home.sentiment': 'Sentimiento',
@@ -492,7 +522,6 @@ const ES: Translations = {
   'home.save_failed': 'No se pudo guardar esta reunión.',
   'home.start_failed': 'No se pudo empezar a grabar. Comprueba que Mintza puede usar tu micrófono.',
   'home.keep_awake_on': 'Mantener la pantalla encendida',
-  'home.keep_awake_off': 'Dejar que la pantalla se apague',
   'home.progress': 'Transcribiendo… {done} de {total} partes',
   'home.progress_skipped': '{count} omitidas',
   'home.progress_failed': '{count} fallidas',
@@ -500,6 +529,28 @@ const ES: Translations = {
   'home.leave_processing':
     'Mintza aún está preparando los resultados. ¿Salir igualmente? Aparecerán en el historial.',
   'home.leave_unsaved': 'Esta reunión no se ha guardado. ¿Salir y perderla?',
+  'home.connect_title': 'Conecta OpenAI para empezar',
+  'home.connect_lede':
+    'Mintza transcribe y resume con tu propia cuenta de OpenAI. No hace falta crear ninguna cuenta de Mintza.',
+  'home.connect_step_account': 'Crea una cuenta en OpenAI.',
+  'home.connect_step_key': 'Crea una clave de API y cópiala.',
+  'home.connect_step_paste': 'Pégala en Ajustes.',
+  'home.connect_cost': 'Unos {cost} por hora de reunión, que pagas directamente a OpenAI.',
+  'home.connect_action': 'Conectar OpenAI',
+  'home.connect_get_key': 'Conseguir una clave',
+  'home.new_tab': '(se abre en otra pestaña)',
+  'home.record_title': 'Graba una reunión',
+  'home.record_hint': 'Mintza transcribe mientras habláis y prepara los resultados cuando paras.',
+  'home.template_more': 'Más…',
+  'home.last_meeting': 'Última reunión',
+  'home.live_transcript': 'Transcripción en directo',
+  'home.processing_title': 'Preparando tus resultados',
+  'home.step_waiting': 'En espera',
+  'home.step_writing': 'Redactando…',
+  'home.step_ready': 'Listo',
+  'home.step_failed': 'Ha fallado',
+  'home.saved_to_history': 'Guardada en el historial',
+  'home.more_about': 'Más sobre esta reunión',
   'history.clear_all': 'Borrar todo',
   'history.load_failed': 'No se pudieron cargar tus reuniones.',
   'history.starred': 'Destacada',
@@ -536,7 +587,6 @@ const ES: Translations = {
   'templates.kinds_required': 'Elige al menos una sección del resumen.',
   'cost.total': 'Total:',
   'cost.words': '{count} palabras',
-  'cost.transcribed': 'Transcrito: {duration}',
   'cost.so_far': 'Coste hasta ahora: {amount}',
   'stats.duration': 'Duración',
   'stats.words': 'Palabras',
@@ -559,10 +609,8 @@ const EU: Translations = {
   'nav.record': 'Grabatu',
   'nav.main': 'Nagusia',
   'home.new_meeting': 'Bilera berria',
-  'home.ready': 'Grabatzeko prest.',
   'home.requesting_mic': 'Mikrofonoaren baimena eskatzen…',
   'home.recording': 'Grabatzen…',
-  'home.stopping': 'Gelditzen…',
   'home.generating': 'Laburpenak sortzen…',
   'home.done': 'Eginda.',
   'home.btn_record': 'Grabatu',
@@ -573,7 +621,7 @@ const EU: Translations = {
   'home.btn_summarize_now': 'Laburtu orain',
   'home.summarizing': 'Laburtzen…',
   'home.paused': 'Pausan — sakatu Jarraitu jarraitzeko.',
-  'home.rec': 'GRABATZEN',
+  'home.rec': 'Grabatzen',
   'home.rec_paused': 'Pausan',
   'home.mic_level': 'Mic maila',
   'home.mic_silent': 'Isila',
@@ -592,7 +640,6 @@ const EU: Translations = {
   'home.transcript': 'Transkripzioa',
   'home.transcript_placeholder': 'Transkripzioa hemen agertuko da hitz egin ahala.',
   'home.summary': 'Laburpena',
-  'home.summary_placeholder': 'Laburpenak grabazioa gelditzean sortuko dira.',
   'home.statistics': 'Estatistikak',
   'home.mind_map': 'Buru-mapa',
   'home.sentiment': 'Sentimendua',
@@ -679,7 +726,6 @@ const EU: Translations = {
   'home.start_failed':
     'Ezin izan da grabatzen hasi. Egiaztatu Mintzak zure mikrofonoa erabil dezakeela.',
   'home.keep_awake_on': 'Mantendu pantaila piztuta',
-  'home.keep_awake_off': 'Utzi pantaila itzaltzen',
   'home.progress': 'Transkribatzen… {done}/{total} zati',
   'home.progress_skipped': '{count} saltatuta',
   'home.progress_failed': '{count} hutsegite',
@@ -687,6 +733,29 @@ const EU: Translations = {
   'home.leave_processing':
     'Mintza oraindik emaitzak prestatzen ari da. Irten hala ere? Historian agertuko dira.',
   'home.leave_unsaved': 'Bilera hau ez da gorde. Irten eta galdu?',
+  'home.connect_title': 'Konektatu OpenAI hasteko',
+  'home.connect_lede':
+    'Mintzak zure OpenAI kontuarekin transkribatzen eta laburtzen du. Ez duzu Mintza konturik sortu behar.',
+  'home.connect_step_account': 'Sortu kontu bat OpenAIn.',
+  'home.connect_step_key': 'Sortu API gako bat eta kopiatu.',
+  'home.connect_step_paste': 'Itsatsi Ezarpenak atalean.',
+  'home.connect_cost': '{cost} inguru bilera-ordu bakoitzeko, zuzenean OpenAIri ordainduta.',
+  'home.connect_action': 'Konektatu OpenAI',
+  'home.connect_get_key': 'Lortu gako bat',
+  'home.new_tab': '(fitxa berri batean irekitzen da)',
+  'home.record_title': 'Grabatu bilera bat',
+  'home.record_hint':
+    'Mintzak hitz egin bitartean transkribatzen du, eta gelditzean emaitzak prestatzen ditu.',
+  'home.template_more': 'Gehiago…',
+  'home.last_meeting': 'Azken bilera',
+  'home.live_transcript': 'Zuzeneko transkripzioa',
+  'home.processing_title': 'Zure emaitzak prestatzen',
+  'home.step_waiting': 'Zain',
+  'home.step_writing': 'Idazten…',
+  'home.step_ready': 'Prest',
+  'home.step_failed': 'Huts egin du',
+  'home.saved_to_history': 'Historian gordeta',
+  'home.more_about': 'Bilera honi buruz gehiago',
   'history.clear_all': 'Ezabatu guztiak',
   'history.load_failed': 'Ezin izan dira zure bilerak kargatu.',
   'history.starred': 'Nabarmendua',
@@ -724,7 +793,6 @@ const EU: Translations = {
   'templates.kinds_required': 'Aukeratu laburpen-atal bat gutxienez.',
   'cost.total': 'Guztira:',
   'cost.words': '{count} hitz',
-  'cost.transcribed': 'Transkribatuta: {duration}',
   'cost.so_far': 'Orain arteko kostua: {amount}',
   'stats.duration': 'Iraupena',
   'stats.words': 'Hitzak',

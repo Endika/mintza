@@ -1,6 +1,25 @@
 import type { Translator } from '../i18n/Translator';
+import type { TranslationKey } from '../i18n/translations';
 
 const SMOOTHING = 0.3;
+
+type Band = 'none' | 'silent' | 'quiet' | 'ok' | 'loud';
+
+const BAND_KEYS: Record<Band, TranslationKey> = {
+  none: 'home.mic_none',
+  silent: 'home.mic_silent',
+  quiet: 'home.mic_quiet',
+  ok: 'home.mic_ok',
+  loud: 'home.mic_loud',
+};
+
+const bandFor = (percent: number, silentTicks: number): Band => {
+  if (silentTicks > 60) return 'none';
+  if (percent < 4) return 'silent';
+  if (percent < 25) return 'quiet';
+  if (percent < 65) return 'ok';
+  return 'loud';
+};
 
 export class AudioLevelMeter {
   private context: AudioContext | null = null;
@@ -13,12 +32,12 @@ export class AudioLevelMeter {
   start(target: HTMLElement, stream: MediaStream, translator: Translator): void {
     this.stop();
     target.innerHTML = `
-      <div class="flex items-center gap-3">
-        <span class="text-xs text-fg-muted w-16">${translator.t('home.mic_level')}</span>
-        <div class="meter-bar-track flex-1">
-          <div data-bar class="meter-bar-fill bg-action" style="width:0%"></div>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span class="shrink-0 text-sm text-fg-muted">${translator.t('home.mic_level')}</span>
+        <div class="meter-bar-track min-w-0 flex-1">
+          <div data-bar class="meter-bar-fill bg-live" style="width:0%"></div>
         </div>
-        <span data-hint class="text-xs text-fg-muted w-44 text-right"></span>
+        <span data-hint class="basis-full text-sm text-fg-muted sm:basis-auto sm:shrink-0"></span>
       </div>
     `;
     const bar = target.querySelector<HTMLElement>('[data-bar]');
@@ -36,31 +55,21 @@ export class AudioLevelMeter {
     this.analyser = analyser;
 
     const buffer = new Uint8Array(analyser.frequencyBinCount);
+    let band: Band | null = null;
     const tick = (): void => {
       analyser.getByteFrequencyData(buffer);
       const avg = average(buffer);
       this.smoothed = this.smoothed * SMOOTHING + avg * (1 - SMOOTHING);
       const percent = Math.min(100, Math.round((this.smoothed / 180) * 100));
       bar.style.width = `${percent}%`;
-      if (percent < 4) {
-        this.silentTicks += 1;
-        bar.classList.remove('bg-action');
-        bar.classList.add('bg-warning');
-      } else {
-        this.silentTicks = 0;
-        bar.classList.remove('bg-warning');
-        bar.classList.add('bg-action');
+      this.silentTicks = percent < 4 ? this.silentTicks + 1 : 0;
+      const next = bandFor(percent, this.silentTicks);
+      if (next !== band) {
+        band = next;
+        hint.textContent = translator.t(BAND_KEYS[next]);
+        hint.classList.toggle('text-warning', next === 'none');
+        hint.classList.toggle('text-fg-muted', next !== 'none');
       }
-      hint.textContent =
-        this.silentTicks > 60
-          ? translator.t('home.mic_none')
-          : percent < 4
-            ? translator.t('home.mic_silent')
-            : percent < 25
-              ? translator.t('home.mic_quiet')
-              : percent < 65
-                ? translator.t('home.mic_ok')
-                : translator.t('home.mic_loud');
       this.rafId = requestAnimationFrame(tick);
     };
     tick();

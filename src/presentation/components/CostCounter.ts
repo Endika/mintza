@@ -27,13 +27,16 @@ const LLM_LABEL: Record<LLMProviderName, string> = {
 export class CostCounter {
   private readonly calculator = new CostCalculator();
   private interval: number | null = null;
+  private live: { elapsed: Text; cost: Text } | null = null;
 
   startLive(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     this.stop();
+    const { elapsed, cost } = this.liveNodes(target);
     const tick = (): void => {
       const meeting = getMeeting();
       if (!meeting) return;
-      this.renderLive(target, meeting, translator);
+      elapsed.data = formatDuration(meeting.durationMs);
+      cost.data = this.liveCostText(meeting, translator);
     };
     tick();
     this.interval = window.setInterval(tick, 1000);
@@ -63,25 +66,44 @@ export class CostCounter {
     `;
   }
 
-  private renderLive(target: HTMLElement, meeting: Meeting, translator: Translator): void {
-    const transcription = this.transcriptionByProvider(meeting);
-    const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
-    const totalSoFar = sumAll([...transcription.values()]);
-    const providerSpans = this.providerSpans(transcription, TRANSCRIPTION_LABEL);
+  /** One quiet line for a just-finished meeting: how long, how many words, what it cost. */
+  renderSummaryLine(target: HTMLElement, meeting: Meeting, translator: Translator): void {
+    this.stop();
+    const total = sumAll([
+      ...this.transcriptionByProvider(meeting).values(),
+      ...this.llmByProvider(meeting).values(),
+    ]);
     target.innerHTML = `
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg">
-        <span><strong>${translator.t('home.recording')}</strong></span>
-        <span class="text-fg-muted">${formatDuration(meeting.durationMs)}</span>
-        <span class="text-fg-muted">${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span>
-        ${
-          transcribedMs > 0
-            ? `<span class="text-fg-muted">${translator.t('cost.transcribed', { duration: formatDuration(transcribedMs) })}</span>
-               <span class="text-fg-muted">${translator.t('cost.so_far', { amount: totalSoFar.format() })}</span>
-               ${providerSpans}`
-            : `<span class="text-fg-muted">${translator.t('home.chunks_wait')}</span>`
-        }
-      </div>
+      <p class="flex flex-wrap gap-x-2 text-sm text-fg-muted">
+        <span class="tabular">${formatDuration(meeting.durationMs)}</span><span aria-hidden="true">·</span>
+        <span>${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span><span aria-hidden="true">·</span>
+        <span class="tabular">${translator.t('cost.total')} ${total.format(3)}</span>
+      </p>
     `;
+  }
+
+  /** Built once per recording so each tick only rewrites two text nodes. */
+  private liveNodes(target: HTMLElement): { elapsed: Text; cost: Text } {
+    if (!this.live || !target.contains(this.live.elapsed)) {
+      const elapsedEl = document.createElement('p');
+      elapsedEl.className = 'text-6xl font-semibold tracking-tight tabular sm:text-7xl';
+      const costEl = document.createElement('p');
+      costEl.className = 'mt-2 text-base text-fg-muted tabular';
+      const elapsed = document.createTextNode('');
+      const cost = document.createTextNode('');
+      elapsedEl.append(elapsed);
+      costEl.append(cost);
+      target.replaceChildren(elapsedEl, costEl);
+      this.live = { elapsed, cost };
+    }
+    return this.live;
+  }
+
+  private liveCostText(meeting: Meeting, translator: Translator): string {
+    const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
+    if (transcribedMs === 0) return translator.t('home.chunks_wait');
+    const soFar = sumAll(this.transcriptionByProvider(meeting).values());
+    return `${translator.t('cost.so_far', { amount: soFar.format(3) })} · ${translator.t('cost.words', { count: meeting.fullText().wordCount() })}`;
   }
 
   private transcriptionByProvider(meeting: Meeting): Map<TranscriptionProviderName, Money> {
@@ -107,8 +129,7 @@ export class CostCounter {
     return [...costs.entries()]
       .filter(([, cost]) => cost.toUsd() > 0)
       .map(
-        ([provider, cost]) =>
-          `<span class="text-fg-muted">${labels[provider]} ${cost.format()}</span>`,
+        ([provider, cost]) => `<span class="tabular">${labels[provider]} ${cost.format(3)}</span>`,
       )
       .join('');
   }
@@ -120,7 +141,7 @@ const sumAll = (values: Iterable<Money>): Money => {
   return total;
 };
 
-const formatDuration = (ms: number): string => {
+export const formatDuration = (ms: number): string => {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

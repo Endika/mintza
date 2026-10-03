@@ -1,6 +1,7 @@
 import type { FinalizeMeetingUseCase } from '../../application/use-cases/FinalizeMeetingUseCase';
 import type { GenerateMindMapUseCase } from '../../application/use-cases/GenerateMindMapUseCase';
 import type { GenerateSummariesUseCase } from '../../application/use-cases/GenerateSummariesUseCase';
+import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
 import type { StartRecordingUseCase } from '../../application/use-cases/StartRecordingUseCase';
 import type { StopRecordingUseCase } from '../../application/use-cases/StopRecordingUseCase';
@@ -11,17 +12,33 @@ import type { ScreenWakePort } from '../../domain/system/ports/ScreenWakePort';
 import type { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
 import { Language, type LanguageCode } from '../../domain/language/value-objects/Language';
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
+import type { MeetingListItem } from '../../domain/meeting/ports/MeetingRepository';
 import type { MindMap } from '../../domain/mindmap/entities/MindMap';
 import type { TemplateRegistry } from '../../domain/meeting/services/TemplateRegistry';
 import { Template, type TemplateKind } from '../../domain/meeting/value-objects/Template';
-import { SUMMARY_KINDS } from '../../domain/summary/value-objects/SummaryKind';
+import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
+import { estimateOpenAiHourlyCost } from '../../domain/tokens/services/HourlyCostEstimate';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import type { ProviderAttempt } from '../../shared/errors/AppError';
 import type { AppShell } from '../components/AppShell';
 import { AudioLevelMeter } from '../components/AudioLevelMeter';
-import { CostCounter } from '../components/CostCounter';
+import { CostCounter, formatDuration } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
+import {
+  ICON_ALERT,
+  ICON_CHECK,
+  ICON_CHEVRON,
+  ICON_EXTERNAL,
+  ICON_HISTORY,
+  ICON_KEY,
+  ICON_PAUSE,
+  ICON_PLAY,
+  ICON_PLUS,
+  ICON_RECORD,
+  ICON_SPARKLE,
+  ICON_STOP,
+} from '../components/icons';
 import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
@@ -31,6 +48,7 @@ import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
+import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
 import { LeaveGuard } from '../lifecycle/LeaveGuard';
@@ -47,11 +65,14 @@ export interface HomePageDeps {
   readonly finalizeMeeting: FinalizeMeetingUseCase;
   readonly saveMeeting: SaveMeetingUseCase;
   readonly listTemplates: ListTemplatesUseCase;
+  readonly listMeetings: ListMeetingsUseCase;
   readonly templateRegistry: TemplateRegistry;
   readonly shell: Pick<AppShell, 'setBusy'>;
 }
 
 type ScreenState = 'idle' | 'recording' | 'paused' | 'processing' | 'done';
+
+type StepState = 'waiting' | 'writing' | 'ready' | 'failed';
 
 interface ChunkProgress {
   received: number;
@@ -60,6 +81,25 @@ interface ChunkProgress {
   failed: number;
   lastError: string | null;
 }
+
+const PANELS: Record<ScreenState, string> = {
+  idle: '#panel-idle',
+  recording: '#panel-live',
+  paused: '#panel-live',
+  processing: '#panel-processing',
+  done: '#panel-done',
+};
+
+const STEP_KEYS: Record<StepState, TranslationKey> = {
+  waiting: 'home.step_waiting',
+  writing: 'home.step_writing',
+  ready: 'home.step_ready',
+  failed: 'home.step_failed',
+};
+
+const VISIBLE_TEMPLATE_CHIPS = 4;
+// Summary content headings start at h4: page h1, card h2, summary label h3.
+const SUMMARY_HEADING_OFFSET = 3;
 
 export class HomePage implements Page {
   private root: HTMLElement | null = null;
@@ -74,6 +114,8 @@ export class HomePage implements Page {
   private readonly exportMenu = new ExportMenu();
   private readonly mindMapView = new MindMapView();
   private readonly meter = new AudioLevelMeter();
+  /** Task 12 swaps this for the chosen template's kinds; every list below derives from it. */
+  private readonly kinds: readonly SummaryKind[] = SUMMARY_KINDS;
   private progress: ChunkProgress = {
     received: 0,
     transcribed: 0,
@@ -82,6 +124,7 @@ export class HomePage implements Page {
     lastError: null,
   };
   private templates: Template[] = [];
+  private selectedTemplate: TemplateKind = 'generic';
   private readonly guard = new LeaveGuard();
   private alive = true;
   private transcriptSaved: Promise<boolean> | null = null;
@@ -95,97 +138,68 @@ export class HomePage implements Page {
 
   async render(root: HTMLElement): Promise<void> {
     this.root = root;
-    const cfg = this.deps.config.get();
     const t = (key: TranslationKey): string => this.t.t(key);
     const templatesResult = await this.deps.listTemplates.execute();
     if (!this.alive) return;
     this.templates = templatesResult.ok ? templatesResult.value : [Template.generic()];
+    const preferred = this.deps.config.get().defaultTemplate;
+    this.selectedTemplate = this.templates.some((tpl) => tpl.id === preferred)
+      ? preferred
+      : 'generic';
+    const hasKey = Boolean(this.deps.config.openAIKey());
+
     root.innerHTML = `
-      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <header class="mb-8">
-          <h1 class="text-3xl font-bold tracking-tight">${t('home.new_meeting')}</h1>
-          <p class="mt-1 text-sm text-fg-muted">${t('app.tagline')}</p>
+      <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
+        <header id="home-header" class="mb-5 sm:mb-6">
+          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">${t('home.new_meeting')}</h1>
         </header>
 
-        <section class="card mb-6">
+        <section id="rec-card" class="card rec-card">
+          ${hasKey ? this.recorderMarkup() : this.connectMarkup()}
+        </section>
+
+        <section id="rest-section" class="mt-4 hidden">
+          <div id="rest-summaries" class="card divide-y divide-line overflow-hidden p-0 sm:p-0"></div>
+        </section>
+
+        <section id="more-section" class="mt-10 hidden" aria-labelledby="more-title">
+          <h2 id="more-title" class="mb-4 text-xl font-semibold tracking-tight">${t('home.more_about')}</h2>
           <div class="flex flex-col gap-4">
-            <div class="flex items-center justify-between gap-4">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
-                ${templateSelect(this.templates, cfg.defaultTemplate, this.t)}
-                ${languageSelect(cfg.language, t)}
-              </div>
-              <span id="rec-badge" class="rec-badge hidden" aria-live="polite">
-                <span class="rec-dot" aria-hidden="true"></span>
-                <span id="rec-badge-label">${t('home.rec')}</span>
-              </span>
-            </div>
-            <div id="rec-controls" class="flex flex-wrap items-center gap-2">
-              <button id="btn-record" class="btn-action" aria-label="${t('home.btn_record')}" title="${t('home.btn_record')}">
-                ${ICON_RECORD}
-                <span>${t('home.btn_record')}</span>
-              </button>
-              <button id="btn-pause" class="btn-ghost" disabled aria-label="${t('home.btn_pause')}" title="${t('home.btn_pause')}">
-                <span id="btn-pause-icon">${ICON_PAUSE}</span>
-                <span id="btn-pause-label">${t('home.btn_pause')}</span>
-              </button>
-              <button id="btn-stop" class="btn-danger" disabled aria-label="${t('home.btn_stop')}" title="${t('home.btn_stop')}">
-                ${ICON_STOP}
-                <span>${t('home.btn_stop')}</span>
-              </button>
-              <button id="btn-summarize" class="btn-ghost hidden" aria-label="${t('home.btn_summarize_now')}" title="${t('home.btn_summarize_now')}">
-                ${ICON_SPARKLE}
-                <span>${t('home.btn_summarize_now')}</span>
-              </button>
-              <button id="btn-new" class="btn-ghost hidden" aria-label="${t('home.btn_new')}" title="${t('home.btn_new')}">
-                ${ICON_PLUS}
-                <span>${t('home.btn_new')}</span>
-              </button>
-            </div>
-            <p id="status" role="status" aria-live="polite" class="text-sm text-fg-muted">${t('home.ready')}</p>
-            <div id="meter" class="hidden"></div>
-            <div id="progress" class="text-xs text-fg-muted hidden"></div>
-            <div id="last-error" class="text-xs text-danger hidden"></div>
-            <div id="counter" aria-live="polite" class="text-sm text-fg-muted"></div>
+            <section id="temperature-card" class="card hidden">
+              <h3 class="mb-3 text-lg font-semibold">${t('home.sentiment')}</h3>
+              <div id="temperature"></div>
+            </section>
+            <section id="mindmap-card" class="card hidden">
+              <h3 class="mb-3 text-lg font-semibold">${t('home.mind_map')}</h3>
+              <div id="mindmap"></div>
+            </section>
+            <section id="stats-card" class="card hidden">
+              <h3 class="mb-3 text-lg font-semibold">${t('home.statistics')}</h3>
+              <div id="stats-body"></div>
+            </section>
+            <section id="export-card" class="card hidden">
+              <div id="export-menu"></div>
+            </section>
           </div>
         </section>
 
-        <section id="temperature-card" class="card mb-6 hidden">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.sentiment')}</h2>
-          <div id="temperature"></div>
-        </section>
-
-        <section class="card mb-6">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.transcript')}</h2>
-          <div id="transcription" class="min-h-[120px] whitespace-pre-wrap text-fg">
+        <details id="transcript-details" class="card group mt-4 hidden p-0 sm:p-0">
+          <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-[var(--radius-card)] px-5 py-3 font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
+            <span id="transcript-label">${t('home.live_transcript')}</span>
+            <span class="text-fg-muted transition-transform duration-150 group-open:rotate-90">${ICON_CHEVRON}</span>
+          </summary>
+          <div id="transcription" class="whitespace-pre-wrap break-words px-5 pb-5 leading-relaxed text-fg sm:px-6">
             <em class="text-fg-muted">${t('home.transcript_placeholder')}</em>
           </div>
-        </section>
+        </details>
 
-        <section class="card mb-6">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.summary')}</h2>
-          <div id="summaries" class="text-fg">
-            <em class="text-fg-muted">${t('home.summary_placeholder')}</em>
-          </div>
-        </section>
-
-        <section id="mindmap-card" class="card mb-6 hidden">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.mind_map')}</h2>
-          <div id="mindmap"></div>
-        </section>
-
-        <section id="stats-card" class="card mb-6 hidden">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t('home.statistics')}</h2>
-          <div id="stats-body"></div>
-        </section>
-
-        <section id="export-card" class="card hidden">
-          <div id="export-menu"></div>
-        </section>
+        <section id="last-meeting" class="mt-6 hidden" aria-labelledby="last-meeting-title"></section>
       </div>
     `;
 
-    this.bind();
+    if (hasKey) this.bind();
     this.applyScreenState();
+    void this.renderLastMeeting();
     if (!templatesResult.ok) {
       this.showLastError(t('home.templates_failed'));
     }
@@ -242,6 +256,163 @@ export class HomePage implements Page {
     else void this.deps.screenWake.release();
   }
 
+  private connectMarkup(): string {
+    const t = (key: TranslationKey, vars?: Record<string, string>): string => this.t.t(key, vars);
+    const cost = estimateOpenAiHourlyCost(this.deps.config.get().summaryQuality).format(2);
+    const steps: TranslationKey[] = [
+      'home.connect_step_account',
+      'home.connect_step_key',
+      'home.connect_step_paste',
+    ];
+    return `
+      <div id="connect" class="flex flex-col gap-6">
+        <div class="flex flex-col gap-4">
+          <span class="flex size-12 items-center justify-center rounded-full bg-raised text-fg">${ICON_KEY}</span>
+          <div>
+            <h2 class="text-2xl font-semibold tracking-tight">${t('home.connect_title')}</h2>
+            <p class="mt-2 leading-relaxed text-fg-muted">${t('home.connect_lede')}</p>
+          </div>
+        </div>
+        <ol class="flex flex-col gap-3">
+          ${steps
+            .map(
+              (key, i) => `
+            <li class="flex items-start gap-3">
+              <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-raised text-sm font-semibold tabular" aria-hidden="true">${i + 1}</span>
+              <span class="pt-0.5">${t(key)}</span>
+            </li>`,
+            )
+            .join('')}
+        </ol>
+        <p class="rounded-[var(--radius-control)] bg-raised px-4 py-3 text-sm leading-relaxed">${t(
+          'home.connect_cost',
+          { cost: `<strong class="font-semibold tabular">${cost}</strong>` },
+        )}</p>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <a href="#/settings" class="btn-action btn-lg w-full sm:w-auto">${t('home.connect_action')}</a>
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="btn-ghost">
+            <span>${t('home.connect_get_key')}</span>
+            <span class="sr-only">${t('home.new_tab')}</span>
+            ${ICON_EXTERNAL}
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  private recorderMarkup(): string {
+    const t = (key: TranslationKey): string => this.t.t(key);
+    const notes = `
+      <div id="card-notes" class="flex flex-col gap-1">
+        <p id="status" role="status" aria-live="polite" class="text-sm text-fg-muted empty:hidden"></p>
+        <p id="progress" class="hidden text-sm text-fg-muted tabular"></p>
+        <div id="last-error" class="hidden text-sm text-danger"></div>
+      </div>`;
+    return `
+      <div id="panel-idle" class="flex flex-col gap-6 max-sm:min-h-[calc(100dvh-22rem)]">
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight">${t('home.record_title')}</h2>
+          <p class="mt-1 leading-relaxed text-fg-muted">${t('home.record_hint')}</p>
+        </div>
+        ${this.templateChooserMarkup()}
+        <label class="flex flex-col gap-2 sm:max-w-xs">
+          <span class="text-sm font-medium text-fg-muted">${t('home.field_language')}</span>
+          ${languageSelect(this.deps.config.spokenLanguage())}
+        </label>
+        <div class="mt-auto flex flex-col gap-3" data-slot="idle">
+          <button id="btn-record" type="button" class="btn-action btn-lg w-full">
+            ${ICON_RECORD}<span>${t('home.btn_record')}</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="panel-live" class="flex flex-1 flex-col" hidden>
+        <div class="flex min-w-0 items-center justify-between gap-3">
+          <h2 id="rec-badge" class="rec-badge" tabindex="-1">
+            <span class="rec-dot" aria-hidden="true"></span>
+            <span id="rec-badge-label">${t('home.rec')}</span>
+          </h2>
+          <span id="live-context" class="min-w-0 truncate text-sm text-fg-muted"></span>
+        </div>
+        <div class="flex flex-1 flex-col items-center justify-center gap-8 py-10 text-center">
+          <div id="counter"></div>
+          <div id="meter" class="hidden w-full max-w-md"></div>
+          <div data-slot="live" class="w-full max-w-md"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button id="btn-pause" type="button" class="btn-secondary btn-lg">
+            <span id="btn-pause-icon">${ICON_PAUSE}</span>
+            <span id="btn-pause-label">${t('home.btn_pause')}</span>
+          </button>
+          <button id="btn-stop" type="button" class="btn-danger btn-lg">
+            ${ICON_STOP}<span>${t('home.btn_stop')}</span>
+          </button>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <span id="wake-slot"></span>
+          <button id="btn-summarize" type="button" class="btn-ghost -mx-3 px-3! text-sm">
+            ${ICON_SPARKLE}<span>${t('home.btn_summarize_now')}</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="panel-processing" hidden>
+        <h2 id="processing-title" class="text-xl font-semibold tracking-tight" tabindex="-1">${t('home.processing_title')}</h2>
+        <div data-slot="processing" class="mt-1"></div>
+        <ol id="steps" class="mt-4 divide-y divide-line"></ol>
+      </div>
+
+      <div id="panel-done" hidden>
+        <h2 id="done-title" class="break-words text-2xl font-semibold tracking-tight" tabindex="-1"></h2>
+        <div id="done-meta" class="mt-1"></div>
+        <div data-slot="done" class="mt-3"></div>
+        <ol id="failed-steps" class="mt-3 divide-y divide-line empty:hidden"></ol>
+        <div id="primary-summary" class="mt-5 border-t border-line pt-5"></div>
+        <button id="btn-new" type="button" class="btn-secondary mt-6 hidden w-full sm:w-auto">
+          ${ICON_PLUS}<span>${t('home.btn_new')}</span>
+        </button>
+      </div>
+      ${notes}
+    `;
+  }
+
+  private templateChooserMarkup(): string {
+    const chips = this.templates.slice(0, VISIBLE_TEMPLATE_CHIPS);
+    const overflow = this.templates.length > VISIBLE_TEMPLATE_CHIPS;
+    const selectedInOverflow = !chips.some((tpl) => tpl.id === this.selectedTemplate);
+    const name = (tpl: Template): string => escapeHtml(templateDisplayName(tpl, this.t));
+    return `
+      <div class="flex flex-col gap-2">
+        <span id="template-label" class="text-sm font-medium text-fg-muted">${this.t.t('home.field_template')}</span>
+        <div role="group" aria-labelledby="template-label" class="flex flex-wrap gap-2">
+          ${chips
+            .map(
+              (tpl) =>
+                `<button type="button" class="chip" data-template="${escapeHtml(tpl.id)}" aria-pressed="${tpl.id === this.selectedTemplate}">${name(tpl)}</button>`,
+            )
+            .join('')}
+          ${
+            overflow
+              ? `<button type="button" id="template-more-toggle" class="chip" aria-expanded="${selectedInOverflow}" aria-controls="template-more">${this.t.t('home.template_more')}</button>`
+              : ''
+          }
+        </div>
+        ${
+          overflow
+            ? `<select id="template-more" class="field${selectedInOverflow ? '' : ' hidden'}" aria-labelledby="template-label">
+                ${this.templates
+                  .map(
+                    (tpl) =>
+                      `<option value="${escapeHtml(tpl.id)}" ${tpl.id === this.selectedTemplate ? 'selected' : ''}>${name(tpl)}</option>`,
+                  )
+                  .join('')}
+              </select>`
+            : ''
+        }
+      </div>
+    `;
+  }
+
   private bind(): void {
     this.qs<HTMLButtonElement>('#btn-record').addEventListener(
       'click',
@@ -257,7 +428,33 @@ export class HomePage implements Page {
       () => void this.handleSummarizeNow(),
     );
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.handleNewMeeting());
-    this.renderWakeToggle(this.qs<HTMLElement>('#rec-controls'));
+    this.bindTemplateChooser();
+    this.renderWakeSwitch(this.qs<HTMLElement>('#wake-slot'));
+  }
+
+  private bindTemplateChooser(): void {
+    const chips = [
+      ...this.qs<HTMLElement>('#panel-idle').querySelectorAll<HTMLButtonElement>('[data-template]'),
+    ];
+    const select = this.qsOptional<HTMLSelectElement>('#template-more');
+    const toggle = this.qsOptional<HTMLButtonElement>('#template-more-toggle');
+    const choose = (id: TemplateKind): void => {
+      this.selectedTemplate = id;
+      chips.forEach((chip) =>
+        chip.setAttribute('aria-pressed', String(chip.dataset['template'] === id)),
+      );
+      if (select) select.value = id;
+    };
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => choose(chip.dataset['template'] ?? 'generic')),
+    );
+    select?.addEventListener('change', () => choose(select.value));
+    toggle?.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      select?.classList.toggle('hidden', !open);
+      if (open) select?.focus();
+    });
   }
 
   private async handleStart(): Promise<void> {
@@ -268,7 +465,7 @@ export class HomePage implements Page {
     }
     this.setStatus(this.t.t('home.requesting_mic'));
     const language = Language.of(this.readLanguage());
-    const template = await this.deps.templateRegistry.resolveOrFallback(this.readTemplate());
+    const template = await this.deps.templateRegistry.resolveOrFallback(this.selectedTemplate);
     if (!this.alive) return;
     const result = await this.deps.startRecording.execute({ template, language });
     if (!this.alive) {
@@ -284,6 +481,8 @@ export class HomePage implements Page {
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
+    this.qs<HTMLElement>('#live-context').textContent =
+      `${templateDisplayName(meeting.template, this.t)} · ${languageName(this.readLanguage())}`;
     this.startMeter();
     this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
     this.unsubChunks = this.deps.audio.onChunk((chunk) => {
@@ -292,6 +491,7 @@ export class HomePage implements Page {
       this.pendingChunks.add(p);
       void p.finally(() => this.pendingChunks.delete(p));
     });
+    this.setStatus(this.t.t('home.recording'));
     this.setScreenState('recording');
     this.syncWakeLock(true);
   }
@@ -301,11 +501,10 @@ export class HomePage implements Page {
       await this.deps.audio.pause();
       if (!this.alive) return;
       this.meeting?.pause();
-      this.counter.stop();
       this.meter.stop();
       this.qs<HTMLElement>('#meter').classList.add('hidden');
-      this.setScreenState('paused');
       this.setStatus(this.t.t('home.paused'));
+      this.setScreenState('paused');
       this.syncWakeLock(false);
     } else if (this.screenState === 'paused') {
       this.meeting?.resume();
@@ -313,6 +512,7 @@ export class HomePage implements Page {
       if (!this.alive) return;
       this.startMeter();
       this.counter.startLive(this.qs<HTMLElement>('#counter'), () => this.meeting, this.t);
+      this.setStatus(this.t.t('home.recording'));
       this.setScreenState('recording');
       this.syncWakeLock(true);
     }
@@ -323,13 +523,16 @@ export class HomePage implements Page {
       onTranscriptSaved(true);
       return;
     }
+    const meeting = this.meeting;
+    const { primary, rest } = orderSummaries(meeting.template, this.kinds);
+    const steps = primary ? [primary, ...rest] : rest;
+    this.renderSteps(meeting, steps);
+    this.setStatus(this.t.t('home.generating'));
     this.setScreenState('processing');
     this.syncWakeLock(false);
-    this.setStatus(this.t.t('home.stopping'));
     this.meter.stop();
     this.qs<HTMLElement>('#meter').classList.add('hidden');
     this.counter.stop();
-    const meeting = this.meeting;
     try {
       await this.deps.stopRecording.execute({
         meeting,
@@ -343,6 +546,7 @@ export class HomePage implements Page {
     if (meeting.segments.length === 0) {
       onTranscriptSaved(true);
       this.setStatus(this.t.t('home.no_audio'));
+      this.renderDone(meeting);
       this.setScreenState('done');
       return;
     }
@@ -350,29 +554,34 @@ export class HomePage implements Page {
     const transcriptSaved = await this.deps.saveMeeting.execute({ meeting });
     if (transcriptSaved.ok) this.persisted = true;
     onTranscriptSaved(transcriptSaved.ok);
-    if (transcriptSaved.ok) this.setStatus(this.t.t('home.generating'));
-    else this.showSaveError(transcriptSaved.error.message);
+    if (!transcriptSaved.ok) this.showSaveError(transcriptSaved.error.message);
 
-    const pendingSummaries = this.qsOptional('#summaries');
-    if (pendingSummaries) pendingSummaries.innerHTML = '<em class="text-fg-muted">…</em>';
-
-    const result = await this.deps.finalizeMeeting.execute({ meeting, kinds: SUMMARY_KINDS });
+    steps.forEach((kind) => this.setStep(kind, 'writing'));
+    const result = await this.deps.finalizeMeeting.execute({
+      meeting,
+      kinds: this.kinds,
+      onSummary: (attempt) =>
+        attempt.result.ok
+          ? this.setStep(attempt.kind, 'ready')
+          : this.setStep(attempt.kind, 'failed', attempt.result.error.message),
+    });
     if (!result.saveError) this.persisted = true;
 
-    const summariesEl = this.qsOptional('#summaries');
-    if (summariesEl) this.renderSummaries(summariesEl);
+    this.renderDone(meeting);
     this.renderTemperature();
     this.renderStatistics();
     this.renderExportMenu();
     if (result.mindMap) this.renderMindMap(result.mindMap);
-    const counterEl = this.qsOptional('#counter');
-    if (counterEl) this.counter.renderFinal(counterEl, meeting, this.t);
 
     if (result.saveError) {
       this.showSaveError(result.saveError.message);
     } else {
-      this.setStatus(
-        `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.summarySuccessCount, failed: result.summaryFailureCount })}`,
+      this.showSaved(
+        meeting,
+        this.t.t('home.summaries_result', {
+          ok: result.summarySuccessCount,
+          failed: result.summaryFailureCount,
+        }),
       );
     }
     this.setScreenState('done');
@@ -383,6 +592,14 @@ export class HomePage implements Page {
     if (!status) return;
     status.textContent = `${this.t.t('home.save_failed')} ${message}`;
     status.classList.add('text-danger');
+    this.paintStatus();
+  }
+
+  private showSaved(meeting: Meeting, detail: string): void {
+    const status = this.qsOptional('#status');
+    if (!status) return;
+    status.classList.remove('text-danger');
+    status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a> · <span class="tabular">${escapeHtml(detail)}</span>`;
   }
 
   private handleNewMeeting(): void {
@@ -409,31 +626,21 @@ export class HomePage implements Page {
     }
     const btn = this.qs<HTMLButtonElement>('#btn-summarize');
     btn.disabled = true;
-    const previousStatus = this.qs<HTMLElement>('#status').textContent ?? '';
     this.setStatus(this.t.t('home.summarizing'));
     const result = await this.deps.generateSummaries.execute({
       meeting: this.meeting,
-      kinds: SUMMARY_KINDS,
+      kinds: this.kinds,
     });
-    const summariesEl = this.qsOptional('#summaries');
-    if (!summariesEl) return;
-    this.renderSummaries(summariesEl);
+    if (!this.alive) return;
+    this.renderSummaries();
     this.applyTemperature();
     this.renderStatistics();
     this.renderExportMenu();
     void this.generateAndRenderMindMap();
-    btn.disabled = this.screenState !== 'recording' && this.screenState !== 'paused';
-    if (this.screenState === 'recording' || this.screenState === 'paused') {
-      this.setStatus(
-        `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.successCount, failed: result.failureCount })}`,
-      );
-      window.setTimeout(() => {
-        if (this.screenState === 'recording') this.setStatus(this.t.t('home.recording'));
-        else if (this.screenState === 'paused') this.setStatus(this.t.t('home.paused'));
-      }, 2500);
-    } else {
-      this.setStatus(previousStatus);
-    }
+    btn.disabled = false;
+    this.setStatus(
+      `${this.t.t('home.done')} ${this.t.t('home.summaries_result', { ok: result.successCount, failed: result.failureCount })}`,
+    );
   }
 
   private startMeter(): void {
@@ -496,12 +703,36 @@ export class HomePage implements Page {
     el.innerHTML = `<strong>${escapeHtml(message)}</strong><br/>${lines}`;
   }
 
+  /** Busy flags change at once; only the card's look waits for the morph. */
   private setScreenState(next: ScreenState): void {
     this.screenState = next;
-    this.applyScreenState();
+    this.syncBusy();
+    this.morph(() => this.applyScreenState(true));
   }
 
-  private applyScreenState(): void {
+  private morph(update: () => void): void {
+    const card = this.qsOptional('#rec-card');
+    if (!card) {
+      update();
+      return;
+    }
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (typeof document.startViewTransition === 'function' && !reduced) {
+      document.startViewTransition(() => {
+        if (this.alive) update();
+      });
+      return;
+    }
+    update();
+    card.classList.remove('rec-card-fade');
+    // Reading layout restarts the animation when the class comes straight back.
+    void card.offsetWidth;
+    card.classList.add('rec-card-fade');
+  }
+
+  private syncBusy(): void {
     if (!this.alive) return;
     const capturing =
       this.screenState === 'recording' ||
@@ -509,80 +740,212 @@ export class HomePage implements Page {
       this.screenState === 'processing';
     this.guard.setBusy(capturing || this.hasUnsavedMeeting);
     this.deps.shell.setBusy(capturing);
+  }
+
+  private applyScreenState(moveFocus = false): void {
+    if (!this.alive) return;
+    this.syncBusy();
     if (!this.root) return;
-    const recordBtn = this.qs<HTMLButtonElement>('#btn-record');
-    const pauseBtn = this.qs<HTMLButtonElement>('#btn-pause');
+    const state = this.screenState;
+    const live = state === 'recording' || state === 'paused';
+
+    this.qsOptional('#home-header')?.classList.toggle('sr-only', live);
+    this.qsOptional('#last-meeting')?.classList.toggle(
+      'hidden',
+      state !== 'idle' || !this.qsOptional('#last-meeting')?.hasChildNodes(),
+    );
+    this.qsOptional('#more-section')?.classList.toggle('hidden', state !== 'done' || !this.meeting);
+    this.qsOptional('#rest-section')?.classList.toggle(
+      'hidden',
+      !(live || state === 'done') || !this.qsOptional('#rest-summaries')?.hasChildNodes(),
+    );
+    const transcript = this.qsOptional('#transcript-details');
+    transcript?.classList.toggle('hidden', !(live || (state === 'done' && this.meeting)));
+    const transcriptLabel = this.qsOptional('#transcript-label');
+    if (transcriptLabel) {
+      transcriptLabel.textContent = this.t.t(live ? 'home.live_transcript' : 'home.transcript');
+    }
+
+    const card = this.qsOptional('#rec-card');
+    if (!card?.querySelector('#panel-idle')) return;
+    card.classList.toggle('rec-card-live', live);
+
+    for (const selector of new Set(Object.values(PANELS))) {
+      this.qs<HTMLElement>(selector).hidden = selector !== PANELS[state];
+    }
+    this.qs<HTMLElement>(`[data-slot="${live ? 'live' : state}"]`).append(this.qs('#card-notes'));
+    this.paintStatus();
+    this.qs<HTMLElement>('#progress').hidden = !live;
+    this.qs<HTMLElement>('#btn-new').classList.toggle('hidden', state !== 'done');
+
     const pauseLabel = this.qs<HTMLElement>('#btn-pause-label');
     const pauseIcon = this.qs<HTMLElement>('#btn-pause-icon');
-    const stopBtn = this.qs<HTMLButtonElement>('#btn-stop');
-    const summarizeBtn = this.qs<HTMLButtonElement>('#btn-summarize');
-    const newBtn = this.qs<HTMLButtonElement>('#btn-new');
     const badge = this.qs<HTMLElement>('#rec-badge');
     const badgeLabel = this.qs<HTMLElement>('#rec-badge-label');
+    pauseLabel.textContent = this.t.t(state === 'paused' ? 'home.btn_resume' : 'home.btn_pause');
+    pauseIcon.innerHTML = state === 'paused' ? ICON_PLAY : ICON_PAUSE;
+    badge.classList.toggle('rec-badge-paused', state === 'paused');
+    badgeLabel.textContent = this.t.t(state === 'paused' ? 'home.rec_paused' : 'home.rec');
 
-    const hasKey = Boolean(this.deps.config.openAIKey());
-    switch (this.screenState) {
-      case 'idle':
-        recordBtn.disabled = !hasKey;
-        recordBtn.title = hasKey ? this.t.t('home.btn_record') : this.t.t('home.configure_key');
-        pauseBtn.disabled = true;
-        stopBtn.disabled = true;
-        pauseLabel.textContent = this.t.t('home.btn_pause');
-        pauseIcon.innerHTML = ICON_PAUSE;
-        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_pause'));
-        summarizeBtn.classList.add('hidden');
-        newBtn.classList.add('hidden');
-        badge.classList.add('hidden');
-        if (!hasKey) {
-          this.setStatus(this.t.t('home.configure_key'));
-        }
-        break;
-      case 'recording':
-        recordBtn.disabled = true;
-        pauseBtn.disabled = false;
-        stopBtn.disabled = false;
-        pauseLabel.textContent = this.t.t('home.btn_pause');
-        pauseIcon.innerHTML = ICON_PAUSE;
-        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_pause'));
-        summarizeBtn.classList.remove('hidden');
-        summarizeBtn.disabled = false;
-        newBtn.classList.add('hidden');
-        badge.classList.remove('hidden', 'rec-badge-paused');
-        badge.classList.add('rec-badge');
-        badgeLabel.textContent = this.t.t('home.rec');
-        this.setStatus(this.t.t('home.recording'));
-        break;
-      case 'paused':
-        recordBtn.disabled = true;
-        pauseBtn.disabled = false;
-        stopBtn.disabled = false;
-        pauseLabel.textContent = this.t.t('home.btn_resume');
-        pauseIcon.innerHTML = ICON_PLAY;
-        pauseBtn.setAttribute('aria-label', this.t.t('home.btn_resume'));
-        summarizeBtn.classList.remove('hidden');
-        summarizeBtn.disabled = false;
-        newBtn.classList.add('hidden');
-        badge.classList.remove('hidden', 'rec-badge');
-        badge.classList.add('rec-badge-paused');
-        badgeLabel.textContent = this.t.t('home.rec_paused');
-        break;
-      case 'processing':
-        recordBtn.disabled = true;
-        pauseBtn.disabled = true;
-        stopBtn.disabled = true;
-        summarizeBtn.classList.add('hidden');
-        newBtn.classList.add('hidden');
-        badge.classList.add('hidden');
-        break;
-      case 'done':
-        recordBtn.disabled = true;
-        pauseBtn.disabled = true;
-        stopBtn.disabled = true;
-        summarizeBtn.classList.add('hidden');
-        newBtn.classList.remove('hidden');
-        badge.classList.add('hidden');
-        break;
+    if (moveFocus) this.keepFocusInView(state);
+  }
+
+  /** Hiding the pressed button would drop focus to the body; hand it to the new panel instead. */
+  private keepFocusInView(state: ScreenState): void {
+    const active = document.activeElement;
+    const lost =
+      active === null ||
+      active === document.body ||
+      (active instanceof HTMLElement && active.closest('[hidden], .hidden') !== null);
+    if (lost) this.focusPanelHeading(state);
+  }
+
+  private focusPanelHeading(state: ScreenState): void {
+    const heading: Record<ScreenState, string | null> = {
+      idle: null,
+      recording: '#rec-badge',
+      paused: '#rec-badge',
+      processing: '#processing-title',
+      done: '#done-title',
+    };
+    const selector = heading[state];
+    if (selector) this.qsOptional(selector)?.focus();
+  }
+
+  private renderSteps(meeting: Meeting, kinds: readonly SummaryKind[]): void {
+    const list = this.qsOptional('#steps');
+    if (!list) return;
+    list.innerHTML = kinds
+      .map(
+        (kind) => `
+        <li data-step="${kind}" class="flex items-start gap-3 py-3">
+          <span data-step-icon class="mt-0.5 flex size-5 shrink-0 items-center justify-center text-fg-muted">${STEP_DOT}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block font-medium">${escapeHtml(this.summaryLabel(meeting.template, kind))}</span>
+            <span data-step-error class="hidden break-words text-sm text-danger"></span>
+          </span>
+          <span data-step-state class="mt-0.5 shrink-0 text-sm text-fg-muted">${this.t.t('home.step_waiting')}</span>
+        </li>`,
+      )
+      .join('');
+  }
+
+  private setStep(kind: SummaryKind, state: StepState, error?: string): void {
+    const row = this.qsOptional(`[data-step="${kind}"]`);
+    if (!row) return;
+    row.toggleAttribute('data-failed', state === 'failed');
+    const icon = row.querySelector<HTMLElement>('[data-step-icon]');
+    const label = row.querySelector<HTMLElement>('[data-step-state]');
+    const errorEl = row.querySelector<HTMLElement>('[data-step-error]');
+    if (label) {
+      label.textContent = this.t.t(STEP_KEYS[state]);
+      label.classList.toggle('text-danger', state === 'failed');
+      label.classList.toggle('font-semibold', state === 'failed');
+      label.classList.toggle('text-fg-muted', state !== 'failed');
     }
+    if (icon) {
+      icon.innerHTML =
+        state === 'ready'
+          ? ICON_CHECK
+          : state === 'failed'
+            ? ICON_ALERT
+            : state === 'writing'
+              ? STEP_PULSE
+              : STEP_DOT;
+      icon.classList.toggle('text-success', state === 'ready');
+      icon.classList.toggle('text-danger', state === 'failed');
+      icon.classList.toggle('text-fg-muted', state === 'waiting' || state === 'writing');
+    }
+    if (errorEl) {
+      errorEl.textContent = error ?? '';
+      errorEl.classList.toggle('hidden', !error);
+    }
+  }
+
+  private renderDone(meeting: Meeting): void {
+    const title = this.qsOptional('#done-title');
+    if (title) title.textContent = meeting.title;
+    const meta = this.qsOptional('#done-meta');
+    if (meta) this.counter.renderSummaryLine(meta, meeting, this.t);
+    const failed = this.root ? [...this.root.querySelectorAll('#steps [data-failed]')] : [];
+    this.qsOptional('#failed-steps')?.replaceChildren(...failed);
+    this.renderSummaries();
+  }
+
+  private renderSummaries(): void {
+    if (!this.meeting) return;
+    const meeting = this.meeting;
+    const generated = this.kinds.filter((kind) => meeting.summaries.has(kind));
+    const { primary, rest } = orderSummaries(meeting.template, generated);
+    const primaryEl = this.qsOptional('#primary-summary');
+    const restEl = this.qsOptional('#rest-summaries');
+    const finished = meeting.isFinished;
+
+    if (primaryEl) {
+      primaryEl.innerHTML =
+        finished && primary
+          ? `<h3 class="text-lg font-semibold">${escapeHtml(this.summaryLabel(meeting.template, primary))}</h3>
+             <div class="prose-summary mt-2 leading-relaxed">${this.summaryHtml(primary)}</div>`
+          : `<p class="text-fg-muted">${this.t.t('detail.no_summaries')}</p>`;
+    }
+    if (restEl) {
+      const listed = finished ? rest : primary ? [primary, ...rest] : [];
+      restEl.innerHTML = listed
+        .map(
+          (kind, i) => `
+          <details class="group" ${!finished && i === 0 ? 'open' : ''}>
+            <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 sm:px-6 [&::-webkit-details-marker]:hidden">
+              <h3 class="text-base font-semibold">${escapeHtml(this.summaryLabel(meeting.template, kind))}</h3>
+              <span class="shrink-0 text-fg-muted transition-transform duration-150 group-open:rotate-90">${ICON_CHEVRON}</span>
+            </summary>
+            <div class="prose-summary px-5 pb-5 leading-relaxed sm:px-6">${this.summaryHtml(kind)}</div>
+          </details>`,
+        )
+        .join('');
+    }
+    this.applyScreenState();
+  }
+
+  private summaryHtml(kind: SummaryKind): string {
+    const summary = this.meeting?.summaries.get(kind);
+    return summary
+      ? renderMarkdown(summary.content, { headingOffset: SUMMARY_HEADING_OFFSET })
+      : '';
+  }
+
+  private summaryLabel(template: Template, kind: SummaryKind): string {
+    return template.labelFor(kind, this.t.t(SUMMARY_LABEL_KEYS[kind]));
+  }
+
+  private async renderLastMeeting(): Promise<void> {
+    const result = await this.deps.listMeetings.execute();
+    const section = this.qsOptional('#last-meeting');
+    if (!result.ok || !section) return;
+    const last = [...result.value].sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
+    if (!last) return;
+    section.innerHTML = `
+      <h2 id="last-meeting-title" class="mb-2 px-1 text-sm font-medium text-fg-muted">${this.t.t('home.last_meeting')}</h2>
+      <a href="#/meeting?id=${escapeHtml(last.id.value)}" class="card flex items-center gap-4 transition-colors duration-150 hover:bg-raised sm:p-5">
+        <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-raised text-fg">${ICON_HISTORY}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-semibold">${escapeHtml(last.title)}</span>
+          <span class="block truncate text-sm text-fg-muted tabular">${escapeHtml(this.lastMeetingMeta(last))}</span>
+        </span>
+        <span class="shrink-0 text-fg-muted">${ICON_CHEVRON}</span>
+      </a>
+    `;
+    this.applyScreenState();
+  }
+
+  private lastMeetingMeta(item: MeetingListItem): string {
+    const when = new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(item.startedAt);
+    const template = this.templates.find((tpl) => tpl.id === item.templateKind);
+    const parts = [when, formatDuration(item.durationMs)];
+    if (template) parts.push(templateDisplayName(template, this.t));
+    return parts.join(' · ');
   }
 
   private async generateAndRenderMindMap(): Promise<void> {
@@ -653,35 +1016,18 @@ export class HomePage implements Page {
     container.appendChild(span);
   }
 
-  private renderSummaries(target: HTMLElement): void {
-    if (!this.meeting) return;
-    const summaries = this.meeting.summaries;
-    if (summaries.size === 0) {
-      target.innerHTML = `<em class="text-fg-muted">${this.t.t('home.summary_placeholder')}</em>`;
-      return;
-    }
-    const order = this.meeting.template.featuredSummaryOrder();
-    target.innerHTML = order
-      .map((kind) => {
-        const summary = summaries.get(kind);
-        if (!summary) return '';
-        return `<article class="mb-4">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${this.t.t(SUMMARY_LABEL_KEYS[kind])}</h3>
-            <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
-          </article>`;
-      })
-      .join('');
-  }
-
-  private renderWakeToggle(container: HTMLElement): void {
+  private renderWakeSwitch(container: HTMLElement): void {
     if (!this.deps.screenWake.isSupported()) return;
-    const btn = document.createElement('button');
-    btn.className = 'btn-ghost';
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.id = 'wake-switch';
+    toggle.className = 'switch';
+    toggle.setAttribute('role', 'switch');
+    toggle.innerHTML = `<span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span><span>${this.t.t('home.keep_awake_on')}</span>`;
     const paint = (): void => {
-      const on = this.deps.config.keepScreenAwake();
-      btn.textContent = on ? this.t.t('home.keep_awake_off') : this.t.t('home.keep_awake_on');
+      toggle.setAttribute('aria-checked', String(this.deps.config.keepScreenAwake()));
     };
-    btn.addEventListener('click', () => {
+    toggle.addEventListener('click', () => {
       void (async () => {
         const next = !this.deps.config.keepScreenAwake();
         await this.deps.config.update({ ...this.deps.config.get(), keepScreenAwake: next });
@@ -690,12 +1036,7 @@ export class HomePage implements Page {
       })();
     });
     paint();
-    container.appendChild(btn);
-  }
-
-  private readTemplate(): TemplateKind {
-    const select = this.qs<HTMLSelectElement>('#template-select');
-    return select.value;
+    container.appendChild(toggle);
   }
 
   private readLanguage(): LanguageCode {
@@ -703,9 +1044,23 @@ export class HomePage implements Page {
     return select.value as LanguageCode;
   }
 
+  /** The badge and the processing heading already say what the status says; errors always show. */
+  private paintStatus(): void {
+    const status = this.qsOptional('#status');
+    if (!status) return;
+    const echoed =
+      this.screenState === 'recording' ||
+      this.screenState === 'paused' ||
+      this.screenState === 'processing';
+    status.classList.toggle('sr-only', echoed && !status.classList.contains('text-danger'));
+  }
+
   private setStatus(message: string): void {
     const status = this.qsOptional('#status');
-    if (status) status.textContent = message;
+    if (!status) return;
+    status.classList.remove('text-danger');
+    status.textContent = message;
+    this.paintStatus();
   }
 
   /** Null once disposed: the root may already hold the next page's elements with the same ids. */
@@ -722,42 +1077,24 @@ export class HomePage implements Page {
   }
 }
 
-const ICON_RECORD = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><circle cx="7" cy="7" r="5"/></svg>`;
-const ICON_PAUSE = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="3" height="10" rx="1"/><rect x="8" y="2" width="3" height="10" rx="1"/></svg>`;
-const ICON_PLAY = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 2.5v9l8-4.5z"/></svg>`;
-const ICON_STOP = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/></svg>`;
-const ICON_SPARKLE = `<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M7 1l1.5 4L13 6.5 8.5 8 7 13 5.5 8 1 6.5 5.5 5 7 1z"/></svg>`;
-const ICON_PLUS = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>`;
+const STEP_DOT = `<span class="size-2.5 rounded-full border-2 border-current"></span>`;
+const STEP_PULSE = `<span class="size-2.5 animate-rec-pulse rounded-full bg-fg motion-reduce:animate-none"></span>`;
 
-const templateSelect = (
-  templates: readonly Template[],
-  currentId: TemplateKind,
-  translator: Translator,
-): string => {
-  const hasCurrent = templates.some((tpl) => tpl.id === currentId);
-  const effective = hasCurrent ? currentId : 'generic';
-  return `
-  <label class="block">
-    <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${translator.t('home.field_template')}</span>
-    <select id="template-select" class="rounded-lg border border-edge px-2 py-1 text-sm">
-      ${templates
-        .map(
-          (tpl) =>
-            `<option value="${escapeHtml(tpl.id)}" ${tpl.id === effective ? 'selected' : ''}>${escapeHtml(templateDisplayName(tpl, translator))}${tpl.builtIn ? '' : ' ★'}</option>`,
-        )
-        .join('')}
-    </select>
-  </label>
-`;
+const LANGUAGE_NAMES: Record<LanguageCode, string> = {
+  en: 'English',
+  es: 'Español',
+  eu: 'Euskara',
 };
 
-const languageSelect = (current: LanguageCode, t: (key: TranslationKey) => string): string => `
-  <label class="block">
-    <span class="block text-xs font-semibold uppercase tracking-wide text-fg-muted mb-1">${t('home.field_language')}</span>
-    <select id="lang-select" class="rounded-lg border border-edge px-2 py-1 text-sm">
-      <option value="en" ${current === 'en' ? 'selected' : ''}>English</option>
-      <option value="es" ${current === 'es' ? 'selected' : ''}>Español</option>
-      <option value="eu" ${current === 'eu' ? 'selected' : ''}>Euskara</option>
-    </select>
-  </label>
+const languageName = (code: LanguageCode): string => LANGUAGE_NAMES[code];
+
+const languageSelect = (current: LanguageCode): string => `
+  <select id="lang-select" class="field">
+    ${(Object.keys(LANGUAGE_NAMES) as LanguageCode[])
+      .map(
+        (code) =>
+          `<option value="${code}" ${code === current ? 'selected' : ''}>${LANGUAGE_NAMES[code]}</option>`,
+      )
+      .join('')}
+  </select>
 `;

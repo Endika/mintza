@@ -20,3 +20,13 @@ export const ICON_KEY = icon(
   '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/>',
   20,
 );
+export const ICON_PLUS = icon('<path d="M12 5v14M5 12h14"/>', 20);
+export const ICON_SPARKLE = icon(
+  '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/>',
+  20,
+);
+export const ICON_CHEVRON = icon('<path d="M9 6l6 6-6 6"/>', 20);
+export const ICON_EXTERNAL = icon(
+  '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  18,
+);

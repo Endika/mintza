@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { FinalizeMeetingUseCase } from '../../src/application/use-cases/FinalizeMeetingUseCase';
 import { GenerateMindMapUseCase } from '../../src/application/use-cases/GenerateMindMapUseCase';
 import { GenerateSummariesUseCase } from '../../src/application/use-cases/GenerateSummariesUseCase';
+import { ListMeetingsUseCase } from '../../src/application/use-cases/ListMeetingsUseCase';
 import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTemplatesUseCase';
 import { SaveMeetingUseCase } from '../../src/application/use-cases/SaveMeetingUseCase';
 import { StartRecordingUseCase } from '../../src/application/use-cases/StartRecordingUseCase';
@@ -182,6 +183,7 @@ const setup = async (
     ),
     saveMeeting: new SaveMeetingUseCase(meetings),
     listTemplates: new ListTemplatesUseCase(registry),
+    listMeetings: new ListMeetingsUseCase(meetings),
     templateRegistry: registry,
     shell,
   });

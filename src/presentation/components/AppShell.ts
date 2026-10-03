@@ -83,6 +83,7 @@ export class AppShell {
   setBusy(busy: boolean): void {
     this.nav.hidden = busy;
     this.nav.inert = busy;
+    this.main.toggleAttribute('data-busy', busy);
   }
 
   relabel(): void {
