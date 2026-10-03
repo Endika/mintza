@@ -390,6 +390,12 @@ export class HomePage implements Page {
 
   private handleNewMeeting(): void {
     if (!this.root) return;
+    if (
+      this.hasUnsavedMeeting &&
+      !this.guard.confirmLeave(this.t.t('home.leave_unsaved'), (m) => window.confirm(m))
+    ) {
+      return;
+    }
     this.meeting = null;
     this.transcriptSaved = null;
     this.persisted = false;
