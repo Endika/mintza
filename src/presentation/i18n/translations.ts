@@ -4,7 +4,8 @@ export type TranslationKey =
   | 'app.tagline'
   | 'nav.history'
   | 'nav.settings'
-  | 'nav.back'
+  | 'nav.record'
+  | 'nav.main'
   | 'home.new_meeting'
   | 'home.ready'
   | 'home.requesting_mic'
@@ -185,7 +186,8 @@ const EN: Translations = {
   'app.tagline': 'From talk to insight.',
   'nav.history': 'History',
   'nav.settings': 'Settings',
-  'nav.back': '← Back',
+  'nav.record': 'Record',
+  'nav.main': 'Main',
   'home.new_meeting': 'New meeting',
   'home.ready': 'Ready to record.',
   'home.requesting_mic': 'Requesting microphone permission…',
@@ -369,7 +371,8 @@ const ES: Translations = {
   'app.tagline': 'De la conversación a la idea.',
   'nav.history': 'Historial',
   'nav.settings': 'Ajustes',
-  'nav.back': '← Volver',
+  'nav.record': 'Grabar',
+  'nav.main': 'Principal',
   'home.new_meeting': 'Nueva reunión',
   'home.ready': 'Listo para grabar.',
   'home.requesting_mic': 'Solicitando permiso de micrófono…',
@@ -553,7 +556,8 @@ const EU: Translations = {
   'app.tagline': 'Hizketatik ideiara.',
   'nav.history': 'Historia',
   'nav.settings': 'Ezarpenak',
-  'nav.back': '← Itzuli',
+  'nav.record': 'Grabatu',
+  'nav.main': 'Nagusia',
   'home.new_meeting': 'Bilera berria',
   'home.ready': 'Grabatzeko prest.',
   'home.requesting_mic': 'Mikrofonoaren baimena eskatzen…',

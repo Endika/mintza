@@ -8,16 +8,7 @@ if (!root) {
 }
 
 const app = new App(root);
-
-const version = document.createElement('span');
-version.textContent = `v${__APP_VERSION__}`;
-version.className =
-  'fixed bottom-2 right-3 text-[10px] font-mono text-fg-muted pointer-events-none select-none';
-document.body.appendChild(version);
-
-void app.start().then(() => {
-  version.setAttribute('aria-label', app.translator.t('app.version', { version: __APP_VERSION__ }));
-});
+void app.start();
 
 if (import.meta.env.PROD) {
   registerServiceWorker('/mintza/sw.js', app.translator);

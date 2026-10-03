@@ -7,6 +7,7 @@ import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import type { Template } from '../../domain/meeting/value-objects/Template';
 import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
+import { ICON_BACK } from '../components/icons';
 import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
@@ -42,7 +43,7 @@ export class MeetingDetailPage implements Page {
     const t = this.deps.translator;
     const id = parseIdFromHash();
     if (!id) {
-      root.innerHTML = errorShell(t.t('nav.back'), t.t('detail.missing_id'));
+      root.innerHTML = errorShell(t.t('nav.history'), t.t('detail.missing_id'));
       return;
     }
 
@@ -50,19 +51,19 @@ export class MeetingDetailPage implements Page {
     try {
       meetingId = MeetingId.restore(id);
     } catch {
-      root.innerHTML = errorShell(t.t('nav.back'), t.t('detail.invalid_id'));
+      root.innerHTML = errorShell(t.t('nav.history'), t.t('detail.invalid_id'));
       return;
     }
 
     root.innerHTML = `
-      <main class="mx-auto max-w-3xl px-6 py-12">
+      <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <header class="mb-6 flex items-center justify-between gap-4">
-          <a href="#/history" class="btn-ghost">${t.t('nav.back')}</a>
+          ${backToHistory(t.t('nav.history'))}
           <button id="btn-delete" class="btn-ghost text-danger text-sm">${t.t('detail.delete')}</button>
         </header>
         <p id="delete-status" class="mb-4 text-sm text-danger hidden" role="status"></p>
         <div id="detail-body"><em class="text-fg-muted">${t.t('history.loading')}</em></div>
-      </main>
+      </div>
     `;
 
     const [meetingResult, templatesResult] = await Promise.all([
@@ -73,11 +74,12 @@ export class MeetingDetailPage implements Page {
     const body = root.querySelector<HTMLElement>('#detail-body');
     if (!body) return;
     if (!meetingResult.ok) {
-      body.innerHTML = `<p class="text-danger">${t.t('detail.load_failed')} ${escapeHtml(meetingResult.error.message)}</p>`;
+      body.innerHTML = `<h1 class="text-2xl font-bold tracking-tight">${t.t('detail.load_failed')}</h1>
+        <p class="mt-2 text-danger">${escapeHtml(meetingResult.error.message)}</p>`;
       return;
     }
     if (!meetingResult.value) {
-      body.innerHTML = `<em class="text-fg-muted">${t.t('detail.not_found')}</em>`;
+      body.innerHTML = `<h1 class="text-2xl font-bold tracking-tight">${t.t('detail.not_found')}</h1>`;
       return;
     }
     this.meeting = meetingResult.value;
@@ -117,7 +119,7 @@ export class MeetingDetailPage implements Page {
         meeting.temperature
           ? `
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.sentiment')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.sentiment')}</h2>
           <div id="detail-temperature"></div>
         </section>`
           : ''
@@ -125,7 +127,7 @@ export class MeetingDetailPage implements Page {
 
       <section class="card mb-6">
         <div class="mb-3 flex items-center justify-between gap-3 flex-wrap">
-          <h3 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.summary')}</h3>
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.summary')}</h2>
           ${this.regenerateControlsHtml()}
         </div>
         <p id="regen-status" class="text-xs text-fg-muted mb-2 hidden"></p>
@@ -136,21 +138,21 @@ export class MeetingDetailPage implements Page {
         meeting.mindMap
           ? `
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.mind_map')}</h3>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.mind_map')}</h2>
           <div id="detail-mindmap"></div>
         </section>`
           : ''
       }
 
       <section class="card mb-6">
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.transcript')}</h3>
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.transcript')}</h2>
         <div class="whitespace-pre-wrap text-fg text-sm">
           ${escapeHtml(meeting.fullText().value) || `<em class="text-fg-muted">${t.t('detail.no_transcript')}</em>`}
         </div>
       </section>
 
       <section class="card mb-6">
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.statistics')}</h3>
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.statistics')}</h2>
         <div id="detail-stats"></div>
       </section>
 
@@ -248,7 +250,7 @@ export class MeetingDetailPage implements Page {
           this.deps.translator.t(SUMMARY_LABEL_KEYS[kind]),
         );
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${escapeHtml(label)}</h4>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${escapeHtml(label)}</h3>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
@@ -264,9 +266,12 @@ const parseIdFromHash = (): string | null => {
   return params.get('id');
 };
 
+const backToHistory = (label: string): string =>
+  `<a href="#/history" class="btn-ghost -ml-3">${ICON_BACK}<span>${label}</span></a>`;
+
 const errorShell = (backLabel: string, message: string): string => `
-  <main class="mx-auto max-w-3xl px-6 py-12">
-    <header class="mb-8"><a href="#/history" class="btn-ghost">${backLabel}</a></header>
-    <p class="text-danger">${escapeHtml(message)}</p>
-  </main>
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div class="mb-6">${backToHistory(backLabel)}</div>
+    <h1 class="text-2xl font-bold tracking-tight">${escapeHtml(message)}</h1>
+  </div>
 `;

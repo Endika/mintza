@@ -124,8 +124,16 @@ const settle = async (): Promise<void> => {
 const chunk = (): AudioChunk =>
   new AudioChunk({ blob: new Blob(['a']), startMs: 0, endMs: 1000, mimeType: 'audio/webm' });
 
+class FakeShell {
+  busy = false;
+  setBusy(busy: boolean): void {
+    this.busy = busy;
+  }
+}
+
 interface Harness {
   readonly page: HomePage;
+  readonly shell: FakeShell;
   readonly root: HTMLElement;
   readonly audio: FakeAudio;
   readonly meetings: InMemoryMeetingRepository;
@@ -156,6 +164,7 @@ const setup = async (
   const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
   const mindMap = new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' });
   const registry = new TemplateRegistry(new LocalStorageTemplateRepository(window.localStorage));
+  const shell = new FakeShell();
   const page = new HomePage({
     config,
     audio,
@@ -174,6 +183,7 @@ const setup = async (
     saveMeeting: new SaveMeetingUseCase(meetings),
     listTemplates: new ListTemplatesUseCase(registry),
     templateRegistry: registry,
+    shell,
   });
   pages.push(page);
   const root = document.createElement('div');
@@ -181,7 +191,7 @@ const setup = async (
   await page.render(root);
   root.querySelector<HTMLButtonElement>('#btn-record')!.click();
   await settle();
-  return { page, root, audio, meetings };
+  return { page, shell, root, audio, meetings };
 };
 
 const originalConfirm = Object.getOwnPropertyDescriptor(window, 'confirm');
@@ -238,16 +248,18 @@ describe('HomePage leaving a recording', () => {
   });
 
   it('asks before leaving a finished meeting that no save could store', async () => {
-    const { page, root, audio } = await setup(
+    const { page, shell, root, audio } = await setup(
       new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
       new BrokenMeetingRepository('fail'),
     );
     audio.emit(chunk());
     await settle();
+    expect(shell.busy).toBe(true);
     root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
     await settle();
     expect(root.querySelector('#btn-new')!.classList.contains('hidden')).toBe(false);
     expect(unload().defaultPrevented).toBe(true);
+    expect(shell.busy).toBe(false);
 
     const asked: string[] = [];
     let answer = false;
