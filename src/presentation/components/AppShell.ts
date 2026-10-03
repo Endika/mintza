@@ -69,7 +69,11 @@ export class AppShell {
   }
 
   setActive(path: string): void {
-    const active = TABS.findIndex((tab) => tab.paths.includes(path));
+    // Unknown paths render Home through the router fallback.
+    const active = Math.max(
+      0,
+      TABS.findIndex((tab) => tab.paths.includes(path)),
+    );
     this.tabs.forEach((tab, i) => {
       if (i === active) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
