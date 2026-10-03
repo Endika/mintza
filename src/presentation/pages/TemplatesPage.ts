@@ -7,11 +7,10 @@ import {
   type Template,
   type TemplateDefinition,
 } from '../../domain/meeting/value-objects/Template';
-import {
-  defaultInstructionFor,
-  defaultLabelFor,
-} from '../../domain/summary/services/SummaryDefaults';
+import { defaultInstructionFor } from '../../domain/summary/services/SummaryDefaults';
 import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
+import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
@@ -59,7 +58,7 @@ export class TemplatesPage implements Page {
     ]);
     if (!templatesResult.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">Error: ${escapeHtml(templatesResult.error.message)}</p>`;
+        `<p class="text-red-600">${this.deps.translator.t('templates.load_failed')} ${escapeHtml(templatesResult.error.message)}</p>`;
       return;
     }
     this.templates = templatesResult.value;
@@ -80,23 +79,19 @@ export class TemplatesPage implements Page {
         const usage = this.usageById.get(tpl.id) ?? 0;
         const usageLine =
           usage > 0
-            ? `<p class="text-xs text-ink-400 mt-0.5">${t
-                .t('templates.used_in')
-                .replace('{count}', String(usage))}</p>`
+            ? `<p class="text-xs text-ink-400 mt-0.5">${t.t('templates.used_in', { count: usage })}</p>`
             : '';
         const deleteDisabled = usage > 0;
-        const deleteTitle = deleteDisabled
-          ? t.t('templates.in_use_block').replace('{count}', String(usage))
-          : '';
+        const deleteTitle = deleteDisabled ? t.t('templates.in_use_block', { count: usage }) : '';
         return `
           <article class="card flex items-center justify-between gap-3">
             <div>
-              <h3 class="font-semibold">${escapeHtml(tpl.name)}${
+              <h3 class="font-semibold">${escapeHtml(templateDisplayName(tpl, t))}${
                 tpl.builtIn
                   ? ` <span class="ml-2 text-xs uppercase tracking-wide text-ink-400">${t.t('templates.builtin')}</span>`
                   : ''
               }</h3>
-              <p class="text-sm text-ink-400">${escapeHtml(tpl.systemRole)} · ${tpl.summaryKinds.length} sections</p>
+              <p class="text-sm text-ink-400">${escapeHtml(tpl.systemRole)} · ${t.t('templates.section_count', { count: tpl.summaryKinds.length })}</p>
               ${usageLine}
             </div>
             <div class="flex gap-2 shrink-0 text-sm">
@@ -129,7 +124,9 @@ export class TemplatesPage implements Page {
     this.openEditor({
       ...def,
       id: generateId(def.name),
-      name: `${def.name} copy`,
+      name: this.deps.translator.t('templates.copy_name', {
+        name: templateDisplayName(source, this.deps.translator),
+      }),
       builtIn: false,
     });
   }
@@ -147,7 +144,7 @@ export class TemplatesPage implements Page {
     if (result.ok) {
       await this.refresh();
     } else {
-      window.alert(result.error.message);
+      window.alert(`${this.deps.translator.t('templates.delete_failed')} ${result.error.message}`);
     }
   }
 
@@ -165,9 +162,9 @@ export class TemplatesPage implements Page {
           <input name="name" required value="${escapeHtml(def.name)}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
         </label>
         <label class="block">
-          <span class="text-sm font-medium">${t.t('templates.field_system_role')}</span>
-          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="a doctor's appointment, a brainstorm…" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
-          <span class="mt-1 block text-xs text-ink-400">Text injected after "You are an expert assistant analyzing…"</span>
+          <span class="text-sm font-medium">${t.t('templates.field_meeting_type')}</span>
+          <input name="systemRole" required value="${escapeHtml(def.systemRole)}" placeholder="${escapeHtml(t.t('templates.meeting_type_placeholder'))}" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-base" />
+          <span class="mt-1 block text-xs text-ink-400">${t.t('templates.field_meeting_type_hint')}</span>
         </label>
         <label class="block">
           <span class="text-sm font-medium">${t.t('templates.field_mindmap')}</span>
@@ -178,12 +175,13 @@ export class TemplatesPage implements Page {
           <div class="space-y-2">
             ${SUMMARY_KINDS.map((k) => {
               const checked = isNew ? true : def.summaryKinds.includes(k);
-              const labelValue = def.kindLabels[k] ?? (isNew ? '' : defaultLabelFor(k));
+              const defaultLabel = t.t(SUMMARY_LABEL_KEYS[k]);
+              const labelValue = def.kindLabels[k] ?? '';
               return `
               <label class="flex items-center gap-3 text-sm">
                 <input type="checkbox" name="kind_${k}" ${checked ? 'checked' : ''} />
-                <span class="w-32 text-ink-400">${defaultLabelFor(k)}</span>
-                <input name="label_${k}" placeholder="${escapeHtml(defaultLabelFor(k))}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
+                <span class="w-32 text-ink-400">${defaultLabel}</span>
+                <input name="label_${k}" placeholder="${escapeHtml(defaultLabel)}" value="${escapeHtml(labelValue)}" class="flex-1 rounded-sm border border-ink-100 px-2 py-1.5 text-sm" />
               </label>`;
             }).join('')}
           </div>
@@ -195,7 +193,7 @@ export class TemplatesPage implements Page {
               const promptValue = def.promptOverrides[k] ?? (isNew ? '' : defaultInstructionFor(k));
               return `
               <details${promptValue ? ' open' : ''} class="rounded-lg border border-ink-100">
-                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${defaultLabelFor(k)}</summary>
+                <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-ink-600">${t.t(SUMMARY_LABEL_KEYS[k])}</summary>
                 <div class="px-3 pb-3">
                   <textarea name="prompt_${k}" rows="6" placeholder="${escapeHtml(defaultInstructionFor(k))}" class="block w-full rounded-sm border border-ink-100 px-3 py-2 text-sm font-mono">${escapeHtml(promptValue)}</textarea>
                 </div>
@@ -235,7 +233,7 @@ export class TemplatesPage implements Page {
 
     const kinds: SummaryKind[] = SUMMARY_KINDS.filter((k) => data.get(`kind_${k}`) === 'on');
     if (kinds.length === 0) {
-      this.showFormError('Select at least one summary section');
+      this.showFormError(this.deps.translator.t('templates.kinds_required'));
       return;
     }
 

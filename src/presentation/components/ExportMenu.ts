@@ -6,12 +6,12 @@ import type { TranslationKey } from '../i18n/translations';
 
 type Format = ExportFormat | 'pdf';
 
-const FORMATS: ReadonlyArray<{ value: Format; label: string; labelKey?: TranslationKey }> = [
-  { value: 'pdf', label: 'PDF' },
-  { value: 'markdown', label: 'Markdown', labelKey: 'export.markdown' },
-  { value: 'json', label: 'JSON', labelKey: 'export.json' },
-  { value: 'txt', label: 'TXT', labelKey: 'export.txt' },
-  { value: 'csv', label: 'CSV', labelKey: 'export.csv' },
+const FORMATS: ReadonlyArray<{ value: Format; labelKey: TranslationKey }> = [
+  { value: 'pdf', labelKey: 'export.pdf' },
+  { value: 'markdown', labelKey: 'export.markdown' },
+  { value: 'json', labelKey: 'export.json' },
+  { value: 'txt', labelKey: 'export.txt' },
+  { value: 'csv', labelKey: 'export.csv' },
 ];
 
 export class ExportMenu {
@@ -24,7 +24,7 @@ export class ExportMenu {
         <span class="text-ink-400">${translator.t('export.label')}</span>
         ${FORMATS.map(
           (f) =>
-            `<button type="button" data-export="${f.value}" class="btn-ghost text-sm">${f.labelKey ? translator.t(f.labelKey) : f.label}</button>`,
+            `<button type="button" data-export="${f.value}" class="btn-ghost text-sm">${translator.t(f.labelKey)}</button>`,
         ).join('')}
       </div>
     `;

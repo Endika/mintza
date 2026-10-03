@@ -3,6 +3,7 @@ import type { LLMProviderName } from '../../domain/summary/value-objects/LLMProv
 import { CostCalculator } from '../../domain/tokens/services/CostCalculator';
 import { Money } from '../../domain/tokens/value-objects/Money';
 import type { TranscriptionProviderName } from '../../domain/transcription/value-objects/TranscriptionProvider';
+import type { Translator } from '../i18n/Translator';
 
 const LLM_DEFAULT_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
@@ -27,12 +28,12 @@ export class CostCounter {
   private readonly calculator = new CostCalculator();
   private interval: number | null = null;
 
-  startLive(target: HTMLElement, getMeeting: () => Meeting | null): void {
+  startLive(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     this.stop();
     const tick = (): void => {
       const meeting = getMeeting();
       if (!meeting) return;
-      this.renderLive(target, meeting);
+      this.renderLive(target, meeting, translator);
     };
     tick();
     this.interval = window.setInterval(tick, 1000);
@@ -45,7 +46,7 @@ export class CostCounter {
     }
   }
 
-  renderFinal(target: HTMLElement, meeting: Meeting): void {
+  renderFinal(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     this.stop();
     const transcription = this.transcriptionByProvider(meeting);
     const llm = this.llmByProvider(meeting);
@@ -53,31 +54,31 @@ export class CostCounter {
 
     target.innerHTML = `
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-600">
-        <span><strong>Total:</strong> ${total.format()}</span>
+        <span><strong>${translator.t('cost.total')}</strong> ${total.format()}</span>
         ${this.providerSpans(transcription, TRANSCRIPTION_LABEL)}
         ${this.providerSpans(llm, LLM_LABEL)}
         <span class="text-ink-400">${formatDuration(meeting.durationMs)}</span>
-        <span class="text-ink-400">${meeting.fullText().wordCount()} words</span>
+        <span class="text-ink-400">${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span>
       </div>
     `;
   }
 
-  private renderLive(target: HTMLElement, meeting: Meeting): void {
+  private renderLive(target: HTMLElement, meeting: Meeting, translator: Translator): void {
     const transcription = this.transcriptionByProvider(meeting);
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
     const totalSoFar = sumAll([...transcription.values()]);
     const providerSpans = this.providerSpans(transcription, TRANSCRIPTION_LABEL);
     target.innerHTML = `
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-600">
-        <span><strong>Recording…</strong></span>
+        <span><strong>${translator.t('home.recording')}</strong></span>
         <span class="text-ink-400">${formatDuration(meeting.durationMs)}</span>
-        <span class="text-ink-400">${meeting.fullText().wordCount()} words</span>
+        <span class="text-ink-400">${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span>
         ${
           transcribedMs > 0
-            ? `<span class="text-ink-400">Transcribed ${formatDuration(transcribedMs)}</span>
-               <span class="text-ink-400">Cost so far: ${totalSoFar.format()}</span>
+            ? `<span class="text-ink-400">${translator.t('cost.transcribed', { duration: formatDuration(transcribedMs) })}</span>
+               <span class="text-ink-400">${translator.t('cost.so_far', { amount: totalSoFar.format() })}</span>
                ${providerSpans}`
-            : '<span class="text-ink-400">Waiting for first chunk…</span>'
+            : `<span class="text-ink-400">${translator.t('home.chunks_wait')}</span>`
         }
       </div>
     `;

@@ -29,7 +29,6 @@ export type TranslationKey =
   | 'home.mic_loud'
   | 'home.mic_none'
   | 'home.chunks_wait'
-  | 'home.chunks_progress'
   | 'home.no_audio'
   | 'home.skip'
   | 'home.last_error'
@@ -46,12 +45,10 @@ export type TranslationKey =
   | 'home.field_template'
   | 'home.field_language'
   | 'home.configure_key'
-  | 'home.screen_on'
-  | 'home.screen_off'
   | 'home.templates_failed'
-  | 'template.work'
-  | 'template.interview'
-  | 'template.generic'
+  | 'template.builtin.work'
+  | 'template.builtin.interview'
+  | 'template.builtin.generic'
   | 'summary.bullet_points'
   | 'summary.action_items'
   | 'summary.one_liner'
@@ -103,7 +100,6 @@ export type TranslationKey =
   | 'templates.delete'
   | 'templates.builtin'
   | 'templates.field_name'
-  | 'templates.field_system_role'
   | 'templates.field_mindmap'
   | 'templates.field_kinds'
   | 'templates.field_label_overrides'
@@ -120,7 +116,65 @@ export type TranslationKey =
   | 'export.markdown'
   | 'export.json'
   | 'export.txt'
-  | 'export.csv';
+  | 'export.csv'
+  | 'app.version'
+  | 'home.summaries_result'
+  | 'home.save_failed'
+  | 'home.start_failed'
+  | 'home.keep_awake_on'
+  | 'home.keep_awake_off'
+  | 'home.progress'
+  | 'home.progress_skipped'
+  | 'home.progress_failed'
+  | 'history.clear_all'
+  | 'history.load_failed'
+  | 'history.starred'
+  | 'history.delete_named'
+  | 'history.confirm_delete'
+  | 'history.confirm_clear'
+  | 'detail.missing_id'
+  | 'detail.invalid_id'
+  | 'detail.delete'
+  | 'detail.load_failed'
+  | 'detail.not_found'
+  | 'detail.confirm_delete'
+  | 'detail.no_transcript'
+  | 'detail.no_summaries'
+  | 'detail.regenerate'
+  | 'settings.provider_openai'
+  | 'settings.provider_google'
+  | 'settings.provider_anthropic'
+  | 'settings.provider_azure'
+  | 'settings.hint_cheap'
+  | 'settings.hint_balanced'
+  | 'settings.hint_premium'
+  | 'settings.azure_region'
+  | 'settings.azure_region_placeholder'
+  | 'settings.key_placeholder'
+  | 'templates.load_failed'
+  | 'templates.section_count'
+  | 'templates.copy_name'
+  | 'templates.delete_failed'
+  | 'templates.field_meeting_type'
+  | 'templates.field_meeting_type_hint'
+  | 'templates.meeting_type_placeholder'
+  | 'templates.kinds_required'
+  | 'cost.total'
+  | 'cost.words'
+  | 'cost.transcribed'
+  | 'cost.so_far'
+  | 'stats.duration'
+  | 'stats.words'
+  | 'stats.words_per_minute'
+  | 'stats.providers'
+  | 'stats.top_keywords'
+  | 'stats.no_keywords'
+  | 'sentiment.very_negative'
+  | 'sentiment.negative'
+  | 'sentiment.neutral'
+  | 'sentiment.positive'
+  | 'sentiment.very_positive'
+  | 'export.pdf';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -152,9 +206,7 @@ const EN: Translations = {
   'home.mic_ok': 'OK',
   'home.mic_loud': 'Loud',
   'home.mic_none': 'No sound detected · check mic',
-  'home.chunks_wait': 'Waiting for the first chunk…',
-  'home.chunks_progress':
-    'Chunks: {received} received · {transcribed} transcribed · {skipped} skipped · {failed} failed',
+  'home.chunks_wait': 'Waiting for the first part…',
   'home.no_audio':
     'No audio was transcribed. The mic may not have captured sound or the API failed.',
   'home.skip': 'Skip to content',
@@ -172,12 +224,10 @@ const EN: Translations = {
   'home.field_template': 'Template',
   'home.field_language': 'Spoken language',
   'home.configure_key': 'Configure your OpenAI key before recording.',
-  'home.screen_on': 'Keep screen on',
-  'home.screen_off': 'Allow screen off',
   'home.templates_failed': "Couldn't load your custom templates. Using the built-in ones.",
-  'template.work': 'Work',
-  'template.interview': 'Interview',
-  'template.generic': 'Generic',
+  'template.builtin.work': 'Work',
+  'template.builtin.interview': 'Interview',
+  'template.builtin.generic': 'Generic',
   'summary.bullet_points': 'Key points',
   'summary.action_items': 'Action items',
   'summary.one_liner': 'One-liner',
@@ -189,13 +239,13 @@ const EN: Translations = {
   'settings.title': 'Settings',
   'settings.api_keys': 'API keys',
   'settings.api_keys_warning':
-    "Your keys are stored only in this browser's localStorage. They never leave your device.",
+    'Your keys stay in this browser. Mintza only sends each key to its own provider, when you record or summarise.',
   'settings.qualities': 'Quality profiles',
   'settings.preferences': 'Preferences',
   'settings.summary_quality': 'Summary quality',
   'settings.transcription_quality': 'Transcription quality',
   'settings.cheap': 'Cheap',
-  'settings.balanced': 'Balanced (recommended)',
+  'settings.balanced': 'Balanced',
   'settings.premium': 'Premium',
   'settings.btn_save': 'Save',
   'settings.btn_clear': 'Clear keys',
@@ -230,7 +280,6 @@ const EN: Translations = {
   'templates.delete': 'Delete',
   'templates.builtin': 'Built-in',
   'templates.field_name': 'Name',
-  'templates.field_system_role': 'Meeting type (system role)',
   'templates.field_mindmap': 'Mind map structure suggestion',
   'templates.field_kinds': 'Summary sections (toggle to include)',
   'templates.field_label_overrides': 'Custom labels (leave empty to keep default)',
@@ -248,6 +297,65 @@ const EN: Translations = {
   'export.json': 'JSON',
   'export.txt': 'TXT',
   'export.csv': 'CSV',
+  'app.version': 'Mintza version {version}',
+  'home.summaries_result': '{ok} ready · {failed} failed',
+  'home.save_failed': "Couldn't save this meeting.",
+  'home.start_failed': "Couldn't start recording. Check that Mintza can use your microphone.",
+  'home.keep_awake_on': 'Keep screen on',
+  'home.keep_awake_off': 'Let screen sleep',
+  'home.progress': 'Transcribing… {done} of {total} parts',
+  'home.progress_skipped': '{count} skipped',
+  'home.progress_failed': '{count} failed',
+  'history.clear_all': 'Clear all',
+  'history.load_failed': "Couldn't load your meetings.",
+  'history.starred': 'Starred',
+  'history.delete_named': 'Delete {title}',
+  'history.confirm_delete': 'Delete this meeting?',
+  'history.confirm_clear': "Delete all meetings? This can't be undone.",
+  'detail.missing_id': "This link doesn't point to a meeting.",
+  'detail.invalid_id': "This meeting link isn't valid.",
+  'detail.delete': 'Delete',
+  'detail.load_failed': "Couldn't load this meeting.",
+  'detail.not_found': 'Meeting not found.',
+  'detail.confirm_delete': "Delete this meeting? This can't be undone.",
+  'detail.no_transcript': 'No transcript.',
+  'detail.no_summaries': 'No summaries.',
+  'detail.regenerate': 'Regenerate',
+  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
+  'settings.provider_google': 'Google (Gemini + Speech)',
+  'settings.provider_anthropic': 'Anthropic Claude',
+  'settings.provider_azure': 'Azure Speech',
+  'settings.hint_cheap': 'Lowest cost; uses your cheapest connected service first.',
+  'settings.hint_balanced': 'Good quality at low cost. Recommended.',
+  'settings.hint_premium': 'Best quality, about 20× the cost.',
+  'settings.azure_region': 'Azure region',
+  'settings.azure_region_placeholder': 'e.g. westeurope',
+  'settings.key_placeholder': 'Paste your key',
+  'templates.load_failed': "Couldn't load your templates.",
+  'templates.section_count': '{count} sections',
+  'templates.copy_name': '{name} copy',
+  'templates.delete_failed': "Couldn't delete this template.",
+  'templates.field_meeting_type': 'What kind of meeting is this?',
+  'templates.field_meeting_type_hint':
+    'Mintza tells the assistant this before reading the transcript.',
+  'templates.meeting_type_placeholder': "a doctor's appointment, a brainstorm…",
+  'templates.kinds_required': 'Pick at least one summary section.',
+  'cost.total': 'Total:',
+  'cost.words': '{count} words',
+  'cost.transcribed': 'Transcribed {duration}',
+  'cost.so_far': 'Cost so far: {amount}',
+  'stats.duration': 'Duration',
+  'stats.words': 'Words',
+  'stats.words_per_minute': 'Words / min',
+  'stats.providers': 'Providers',
+  'stats.top_keywords': 'Top keywords',
+  'stats.no_keywords': 'No keywords detected.',
+  'sentiment.very_negative': 'Very negative',
+  'sentiment.negative': 'Negative',
+  'sentiment.neutral': 'Neutral',
+  'sentiment.positive': 'Positive',
+  'sentiment.very_positive': 'Very positive',
+  'export.pdf': 'PDF',
 };
 
 const ES: Translations = {
@@ -278,9 +386,7 @@ const ES: Translations = {
   'home.mic_ok': 'OK',
   'home.mic_loud': 'Alto',
   'home.mic_none': 'No se detecta sonido · revisa el mic',
-  'home.chunks_wait': 'Esperando al primer fragmento…',
-  'home.chunks_progress':
-    'Fragmentos: {received} recibidos · {transcribed} transcritos · {skipped} saltados · {failed} fallidos',
+  'home.chunks_wait': 'Esperando la primera parte…',
   'home.no_audio': 'No se transcribió nada. El micro pudo no captar sonido o la API falló.',
   'home.skip': 'Saltar al contenido',
   'home.last_error': 'Último error',
@@ -297,13 +403,11 @@ const ES: Translations = {
   'home.field_template': 'Plantilla',
   'home.field_language': 'Idioma hablado',
   'home.configure_key': 'Configura tu clave de OpenAI antes de grabar.',
-  'home.screen_on': 'Mantener pantalla encendida',
-  'home.screen_off': 'Permitir apagar pantalla',
   'home.templates_failed':
     'No se pudieron cargar tus plantillas personalizadas. Se usan las integradas.',
-  'template.work': 'Trabajo',
-  'template.interview': 'Entrevista',
-  'template.generic': 'Genérica',
+  'template.builtin.work': 'Trabajo',
+  'template.builtin.interview': 'Entrevista',
+  'template.builtin.generic': 'Genérica',
   'summary.bullet_points': 'Puntos clave',
   'summary.action_items': 'Acciones',
   'summary.one_liner': 'En una línea',
@@ -315,13 +419,13 @@ const ES: Translations = {
   'settings.title': 'Ajustes',
   'settings.api_keys': 'Claves API',
   'settings.api_keys_warning':
-    'Tus claves se guardan solo en el localStorage de este navegador. No salen de tu dispositivo.',
+    'Tus claves se quedan en este navegador. Mintza solo envía cada clave a su proveedor cuando grabas o resumes.',
   'settings.qualities': 'Perfiles de calidad',
   'settings.preferences': 'Preferencias',
   'settings.summary_quality': 'Calidad de resumen',
   'settings.transcription_quality': 'Calidad de transcripción',
   'settings.cheap': 'Barato',
-  'settings.balanced': 'Equilibrado (recomendado)',
+  'settings.balanced': 'Equilibrado',
   'settings.premium': 'Premium',
   'settings.btn_save': 'Guardar',
   'settings.btn_clear': 'Borrar claves',
@@ -356,7 +460,6 @@ const ES: Translations = {
   'templates.delete': 'Borrar',
   'templates.builtin': 'Integrada',
   'templates.field_name': 'Nombre',
-  'templates.field_system_role': 'Tipo de reunión (rol del sistema)',
   'templates.field_mindmap': 'Estructura sugerida del mapa mental',
   'templates.field_kinds': 'Secciones del resumen (activa/desactiva)',
   'templates.field_label_overrides': 'Etiquetas personalizadas (vacío = por defecto)',
@@ -374,6 +477,65 @@ const ES: Translations = {
   'export.json': 'JSON',
   'export.txt': 'TXT',
   'export.csv': 'CSV',
+  'app.version': 'Mintza, versión {version}',
+  'home.summaries_result': '{ok} listos · {failed} fallidos',
+  'home.save_failed': 'No se pudo guardar esta reunión.',
+  'home.start_failed': 'No se pudo empezar a grabar. Comprueba que Mintza puede usar tu micrófono.',
+  'home.keep_awake_on': 'Mantener la pantalla encendida',
+  'home.keep_awake_off': 'Dejar que la pantalla se apague',
+  'home.progress': 'Transcribiendo… {done} de {total} partes',
+  'home.progress_skipped': '{count} omitidas',
+  'home.progress_failed': '{count} fallidas',
+  'history.clear_all': 'Borrar todo',
+  'history.load_failed': 'No se pudieron cargar tus reuniones.',
+  'history.starred': 'Destacada',
+  'history.delete_named': 'Borrar {title}',
+  'history.confirm_delete': '¿Borrar esta reunión?',
+  'history.confirm_clear': '¿Borrar todas las reuniones? No se puede deshacer.',
+  'detail.missing_id': 'Este enlace no lleva a ninguna reunión.',
+  'detail.invalid_id': 'Este enlace de reunión no es válido.',
+  'detail.delete': 'Borrar',
+  'detail.load_failed': 'No se pudo cargar esta reunión.',
+  'detail.not_found': 'No se encontró la reunión.',
+  'detail.confirm_delete': '¿Borrar esta reunión? No se puede deshacer.',
+  'detail.no_transcript': 'Sin transcripción.',
+  'detail.no_summaries': 'Sin resúmenes.',
+  'detail.regenerate': 'Regenerar',
+  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
+  'settings.provider_google': 'Google (Gemini + Speech)',
+  'settings.provider_anthropic': 'Anthropic Claude',
+  'settings.provider_azure': 'Azure Speech',
+  'settings.hint_cheap': 'El coste más bajo; usa primero tu servicio conectado más barato.',
+  'settings.hint_balanced': 'Buena calidad a bajo coste. Recomendado.',
+  'settings.hint_premium': 'La mejor calidad, unas 20 veces más cara.',
+  'settings.azure_region': 'Región de Azure',
+  'settings.azure_region_placeholder': 'p. ej., westeurope',
+  'settings.key_placeholder': 'Pega tu clave',
+  'templates.load_failed': 'No se pudieron cargar tus plantillas.',
+  'templates.section_count': '{count} secciones',
+  'templates.copy_name': '{name} (copia)',
+  'templates.delete_failed': 'No se pudo borrar esta plantilla.',
+  'templates.field_meeting_type': '¿Qué tipo de reunión es?',
+  'templates.field_meeting_type_hint':
+    'Mintza se lo dice al asistente antes de leer la transcripción.',
+  'templates.meeting_type_placeholder': 'una cita médica, una lluvia de ideas…',
+  'templates.kinds_required': 'Elige al menos una sección del resumen.',
+  'cost.total': 'Total:',
+  'cost.words': '{count} palabras',
+  'cost.transcribed': 'Transcrito: {duration}',
+  'cost.so_far': 'Coste hasta ahora: {amount}',
+  'stats.duration': 'Duración',
+  'stats.words': 'Palabras',
+  'stats.words_per_minute': 'Palabras / min',
+  'stats.providers': 'Proveedores',
+  'stats.top_keywords': 'Palabras clave principales',
+  'stats.no_keywords': 'No se detectaron palabras clave.',
+  'sentiment.very_negative': 'Muy negativo',
+  'sentiment.negative': 'Negativo',
+  'sentiment.neutral': 'Neutro',
+  'sentiment.positive': 'Positivo',
+  'sentiment.very_positive': 'Muy positivo',
+  'export.pdf': 'PDF',
 };
 
 const EU: Translations = {
@@ -405,8 +567,6 @@ const EU: Translations = {
   'home.mic_loud': 'Altua',
   'home.mic_none': 'Ez da soinurik antzeman · egiaztatu mikrofonoa',
   'home.chunks_wait': 'Lehen zatiaren zain…',
-  'home.chunks_progress':
-    'Zatiak: {received} jasota · {transcribed} transkribatuta · {skipped} saltatuak · {failed} hutsegite',
   'home.no_audio':
     'Ez da audiorik transkribatu. Mikrofonoak agian ez du jaso edo APIa huts egin du.',
   'home.skip': 'Edukira jauzi',
@@ -424,13 +584,11 @@ const EU: Translations = {
   'home.field_template': 'Txantiloia',
   'home.field_language': 'Hizkuntza',
   'home.configure_key': 'Konfiguratu zure OpenAI gakoa grabatu aurretik.',
-  'home.screen_on': 'Mantendu pantaila piztuta',
-  'home.screen_off': 'Utzi pantaila itzaltzen',
   'home.templates_failed':
     'Ezin izan dira zure txantiloi pertsonalizatuak kargatu. Integratuak erabiliko dira.',
-  'template.work': 'Lana',
-  'template.interview': 'Elkarrizketa',
-  'template.generic': 'Orokorra',
+  'template.builtin.work': 'Lana',
+  'template.builtin.interview': 'Elkarrizketa',
+  'template.builtin.generic': 'Orokorra',
   'summary.bullet_points': 'Puntu nagusiak',
   'summary.action_items': 'Ekintzak',
   'summary.one_liner': 'Esaldi batean',
@@ -442,13 +600,13 @@ const EU: Translations = {
   'settings.title': 'Ezarpenak',
   'settings.api_keys': 'API gakoak',
   'settings.api_keys_warning':
-    'Zure gakoak nabigatzaile honetako localStorage-an bakarrik gordetzen dira. Ez dute zure gailua uzten.',
+    'Zure gakoak nabigatzaile honetan geratzen dira. Mintzak gako bakoitza bere hornitzaileari bakarrik bidaltzen dio, grabatzean edo laburtzean.',
   'settings.qualities': 'Kalitate-profilak',
   'settings.preferences': 'Lehentasunak',
   'settings.summary_quality': 'Laburpenaren kalitatea',
   'settings.transcription_quality': 'Transkripzioaren kalitatea',
   'settings.cheap': 'Merkea',
-  'settings.balanced': 'Orekatua (gomendatua)',
+  'settings.balanced': 'Orekatua',
   'settings.premium': 'Premium',
   'settings.btn_save': 'Gorde',
   'settings.btn_clear': 'Garbitu gakoak',
@@ -483,7 +641,6 @@ const EU: Translations = {
   'templates.delete': 'Ezabatu',
   'templates.builtin': 'Integratua',
   'templates.field_name': 'Izena',
-  'templates.field_system_role': 'Bilera mota (sistema-rola)',
   'templates.field_mindmap': 'Buru-maparen iradokizun-egitura',
   'templates.field_kinds': 'Laburpenaren atalak (aktibatu/desaktibatu)',
   'templates.field_label_overrides': 'Etiketa pertsonalizatuak (hutsa = lehenetsia)',
@@ -501,6 +658,67 @@ const EU: Translations = {
   'export.json': 'JSON',
   'export.txt': 'TXT',
   'export.csv': 'CSV',
+  'app.version': 'Mintza, {version} bertsioa',
+  'home.summaries_result': '{ok} prest · {failed} huts',
+  'home.save_failed': 'Ezin izan da bilera hau gorde.',
+  'home.start_failed':
+    'Ezin izan da grabatzen hasi. Egiaztatu Mintzak zure mikrofonoa erabil dezakeela.',
+  'home.keep_awake_on': 'Mantendu pantaila piztuta',
+  'home.keep_awake_off': 'Utzi pantaila itzaltzen',
+  'home.progress': 'Transkribatzen… {done}/{total} zati',
+  'home.progress_skipped': '{count} saltatuta',
+  'home.progress_failed': '{count} huts',
+  'history.clear_all': 'Ezabatu guztiak',
+  'history.load_failed': 'Ezin izan dira zure bilerak kargatu.',
+  'history.starred': 'Izarduna',
+  'history.delete_named': 'Ezabatu {title}',
+  'history.confirm_delete': 'Bilera hau ezabatu?',
+  'history.confirm_clear': 'Bilera guztiak ezabatu? Ezin da desegin.',
+  'detail.missing_id': 'Esteka honetan ez dago bilerarik.',
+  'detail.invalid_id': 'Bilera-esteka hau ez da baliozkoa.',
+  'detail.delete': 'Ezabatu',
+  'detail.load_failed': 'Ezin izan da bilera hau kargatu.',
+  'detail.not_found': 'Ez da bilera aurkitu.',
+  'detail.confirm_delete': 'Bilera hau ezabatu? Ezin da desegin.',
+  'detail.no_transcript': 'Ez dago transkripziorik.',
+  'detail.no_summaries': 'Ez dago laburpenik.',
+  'detail.regenerate': 'Birsortu',
+  'settings.provider_openai': 'OpenAI (Whisper + GPT)',
+  'settings.provider_google': 'Google (Gemini + Speech)',
+  'settings.provider_anthropic': 'Anthropic Claude',
+  'settings.provider_azure': 'Azure Speech',
+  'settings.hint_cheap':
+    'Kosturik txikiena; zure zerbitzu konektatu merkeena erabiltzen du lehenik.',
+  'settings.hint_balanced': 'Kalitate ona kostu txikian. Gomendatua.',
+  'settings.hint_premium': 'Kalitaterik onena, 20 aldiz garestiago gutxi gorabehera.',
+  'settings.azure_region': 'Azure eskualdea',
+  'settings.azure_region_placeholder': 'adib. westeurope',
+  'settings.key_placeholder': 'Itsatsi zure gakoa',
+  'templates.load_failed': 'Ezin izan dira zure txantiloiak kargatu.',
+  'templates.section_count': '{count} atal',
+  'templates.copy_name': '{name} (kopia)',
+  'templates.delete_failed': 'Ezin izan da txantiloi hau ezabatu.',
+  'templates.field_meeting_type': 'Zer bilera mota da?',
+  'templates.field_meeting_type_hint':
+    'Mintzak hau esaten dio laguntzaileari transkripzioa irakurri aurretik.',
+  'templates.meeting_type_placeholder': 'mediku-hitzordu bat, ideia-jasa bat…',
+  'templates.kinds_required': 'Aukeratu laburpen-atal bat gutxienez.',
+  'cost.total': 'Guztira:',
+  'cost.words': '{count} hitz',
+  'cost.transcribed': 'Transkribatuta: {duration}',
+  'cost.so_far': 'Orain arteko kostua: {amount}',
+  'stats.duration': 'Iraupena',
+  'stats.words': 'Hitzak',
+  'stats.words_per_minute': 'Hitz / min',
+  'stats.providers': 'Hornitzaileak',
+  'stats.top_keywords': 'Hitz gako nagusiak',
+  'stats.no_keywords': 'Ez da hitz gakorik antzeman.',
+  'sentiment.very_negative': 'Oso negatiboa',
+  'sentiment.negative': 'Negatiboa',
+  'sentiment.neutral': 'Neutroa',
+  'sentiment.positive': 'Positiboa',
+  'sentiment.very_positive': 'Oso positiboa',
+  'export.pdf': 'PDF',
 };
 
 export const TRANSLATIONS: Record<LanguageCode, Translations> = {
