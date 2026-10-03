@@ -11,6 +11,10 @@ export interface RouterOptions {
 
 export type PageFactory = () => Page | Promise<Page>;
 
+interface NavigateEventLike extends Event {
+  readonly navigationType?: string;
+}
+
 export class Router {
   private current: Page | undefined;
   private currentHash = '';
@@ -18,6 +22,11 @@ export class Router {
   private generation = 0;
   private firstRender = true;
   private leaving: Promise<boolean> | undefined;
+  /** With the Navigation API, refused pushes are stepped back over instead of overwritten. */
+  private tracking = false;
+  private pushes = 0;
+  private popped = false;
+  private undoingTraverse = false;
   private readonly abort = new AbortController();
 
   constructor(
@@ -28,6 +37,15 @@ export class Router {
   ) {}
 
   start(): void {
+    const navigation = (window as { navigation?: EventTarget }).navigation;
+    if (navigation) {
+      this.tracking = true;
+      navigation.addEventListener(
+        'navigate',
+        (e: NavigateEventLike) => this.track(e.navigationType),
+        { signal: this.abort.signal },
+      );
+    }
     window.addEventListener(
       'hashchange',
       (e) => {
@@ -52,30 +70,40 @@ export class Router {
     }
   }
 
+  private track(type: string | undefined): void {
+    if (type === 'push') this.pushes++;
+    else if (type === 'traverse' && this.undoingTraverse) this.undoingTraverse = false;
+    else this.popped = true;
+  }
+
   private async handle(force = true): Promise<void> {
     const target = window.location.hash;
     this.lastTargetHash = target;
     if (!force && this.current && target === this.currentHash) {
       this.generation++;
+      this.leaving = undefined;
+      this.resetPushes();
       return;
     }
     const initial = this.firstRender;
     this.firstRender = false;
     const generation = ++this.generation;
     const guarded = this.current;
-    if (guarded?.canLeave && target !== this.currentHash) {
-      this.leaving ??= Promise.resolve(guarded.canLeave()).finally(() => {
-        this.leaving = undefined;
-      });
-      const leave = await this.leaving;
+    const sameHash = target === this.currentHash;
+    if (guarded?.canLeave && (force || !sameHash)) {
+      const asking: Promise<boolean> = (this.leaving ??= Promise.resolve(
+        guarded.canLeave(),
+      ).finally(() => {
+        if (this.leaving === asking) this.leaving = undefined;
+      }));
+      const leave = await asking;
       if (generation !== this.generation) return;
       if (!leave) {
-        const restored = this.currentHash || '#/';
-        this.lastTargetHash = restored;
-        history.replaceState(null, '', restored);
+        if (!sameHash) this.restore();
         return;
       }
     }
+    this.resetPushes();
     this.current?.dispose?.();
     this.current = undefined;
     const raw = target.replace(/^#/, '') || '/';
@@ -92,6 +120,23 @@ export class Router {
     if (generation !== this.generation) return;
     this.options.onNavigate?.(path);
     this.announce(container, initial);
+  }
+
+  private restore(): void {
+    const restored = this.currentHash || '#/';
+    this.lastTargetHash = restored;
+    if (this.tracking && !this.popped && this.pushes > 0) {
+      this.undoingTraverse = true;
+      history.go(-this.pushes);
+    } else {
+      history.replaceState(null, '', restored);
+    }
+    this.resetPushes();
+  }
+
+  private resetPushes(): void {
+    this.pushes = 0;
+    this.popped = false;
   }
 
   private announce(container: HTMLElement, initial: boolean): void {
