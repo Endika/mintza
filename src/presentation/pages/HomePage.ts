@@ -132,6 +132,7 @@ export class HomePage implements Page {
   private alive = true;
   private transcriptSaved: Promise<boolean> | null = null;
   private persisted = false;
+  private transcriptStored = false;
 
   constructor(private readonly deps: HomePageDeps) {}
 
@@ -218,7 +219,11 @@ export class HomePage implements Page {
     if (this.screenState === 'processing') {
       return ask('home.leave_processing') && ((await this.transcriptSaved) ?? true);
     }
-    return ask('home.leave_unsaved');
+    return ask(this.unsavedPrompt);
+  }
+
+  private get unsavedPrompt(): TranslationKey {
+    return this.transcriptStored ? 'home.leave_summaries_unsaved' : 'home.leave_unsaved';
   }
 
   private get hasUnsavedMeeting(): boolean {
@@ -565,7 +570,10 @@ export class HomePage implements Page {
     }
 
     const transcriptSaved = await this.deps.saveMeeting.execute({ meeting });
-    if (transcriptSaved.ok) this.persisted = true;
+    if (transcriptSaved.ok) {
+      this.persisted = true;
+      this.transcriptStored = true;
+    }
     onTranscriptSaved(transcriptSaved.ok);
     if (!transcriptSaved.ok) this.showSaveError(transcriptSaved.error.message);
 
@@ -596,7 +604,7 @@ export class HomePage implements Page {
         : transcriptSaved.ok
           ? 'home.summaries_save_failed'
           : 'home.save_failed';
-      this.showRetrySave(meeting, `${this.t.t(what)} ${result.saveError.message}`, detail);
+      this.showRetrySave(meeting, what, result.saveError.message, detail);
     } else {
       this.showSaved(meeting, detail);
     }
@@ -611,20 +619,27 @@ export class HomePage implements Page {
   }
 
   /** Re-saving the whole meeting stores whatever the last save missed. */
-  private showRetrySave(meeting: Meeting, message: string, detail: string): void {
+  private showRetrySave(
+    meeting: Meeting,
+    what: TranslationKey,
+    error: string,
+    detail: string,
+  ): void {
     const status = this.qsOptional('#status');
     if (!status) return;
+    this.removeRetrySave();
     status.classList.add('text-danger');
+    status.textContent = `${this.t.t(what)} ${error}`;
+    this.paintStatus();
     const retry = document.createElement('button');
     retry.type = 'button';
     retry.id = 'btn-retry-save';
-    retry.className =
-      'ml-1 inline-flex min-h-11 items-center font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg';
+    retry.className = 'btn-secondary mt-2 self-start';
     retry.textContent = this.t.t('home.retry_save');
     retry.addEventListener('click', () => {
       void (async () => {
-        retry.disabled = true;
         const hadFocus = document.activeElement === retry;
+        retry.disabled = true;
         const saved = await this.deps.saveMeeting.execute({ meeting });
         if (!this.alive || this.meeting !== meeting) return;
         if (saved.ok) {
@@ -634,16 +649,15 @@ export class HomePage implements Page {
           if (hadFocus) this.qsOptional('#status a')?.focus();
           return;
         }
-        this.showRetrySave(
-          meeting,
-          `${this.t.t('home.save_failed')} ${saved.error.message}`,
-          detail,
-        );
+        this.showRetrySave(meeting, what, saved.error.message, detail);
         if (hadFocus) this.qsOptional('#btn-retry-save')?.focus();
       })();
     });
-    status.replaceChildren(document.createTextNode(`${message} `), retry);
-    this.paintStatus();
+    status.after(retry);
+  }
+
+  private removeRetrySave(): void {
+    this.qsOptional('#btn-retry-save')?.remove();
   }
 
   private showSaveError(message: string): void {
@@ -657,6 +671,7 @@ export class HomePage implements Page {
   private showSaved(meeting: Meeting, detail: string): void {
     const status = this.qsOptional('#status');
     if (!status) return;
+    this.removeRetrySave();
     status.classList.remove('text-danger');
     status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="mr-3 font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a><span class="tabular">${escapeHtml(detail)}</span>`;
   }
@@ -665,13 +680,14 @@ export class HomePage implements Page {
     if (!this.root) return;
     if (
       this.hasUnsavedMeeting &&
-      !this.guard.confirmLeave(this.t.t('home.leave_unsaved'), (m) => window.confirm(m))
+      !this.guard.confirmLeave(this.t.t(this.unsavedPrompt), (m) => window.confirm(m))
     ) {
       return;
     }
     this.meeting = null;
     this.transcriptSaved = null;
     this.persisted = false;
+    this.transcriptStored = false;
     this.kinds = SUMMARY_KINDS;
     this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
     this.screenState = 'idle';

@@ -258,17 +258,36 @@ describe('Router', () => {
 
   describe('with the Navigation API', () => {
     class FakeNavigation extends EventTarget {
-      announce(navigationType: 'push' | 'traverse'): void {
-        this.dispatchEvent(Object.assign(new Event('navigate'), { navigationType }));
+      announce(
+        navigationType: 'push' | 'replace' | 'traverse',
+        extra: { hashChange?: boolean; downloadRequest?: string | null } = {},
+      ): void {
+        this.dispatchEvent(
+          Object.assign(new Event('navigate'), {
+            navigationType,
+            hashChange: true,
+            downloadRequest: null,
+            ...extra,
+          }),
+        );
       }
     }
     let navigation: FakeNavigation;
+    const goes: number[] = [];
     beforeEach(() => {
       navigation = new FakeNavigation();
+      goes.length = 0;
       Object.defineProperty(window, 'navigation', { value: navigation, configurable: true });
+      // A real browser announces the traverse that history.go starts.
+      history.go = (delta?: number): void => {
+        goes.push(delta ?? 0);
+        navigation.announce('traverse');
+        History.prototype.go.call(history, delta);
+      };
     });
     afterEach(() => {
       Reflect.deleteProperty(window, 'navigation');
+      Reflect.deleteProperty(history, 'go');
     });
 
     it('steps back over a refused push instead of leaving a duplicate entry', async () => {
@@ -345,6 +364,40 @@ describe('Router', () => {
       expect(window.location.hash).toBe('#/history');
       expect(busy.asked).toBe(1);
       expect(root.textContent).toBe('Recording');
+    });
+
+    it('ignores a download and a same-URL link, then steps back over one refused push', async () => {
+      const busy = new StubPage('Recording', false);
+      router = new Router(
+        root,
+        new Map([
+          ['/', () => busy],
+          ['/history', () => new StubPage('History')],
+        ]),
+        () => busy,
+      );
+      history.replaceState({ entry: 'home' }, '', '#/');
+      router.start();
+      await flush();
+      const length = history.length;
+
+      navigation.announce('push', { hashChange: false, downloadRequest: 'sync.md' });
+      navigation.announce('replace', { hashChange: false });
+      navigation.announce('push');
+      await go('#/history', 10);
+
+      expect(goes).toEqual([-1]);
+      expect(window.location.hash).toBe('#/');
+      expect(history.state).toEqual({ entry: 'home' });
+      expect(history.length).toBe(length + 1);
+      expect(root.textContent).toBe('Recording');
+
+      navigation.announce('push');
+      await go('#/history', 10);
+
+      expect(goes).toEqual([-1, -1]);
+      expect(history.state).toEqual({ entry: 'home' });
+      expect(busy.asked).toBe(2);
     });
   });
 });

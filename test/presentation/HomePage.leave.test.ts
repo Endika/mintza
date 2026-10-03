@@ -463,12 +463,28 @@ describe('HomePage leaving a recording', () => {
     expect(unload().defaultPrevented).toBe(true);
     const retry = root.querySelector<HTMLButtonElement>('#btn-retry-save')!;
     expect(retry.textContent).toBe('Try saving again');
+    expect(status.contains(retry)).toBe(false);
+    expect(retry.previousElementSibling).toBe(status);
 
+    const asked: string[] = [];
+    window.confirm = (message?: string) => {
+      asked.push(message ?? '');
+      return false;
+    };
+    expect(await page.canLeave()).toBe(false);
+    root.querySelector<HTMLButtonElement>('#btn-new')!.click();
+    expect(asked).toEqual([
+      "The summaries aren't saved. Leave without them?",
+      "The summaries aren't saved. Leave without them?",
+    ]);
+
+    retry.focus();
     retry.click();
     await settle();
 
     expect(status.textContent).toContain('Saved to History');
     expect(root.querySelector('#btn-retry-save')).toBeNull();
+    expect(document.activeElement).toBe(status.querySelector('a'));
     const stored = await meetings.findById(meetings.saves.at(-1)!.id);
     expect(stored.ok && stored.value?.summaries.size).toBeGreaterThan(0);
     window.confirm = () => false;
