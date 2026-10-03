@@ -13,7 +13,7 @@ export interface ClaudeSummarizationOptions {
   readonly model?: string;
 }
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5';
+const DEFAULT_MODEL = 'claude-sonnet-5-5';
 
 export class ClaudeSummarizationAdapter implements SummarizationPort {
   private readonly model: string;
@@ -33,6 +33,7 @@ export class ClaudeSummarizationAdapter implements SummarizationPort {
       model: this.model,
       system: prompt.system,
       user: prompt.user,
+      effort: 'low',
     });
     if (!response.ok) return response;
     const summary = new Summary({

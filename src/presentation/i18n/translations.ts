@@ -244,6 +244,7 @@ export type TranslationKey =
   | 'error.missing_region'
   | 'error.no_speech'
   | 'error.bad_response'
+  | 'error.refused'
   | 'error.unknown'
   | 'settings.key_empty'
   | 'error.key_restricted'
@@ -521,6 +522,7 @@ const EN: Translations = {
   'error.missing_region': 'No Azure region in Settings.',
   'error.no_speech': 'No speech heard in this part.',
   'error.bad_response': "The service sent an answer Mintza couldn't read.",
+  'error.refused': 'The service declined to summarise this content.',
   'error.unknown': 'Something went wrong. Try again in a moment.',
   'settings.key_empty': 'Paste a key first.',
   'error.key_restricted': "This key's restrictions don't allow this site or app.",
@@ -800,6 +802,7 @@ const ES: Translations = {
   'error.missing_region': 'Falta la región de Azure en Ajustes.',
   'error.no_speech': 'No se ha oído voz en este fragmento.',
   'error.bad_response': 'El servicio ha devuelto una respuesta que Mintza no puede leer.',
+  'error.refused': 'El servicio se ha negado a resumir este contenido.',
   'error.unknown': 'Algo ha fallado. Vuelve a intentarlo en un momento.',
   'settings.key_empty': 'Pega primero una clave.',
   'error.key_restricted': 'Las restricciones de esta clave no permiten este sitio ni esta app.',
@@ -1083,6 +1086,7 @@ const EU: Translations = {
   'error.missing_region': 'Azure eskualdea falta da Ezarpenetan.',
   'error.no_speech': 'Ez da ahotsik entzun zati honetan.',
   'error.bad_response': 'Zerbitzuak Mintzak irakurri ezin duen erantzuna itzuli du.',
+  'error.refused': 'Zerbitzuak ez du eduki hau laburtu nahi izan.',
   'error.unknown': 'Zerbait gaizki joan da. Saiatu berriro pixka bat barru.',
   'settings.key_empty': 'Itsatsi gako bat lehenik.',
   'error.key_restricted': 'Gako honen murrizketek ez dute gune edo aplikazio hau onartzen.',

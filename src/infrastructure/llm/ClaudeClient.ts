@@ -4,12 +4,13 @@ import type { HttpClient } from '../http/HttpClient';
 
 const CLAUDE_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
+const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 
 export interface ClaudeChatRequest {
   readonly model: string;
   readonly system: string;
   readonly user: string;
-  readonly temperature?: number;
+  readonly effort?: 'low' | 'medium' | 'high';
   readonly maxTokens?: number;
 }
 
@@ -20,6 +21,7 @@ export interface ClaudeChatResponse {
 }
 
 interface ClaudeBody {
+  readonly stop_reason?: string;
   readonly content: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
   readonly usage?: {
     readonly input_tokens: number;
@@ -48,8 +50,9 @@ export class ClaudeClient {
     }
     const body = JSON.stringify({
       model: request.model,
-      max_tokens: request.maxTokens ?? 1024,
-      temperature: request.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? 4096,
+      ...(request.effort ? { output_config: { effort: request.effort } } : {}),
+      fallbacks: 'default',
       system: request.system,
       messages: [{ role: 'user', content: request.user }],
     });
@@ -60,6 +63,7 @@ export class ClaudeClient {
         'x-api-key': apiKey,
         'anthropic-version': ANTHROPIC_VERSION,
         'anthropic-dangerous-direct-browser-access': 'true',
+        'anthropic-beta': FALLBACK_BETA,
         'content-type': 'application/json',
       },
       body,
@@ -67,6 +71,11 @@ export class ClaudeClient {
     if (!response.ok) return response;
     try {
       const parsed = await response.value.json<ClaudeBody>();
+      if (parsed.stop_reason === 'refusal') {
+        return err(
+          new AppError('SUMMARIZATION_FAILED', 'Claude: refused', undefined, [], 'refused'),
+        );
+      }
       const text = parsed.content
         .filter((c) => c.type === 'text')
         .map((c) => c.text ?? '')

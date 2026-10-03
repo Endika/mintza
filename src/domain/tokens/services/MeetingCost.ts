@@ -15,7 +15,7 @@ export interface MeetingCostBreakdown {
 /** Prices a summary whose model is unrecorded or missing from the price table. */
 const FALLBACK_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
-  anthropic: 'claude-sonnet-4-5',
+  anthropic: 'claude-sonnet-5-5',
   gemini: 'gemini-3.1-flash-lite',
 };
 

@@ -98,7 +98,7 @@ describe('meetingCost', () => {
       }),
     );
     const cost = meetingCost(meeting);
-    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(3, 6);
+    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(2, 6);
     expect(cost.mindMap.toUsd()).toBeCloseTo(0.15, 6);
   });
 
