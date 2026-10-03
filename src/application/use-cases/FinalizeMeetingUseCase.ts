@@ -11,6 +11,7 @@ import type { AppError } from '../../shared/errors/AppError';
 export interface FinalizeMeetingInput {
   readonly meeting: Meeting;
   readonly kinds: readonly SummaryKind[];
+  readonly onSummary?: (attempt: SummaryAttempt) => void;
 }
 
 export interface SummaryAttempt {
@@ -44,11 +45,12 @@ export class FinalizeMeetingUseCase {
         template: input.meeting.template,
         language: input.meeting.language,
       });
-      if (result.ok) {
-        input.meeting.setSummary(result.value);
-        return { kind, result: { ok: true, summary: result.value } };
-      }
-      return { kind, result: { ok: false, error: result.error } };
+      const attempt: SummaryAttempt = result.ok
+        ? { kind, result: { ok: true, summary: result.value } }
+        : { kind, result: { ok: false, error: result.error } };
+      if (result.ok) input.meeting.setSummary(result.value);
+      input.onSummary?.(attempt);
+      return attempt;
     });
     const summaryAttempts = await Promise.all(summaryRequests);
     const summarySuccessCount = summaryAttempts.filter((a) => a.result.ok).length;

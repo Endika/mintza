@@ -73,6 +73,17 @@
   @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 font-semibold transition-[background-color,transform] duration-150 ease-smooth active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-100;
 }
 
+@keyframes rec-card-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+::view-transition-group(rec-card) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-smooth);
+}
+
 @layer base {
   :root {
     color-scheme: light dark;
@@ -186,12 +197,46 @@
   .shell-main {
     @apply block pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0;
   }
+  .shell-main[data-busy] {
+    @apply pb-[env(safe-area-inset-bottom)];
+  }
 
   .meter-bar-track {
     @apply h-2 overflow-hidden rounded-full bg-line;
   }
   .meter-bar-fill {
-    @apply h-full rounded-full transition-[width] duration-150 ease-out;
+    @apply h-full rounded-full;
+  }
+
+  .switch {
+    @apply inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] text-sm font-medium text-fg;
+  }
+  .switch-track {
+    @apply relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-edge bg-raised transition-colors duration-150;
+  }
+  .switch-thumb {
+    @apply ml-0.5 size-5 rounded-full bg-fg-muted transition-transform duration-150 ease-smooth;
+  }
+  .switch[aria-checked='true'] .switch-track {
+    @apply border-action bg-action;
+  }
+  .switch[aria-checked='true'] .switch-thumb {
+    @apply translate-x-5 bg-on-action;
+  }
+
+  .rec-card {
+    view-transition-name: rec-card;
+  }
+  .rec-card-live {
+    @apply flex min-h-[calc(100dvh-3rem)] flex-col sm:min-h-[calc(100dvh-5rem)];
+  }
+  .rec-card-fade {
+    animation: rec-card-fade 150ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rec-card-fade {
+      animation-duration: 150ms !important;
+    }
   }
   .prose-summary > * + * {
     @apply mt-2;

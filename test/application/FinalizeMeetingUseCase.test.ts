@@ -57,6 +57,29 @@ describe('FinalizeMeetingUseCase', () => {
     expect(stored.ok && stored.value?.mindMap?.root.label).toBe('topic');
   });
 
+  it('reports each summary as it settles', async () => {
+    const useCase = new FinalizeMeetingUseCase(
+      new FakeSummarizationPort({
+        kind: 'failure',
+        code: 'SUMMARIZATION_FAILED',
+        message: 'bad key',
+      }),
+      new FakeMindMapPort({ kind: 'success', rootLabel: 'topic' }),
+      new InMemoryMeetingRepository(),
+      new SentimentScoreParser(),
+    );
+    const settled: string[] = [];
+
+    await useCase.execute({
+      meeting: meetingWith('hello team'),
+      kinds: ['bullet_points', 'decisions'],
+      onSummary: (attempt) =>
+        settled.push(`${attempt.kind}:${attempt.result.ok ? 'ok' : attempt.result.error.message}`),
+    });
+
+    expect(settled.sort()).toEqual(['bullet_points:bad key', 'decisions:bad key']);
+  });
+
   it('derives temperature from sentiment summary content', async () => {
     const summarization = new FakeSummarizationPort({
       kind: 'success',
