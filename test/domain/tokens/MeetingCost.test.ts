@@ -98,8 +98,30 @@ describe('meetingCost', () => {
       }),
     );
     const cost = meetingCost(meeting);
-    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(2, 6);
+    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(3, 6);
     expect(cost.mindMap.toUsd()).toBeCloseTo(0.15, 6);
+  });
+
+  it('prices a summary saved before models were recorded at the model that ran then', () => {
+    const unrecorded = (provider: 'anthropic' | 'gemini'): Meeting => {
+      const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+      meeting.setSummary(
+        new Summary({
+          kind: 'decisions',
+          content: '- ship it',
+          tokensIn: MILLION,
+          tokensOut: MILLION,
+          provider,
+          generatedAt: new Date(),
+        }),
+      );
+      return meeting;
+    };
+    expect(meetingCost(unrecorded('anthropic')).llm.get('anthropic')!.toUsd()).toBeCloseTo(
+      3 + 15,
+      6,
+    );
+    expect(meetingCost(unrecorded('gemini')).llm.get('gemini')!.toUsd()).toBeCloseTo(0.1 + 0.4, 6);
   });
 
   describe('Gemini', () => {
@@ -123,10 +145,6 @@ describe('meetingCost', () => {
       expect(
         meetingCost(geminiMeeting('gemini-3.1-flash-lite')).llm.get('gemini')!.toUsd(),
       ).toBeCloseTo(0.25 + 1.5, 6);
-    });
-
-    it('prices a summary saved without a model at the current default', () => {
-      expect(meetingCost(geminiMeeting()).llm.get('gemini')!.toUsd()).toBeCloseTo(0.25 + 1.5, 6);
     });
 
     it('keeps pricing meetings summarised with the retired gemini-2.0-flash', () => {

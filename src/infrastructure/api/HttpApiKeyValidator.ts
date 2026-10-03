@@ -63,19 +63,13 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
         {
           service: 'Anthropic',
           request: {
-            url: 'https://api.anthropic.com/v1/messages',
-            method: 'POST',
+            url: 'https://api.anthropic.com/v1/models',
+            method: 'GET',
             headers: {
               'x-api-key': key,
               'anthropic-version': '2023-06-01',
               'anthropic-dangerous-direct-browser-access': 'true',
-              'content-type': 'application/json',
             },
-            body: JSON.stringify({
-              model: 'claude-sonnet-5-5',
-              max_tokens: 1,
-              messages: [{ role: 'user', content: 'ping' }],
-            }),
           },
         },
       ];

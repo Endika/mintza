@@ -138,10 +138,19 @@ describe('Claude summaries on Sonnet 5.5', () => {
     }
   });
 
-  it('probes a new key against claude-sonnet-5-5', async () => {
-    const http = new CannedHttp(answer);
-    await new HttpApiKeyValidator(http).validate('anthropic', 'sk-ant-key');
-    expect(sentBody(http).model).toBe('claude-sonnet-5-5');
+  it('checks an Anthropic key by listing models, without a paid call', async () => {
+    const http = new CannedHttp({ data: [] });
+    const result = await new HttpApiKeyValidator(http).validate('anthropic', 'sk-ant-key');
+    if (!result.ok) throw new Error('validation should produce checks');
+    expect(result.value.checks).toEqual([{ service: 'Anthropic', ok: true }]);
+    expect(http.sent[0]?.url).toBe('https://api.anthropic.com/v1/models');
+    expect(http.sent[0]?.method).toBe('GET');
+    expect(http.sent[0]?.body).toBeUndefined();
+    expect(http.sent[0]?.headers).toEqual({
+      'x-api-key': 'sk-ant-key',
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    });
   });
 
   it('prices Sonnet 5.5 and still prices Sonnet 4.5', () => {

@@ -87,6 +87,21 @@ describe('a failed key test says why', () => {
     });
   });
 
+  it('reads a 401 from Anthropic as an invalid key', async () => {
+    respondWith(
+      401,
+      JSON.stringify({
+        type: 'error',
+        error: { type: 'authentication_error', message: 'invalid x-api-key' },
+      }),
+    );
+    expect(await onlyCheck('anthropic')).toEqual({
+      service: 'Anthropic',
+      ok: false,
+      reason: 'invalid_key',
+    });
+  });
+
   it('reads an unreachable service as a network problem', async () => {
     failWithNetwork();
     expect((await onlyCheck('anthropic')).reason).toBe('network');
