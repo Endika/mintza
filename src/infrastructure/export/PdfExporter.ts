@@ -7,14 +7,14 @@ const PAGE_HEIGHT = 297;
 const LINE_HEIGHT = 6;
 
 export class PdfExporter {
-  async generate(meeting: Meeting): Promise<Blob> {
+  async generate(meeting: Meeting, title: string = meeting.title): Promise<Blob> {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     let y = PAGE_MARGIN;
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    y = this.writeWrapped(doc, meeting.title, y, 18, 'bold');
+    y = this.writeWrapped(doc, title, y, 18, 'bold');
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);

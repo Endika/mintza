@@ -74,4 +74,24 @@ describe('MeetingExporter', () => {
     const file = exporter.export(meeting, 'csv');
     expect(file.content).toContain('"hello, ""world"""');
   });
+
+  it('writes the title it is given into the Markdown and TXT contents and every file name', () => {
+    const meeting = buildMeeting();
+    const title = 'Reunión · 21 may, 12:00';
+    const markdown = exporter.export(meeting, 'markdown', title);
+    const txt = exporter.export(meeting, 'txt', title);
+    expect(markdown.content.split('\n')[0]).toBe(`# ${title}`);
+    expect(txt.content.split('\n')[0]).toBe(title);
+    expect(markdown.content).not.toContain('Q1 review');
+    expect(markdown.filename).toBe('reunion-21-may-12-00.md');
+    expect(exporter.export(meeting, 'json', title).filename).toBe('reunion-21-may-12-00.json');
+    expect(exporter.export(meeting, 'csv', title).filename).toBe('reunion-21-may-12-00.csv');
+  });
+
+  it('keeps file names free of characters file systems reject', () => {
+    const file = exporter.export(buildMeeting(), 'txt', 'a/b\\c: "d" <e>|f?*');
+    expect(file.filename).not.toMatch(/[\\/:*?"<>|]/);
+    expect(file.filename).toBe('a-b-c-d-e-f.txt');
+    expect(exporter.export(buildMeeting(), 'txt', '///').filename).toBe('meeting.txt');
+  });
 });
