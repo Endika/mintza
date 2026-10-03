@@ -7,6 +7,8 @@ export interface DisclosureRow {
   readonly label: string;
   readonly bodyHtml: string;
   readonly expanded?: boolean;
+  /** A labelled region per row only helps while the rows are few. */
+  readonly landmark?: boolean;
 }
 
 /** VoiceOver flattens a heading inside <summary>, so the heading holds the button instead. */
@@ -16,6 +18,7 @@ export const disclosureHtml = ({
   label,
   bodyHtml,
   expanded = false,
+  landmark = false,
 }: DisclosureRow): string => `
   <div data-kind="${kind}">
     <h3 class="text-base font-semibold">
@@ -24,7 +27,7 @@ export const disclosureHtml = ({
         <span class="shrink-0 text-fg-muted transition-transform duration-150 group-aria-expanded:rotate-90">${ICON_CHEVRON}</span>
       </button>
     </h3>
-    <div id="${id}" role="region" aria-labelledby="${id}-toggle" class="prose-summary px-5 pb-5 leading-relaxed sm:px-6"${expanded ? '' : ' hidden'}>${bodyHtml}</div>
+    <div id="${id}"${landmark ? ` role="region" aria-labelledby="${id}-toggle"` : ''} class="prose-summary px-5 pb-5 leading-relaxed sm:px-6"${expanded ? '' : ' hidden'}>${bodyHtml}</div>
   </div>`;
 
 /** Delegated, so rows rendered again later into the same container keep working. */
@@ -36,7 +39,7 @@ export const bindDisclosures = (container: HTMLElement): void => {
     if (!toggle || !container.contains(toggle)) return;
     const expanded = toggle.getAttribute('aria-expanded') !== 'true';
     toggle.setAttribute('aria-expanded', String(expanded));
-    const region = container.querySelector<HTMLElement>(`#${toggle.getAttribute('aria-controls')}`);
+    const region = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
     if (region) region.hidden = !expanded;
   });
 };

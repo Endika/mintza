@@ -8,7 +8,6 @@ export class UpdateBanner {
     if (this.banner) return;
     const node = document.createElement('div');
     node.setAttribute('role', 'status');
-    node.setAttribute('aria-live', 'polite');
     node.className =
       'card fixed inset-x-4 top-3 z-50 mx-auto flex max-w-md items-center gap-2 py-2 pr-2 pl-4 sm:py-2 sm:pr-2 sm:pl-5';
     node.innerHTML = `

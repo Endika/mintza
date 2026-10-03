@@ -321,7 +321,7 @@ describe('HomePage states', () => {
     const toggle = root.querySelector<HTMLButtonElement>(
       '#rest-summaries [data-kind="action_items"] button',
     )!;
-    expectCollapsibleResult(root, toggle, 'Action items', 'ok');
+    expectCollapsibleResult(root, toggle, 'Action items', 'ok', { region: false });
   });
 
   it('leaves sentiment to the gauge instead of repeating it as a text row', async () => {

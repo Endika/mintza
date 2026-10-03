@@ -58,7 +58,7 @@ export class TemplatesPage implements Page {
           <h1 id="page-title" tabindex="-1" class="min-w-0 break-words text-3xl font-semibold tracking-tight sm:text-4xl">${t.t('templates.title')}</h1>
           <button id="btn-new" type="button" class="btn-action">${ICON_PLUS}<span>${t.t('templates.new')}</span></button>
         </header>
-        <p id="list-status" role="status" class="mb-4 text-sm text-danger empty:hidden"></p>
+        <p id="list-status" role="status" class="mb-4 text-sm text-danger empty:sr-only"></p>
         <div id="list" class="flex flex-col gap-3"></div>
         <div id="editor" class="hidden"></div>
       </div>
@@ -233,7 +233,7 @@ export class TemplatesPage implements Page {
             ${SUMMARY_KINDS.map((k) => this.wordingRow(k, def)).join('')}
           </div>
         </details>
-        <p id="form-error" role="alert" class="text-sm font-semibold text-danger empty:hidden"></p>
+        <p id="form-error" role="alert" class="text-sm font-semibold text-danger empty:sr-only"></p>
         <div class="flex flex-wrap justify-end gap-2">
           <button type="button" id="btn-cancel" class="btn-ghost">${t.t('templates.cancel')}</button>
           <button type="submit" class="btn-action">${t.t('templates.save')}</button>
