@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { bootDocumentScript } from './src/bootstrap/bootDocument';
 
 const r = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
@@ -29,12 +30,17 @@ const injectVersionInServiceWorker = (version: string): Plugin => {
   };
 };
 
+const inlineBootDocument = (): Plugin => ({
+  name: 'mintza-boot-document',
+  transformIndexHtml: () => [{ tag: 'script', children: bootDocumentScript(), injectTo: 'head' }],
+});
+
 export default defineConfig({
   base: '/mintza/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
-  plugins: [tailwindcss(), injectVersionInServiceWorker(pkg.version)],
+  plugins: [tailwindcss(), inlineBootDocument(), injectVersionInServiceWorker(pkg.version)],
   resolve: {
     alias: {
       '@domain': r('./src/domain'),
