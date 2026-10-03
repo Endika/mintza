@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.22.2](https://github.com/Endika/mintza/compare/v1.22.1...v1.22.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* **deps:** bump dompurify and brace-expansion to patched versions ([933ea33](https://github.com/Endika/mintza/commit/933ea338c058631b6ac0eea3b42e921f39f47a14))
+
 ## [1.22.1](https://github.com/Endika/mintza/compare/v1.22.0...v1.22.1) (2026-10-03)
 
 
