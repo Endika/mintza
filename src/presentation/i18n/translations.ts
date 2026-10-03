@@ -235,11 +235,17 @@ export type TranslationKey =
   | 'settings.use_google_speech'
   | 'settings.source_google'
   | 'settings.source_google_speech'
-  | 'settings.reason_invalid_key'
-  | 'settings.reason_api_blocked'
-  | 'settings.reason_api_disabled'
-  | 'settings.reason_network'
-  | 'settings.reason_unknown'
+  | 'error.invalid_key'
+  | 'error.api_blocked'
+  | 'error.api_disabled'
+  | 'error.network'
+  | 'settings.key_rejected'
+  | 'error.missing_key'
+  | 'error.missing_region'
+  | 'error.no_speech'
+  | 'error.bad_response'
+  | 'error.unknown'
+  | 'settings.key_empty'
   | 'settings.link_enable_api'
   | 'settings.link_key_restrictions'
   | 'settings.confirm_clear'
@@ -490,7 +496,7 @@ const EN: Translations = {
     'Mintza transcribes in this language. You can also change it before each meeting.',
   'settings.keys_title': 'Your keys',
   'settings.required': 'Required',
-  'settings.backups': 'Optional backup services (Google, Azure, Anthropic)',
+  'settings.backups': 'Optional backup services (Google Gemini, Google Speech, Azure, Anthropic)',
   'settings.use_openai': 'Transcription and summaries (Whisper and GPT)',
   'settings.use_google': 'Summaries (Gemini)',
   'settings.use_azure': 'Transcription (Azure Speech)',
@@ -503,11 +509,17 @@ const EN: Translations = {
   'settings.source_google': 'Where to get it: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Where to get it: Google Cloud → Credentials → API key with Cloud Speech-to-Text',
-  'settings.reason_invalid_key': "The key isn't valid.",
-  'settings.reason_api_blocked': "This key's restrictions don't allow this API.",
-  'settings.reason_api_disabled': "This API isn't turned on in your Google Cloud project.",
-  'settings.reason_network': "Couldn't reach the service. Check your connection.",
-  'settings.reason_unknown': "The service didn't accept the key.",
+  'error.invalid_key': "The key isn't valid.",
+  'error.api_blocked': "This key's restrictions don't allow this API.",
+  'error.api_disabled': "This API isn't turned on in your Google Cloud project.",
+  'error.network': "Couldn't reach the service. Check your connection.",
+  'settings.key_rejected': "The service didn't accept the key.",
+  'error.missing_key': 'No key for this service in Settings.',
+  'error.missing_region': 'No Azure region in Settings.',
+  'error.no_speech': 'No speech heard in this part.',
+  'error.bad_response': "The service sent an answer Mintza couldn't read.",
+  'error.unknown': 'Something went wrong. Try again in a moment.',
+  'settings.key_empty': 'Paste a key first.',
   'settings.link_enable_api': 'Turn on the API',
   'settings.link_key_restrictions': "Edit the key's restrictions",
   'settings.confirm_clear':
@@ -759,7 +771,8 @@ const ES: Translations = {
     'Mintza transcribe en este idioma. También puedes cambiarlo antes de cada reunión.',
   'settings.keys_title': 'Tus claves',
   'settings.required': 'Obligatoria',
-  'settings.backups': 'Servicios de respaldo opcionales (Google, Azure, Anthropic)',
+  'settings.backups':
+    'Servicios de respaldo opcionales (Google Gemini, Google Speech, Azure, Anthropic)',
   'settings.use_openai': 'Transcripción y resúmenes (Whisper y GPT)',
   'settings.use_google': 'Resúmenes (Gemini)',
   'settings.use_azure': 'Transcripción (Azure Speech)',
@@ -772,11 +785,17 @@ const ES: Translations = {
   'settings.source_google': 'Dónde conseguirla: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Dónde conseguirla: Google Cloud → Credenciales → clave de API con Cloud Speech-to-Text',
-  'settings.reason_invalid_key': 'La clave no es válida.',
-  'settings.reason_api_blocked': 'Las restricciones de esta clave no permiten usar esta API.',
-  'settings.reason_api_disabled': 'Esta API no está activada en tu proyecto de Google Cloud.',
-  'settings.reason_network': 'No se ha podido conectar con el servicio. Revisa la conexión.',
-  'settings.reason_unknown': 'El servicio no ha aceptado la clave.',
+  'error.invalid_key': 'La clave no es válida.',
+  'error.api_blocked': 'Las restricciones de esta clave no permiten usar esta API.',
+  'error.api_disabled': 'Esta API no está activada en tu proyecto de Google Cloud.',
+  'error.network': 'No se ha podido conectar con el servicio. Revisa la conexión.',
+  'settings.key_rejected': 'El servicio no ha aceptado la clave.',
+  'error.missing_key': 'No hay clave para este servicio en Ajustes.',
+  'error.missing_region': 'Falta la región de Azure en Ajustes.',
+  'error.no_speech': 'No se ha oído voz en este fragmento.',
+  'error.bad_response': 'El servicio ha devuelto una respuesta que Mintza no puede leer.',
+  'error.unknown': 'Algo ha fallado. Vuelve a probar dentro de un momento.',
+  'settings.key_empty': 'Pega primero una clave.',
   'settings.link_enable_api': 'Activar la API',
   'settings.link_key_restrictions': 'Editar las restricciones de la clave',
   'settings.confirm_clear':
@@ -1032,7 +1051,8 @@ const EU: Translations = {
     'Mintzak hizkuntza honetan transkribatzen du. Bilera bakoitzaren aurretik ere alda dezakezu.',
   'settings.keys_title': 'Zure gakoak',
   'settings.required': 'Derrigorrezkoa',
-  'settings.backups': 'Aukerako ordezko zerbitzuak (Google, Azure, Anthropic)',
+  'settings.backups':
+    'Aukerako ordezko zerbitzuak (Google Gemini, Google Speech, Azure, Anthropic)',
   'settings.use_openai': 'Transkripzioa eta laburpenak (Whisper eta GPT)',
   'settings.use_google': 'Laburpenak (Gemini)',
   'settings.use_azure': 'Transkripzioa (Azure Speech)',
@@ -1045,11 +1065,17 @@ const EU: Translations = {
   'settings.source_google': 'Non lortu: Google AI Studio → Get API key',
   'settings.source_google_speech':
     'Non lortu: Google Cloud → Credentials → Cloud Speech-to-Text duen API gakoa',
-  'settings.reason_invalid_key': 'Gakoa ez da baliozkoa.',
-  'settings.reason_api_blocked': 'Gako honen murrizketek ez dute API hau erabiltzen uzten.',
-  'settings.reason_api_disabled': 'API hau ez dago aktibatuta zure Google Cloud proiektuan.',
-  'settings.reason_network': 'Ezin izan da zerbitzura konektatu. Begiratu konexioa.',
-  'settings.reason_unknown': 'Zerbitzuak ez du gakoa onartu.',
+  'error.invalid_key': 'Gakoa ez da baliozkoa.',
+  'error.api_blocked': 'Gako honen murrizketek ez dute API hau erabiltzen uzten.',
+  'error.api_disabled': 'API hau ez dago aktibatuta zure Google Cloud proiektuan.',
+  'error.network': 'Ezin izan da zerbitzura konektatu. Begiratu konexioa.',
+  'settings.key_rejected': 'Zerbitzuak ez du gakoa onartu.',
+  'error.missing_key': 'Zerbitzu honek ez du gakorik Ezarpenetan.',
+  'error.missing_region': 'Azure eskualdea falta da Ezarpenetan.',
+  'error.no_speech': 'Ez da ahotsik entzun zati honetan.',
+  'error.bad_response': 'Zerbitzuak Mintzak irakurri ezin duen erantzuna itzuli du.',
+  'error.unknown': 'Zerbait gaizki joan da. Saiatu berriro pixka bat barru.',
+  'settings.key_empty': 'Itsatsi gako bat lehenik.',
   'settings.link_enable_api': 'Aktibatu APIa',
   'settings.link_key_restrictions': 'Editatu gakoaren murrizketak',
   'settings.confirm_clear':

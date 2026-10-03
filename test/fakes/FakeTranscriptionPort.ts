@@ -5,7 +5,12 @@ import type {
 import { TranscriptSegment } from '../../src/domain/transcription/entities/TranscriptSegment';
 import { TranscriptText } from '../../src/domain/transcription/value-objects/TranscriptText';
 import type { TranscriptionProviderName } from '../../src/domain/transcription/value-objects/TranscriptionProvider';
-import { AppError, type AppErrorCode } from '../../src/shared/errors/AppError';
+import {
+  AppError,
+  type AppErrorCode,
+  type ErrorReason,
+  type ProviderAttempt,
+} from '../../src/shared/errors/AppError';
 import { err, ok, type Result } from '../../src/shared/result/Result';
 
 export class FakeTranscriptionPort implements TranscriptionPort {
@@ -14,13 +19,20 @@ export class FakeTranscriptionPort implements TranscriptionPort {
   constructor(
     private readonly behavior:
       | { kind: 'success'; text: string; provider: TranscriptionProviderName }
-      | { kind: 'failure'; code: AppErrorCode; message: string },
+      | {
+          kind: 'failure';
+          code: AppErrorCode;
+          message: string;
+          reason?: ErrorReason;
+          attempts?: readonly ProviderAttempt[];
+        },
   ) {}
 
   async transcribe(request: TranscriptionRequest): Promise<Result<TranscriptSegment, AppError>> {
     this.calls.push(request);
     if (this.behavior.kind === 'failure') {
-      return Promise.resolve(err(new AppError(this.behavior.code, this.behavior.message)));
+      const { code, message, reason, attempts = [] } = this.behavior;
+      return Promise.resolve(err(new AppError(code, message, undefined, attempts, reason)));
     }
     const segment = new TranscriptSegment({
       id: 'fake',

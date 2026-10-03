@@ -7,14 +7,13 @@ import type {
 } from '../../domain/meeting/ports/ApiKeyValidator';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
-import { httpFailureOf, type HttpClient, type HttpRequest } from '../http/HttpClient';
+import type { HttpClient, HttpRequest } from '../http/HttpClient';
 
 const TIMEOUT_MS = 6_000;
 
 interface Probe {
   readonly service: string;
   readonly request: HttpRequest;
-  readonly google?: true;
 }
 
 export class HttpApiKeyValidator implements ApiKeyValidator {
@@ -39,8 +38,7 @@ export class HttpApiKeyValidator implements ApiKeyValidator {
       if (response.ok) {
         checks.push({ service: probe.service, ok: true });
       } else {
-        const reason = failureReason(response.error, probe.google === true);
-        checks.push({ service: probe.service, ok: false, reason });
+        checks.push({ service: probe.service, ok: false, reason: checkReason(response.error) });
       }
     }
     return ok({ checks });
@@ -101,7 +99,6 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
             method: 'GET',
             headers: { 'x-goog-api-key': key },
           },
-          google: true,
         },
       ];
     case 'googleSpeech':
@@ -113,49 +110,20 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
             method: 'GET',
             headers: { 'x-goog-api-key': key },
           },
-          google: true,
         },
       ];
   }
 };
 
-const failureReason = (error: AppError, google: boolean): CheckFailureReason => {
-  const failure = httpFailureOf(error);
-  if (!failure) return error.code === 'NETWORK_ERROR' ? 'network' : 'unknown';
-  if (!google) return failure.status === 401 ? 'invalid_key' : 'unknown';
-  const markers = googleErrorMarkers(failure.body);
-  if (markers.has('API_KEY_SERVICE_BLOCKED')) return 'api_blocked';
-  if (markers.has('SERVICE_DISABLED') || markers.has('accessNotConfigured')) return 'api_disabled';
-  if (markers.has('API_KEY_INVALID') || markers.has('UNAUTHENTICATED')) return 'invalid_key';
-  return 'unknown';
-};
+const CHECK_REASONS: ReadonlySet<CheckFailureReason> = new Set([
+  'invalid_key',
+  'api_blocked',
+  'api_disabled',
+  'network',
+  'unknown',
+]);
 
-interface GoogleErrorBody {
-  readonly error?: {
-    readonly status?: unknown;
-    readonly details?: unknown;
-    readonly errors?: unknown;
-  };
-}
-
-/** The reasons and status Google puts in an error body, e.g. API_KEY_SERVICE_BLOCKED. */
-const googleErrorMarkers = (body: string): ReadonlySet<string> => {
-  let parsed: GoogleErrorBody | null;
-  try {
-    parsed = JSON.parse(body) as GoogleErrorBody | null;
-  } catch {
-    return new Set();
-  }
-  const error = parsed?.error;
-  const entries: unknown[] = [
-    error?.status,
-    ...reasonsOf(error?.details),
-    ...reasonsOf(error?.errors),
-  ];
-  return new Set(entries.filter((e): e is string => typeof e === 'string'));
-};
-
-const reasonsOf = (list: unknown): unknown[] =>
-  Array.isArray(list)
-    ? list.map((item: unknown) => (item as { readonly reason?: unknown } | null)?.reason)
-    : [];
+const checkReason = (error: AppError): CheckFailureReason =>
+  CHECK_REASONS.has(error.reason as CheckFailureReason)
+    ? (error.reason as CheckFailureReason)
+    : 'unknown';

@@ -1,5 +1,6 @@
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
+import { httpFailureReason } from './httpFailureReason';
 
 export interface HttpRequest {
   readonly url: string;
@@ -57,6 +58,9 @@ export class HttpClient {
           lastError = new AppError(
             'NETWORK_ERROR',
             `Server ${response.status} on attempt ${attempt + 1}`,
+            undefined,
+            [],
+            'unknown',
           );
           await wait(backoffMs(attempt));
           continue;
@@ -65,14 +69,25 @@ export class HttpClient {
         if (!response.ok) {
           const body = await response.text().catch(() => '');
           const failure: HttpFailure = { status: response.status, body };
+          const reason = httpFailureReason(failure);
           if (response.status === 401 || response.status === 403) {
-            return err(new AppError('API_KEY_INVALID', 'Invalid or unauthorized API key', failure));
+            return err(
+              new AppError(
+                'API_KEY_INVALID',
+                'Invalid or unauthorized API key',
+                failure,
+                [],
+                reason,
+              ),
+            );
           }
           return err(
             new AppError(
               'NETWORK_ERROR',
               `HTTP ${response.status}: ${body.slice(0, 200)}`,
               failure,
+              [],
+              reason,
             ),
           );
         }
@@ -85,11 +100,15 @@ export class HttpClient {
           'NETWORK_ERROR',
           isAbort ? `Timeout after ${timeoutMs}ms` : 'Network error',
           cause,
+          [],
+          'network',
         );
         if (attempt < maxRetries) await wait(backoffMs(attempt));
       }
     }
-    return err(lastError ?? new AppError('NETWORK_ERROR', 'Unknown failure'));
+    return err(
+      lastError ?? new AppError('NETWORK_ERROR', 'Unknown failure', undefined, [], 'unknown'),
+    );
   }
 }
 

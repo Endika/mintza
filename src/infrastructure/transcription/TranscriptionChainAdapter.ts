@@ -27,7 +27,8 @@ export class TranscriptionChainAdapter implements TranscriptionPort {
     for (const { name, port } of providers) {
       const result = await port.transcribe(request);
       if (result.ok) return result;
-      attempts.push({ provider: name, code: result.error.code, message: result.error.message });
+      const { code, message, reason } = result.error;
+      attempts.push({ provider: name, code, message, ...(reason ? { reason } : {}) });
       if (!RECOVERABLE_CODES.has(result.error.code)) break;
     }
     return err(

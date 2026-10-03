@@ -6,7 +6,12 @@ import type { SummaryKind } from '../../src/domain/summary/value-objects/Summary
 import { Summary } from '../../src/domain/summary/entities/Summary';
 import type { LLMProviderName } from '../../src/domain/summary/value-objects/LLMProvider';
 import { TokenCount } from '../../src/domain/tokens/value-objects/TokenCount';
-import { AppError, type AppErrorCode } from '../../src/shared/errors/AppError';
+import {
+  AppError,
+  type AppErrorCode,
+  type ErrorReason,
+  type ProviderAttempt,
+} from '../../src/shared/errors/AppError';
 import { err, ok, type Result } from '../../src/shared/result/Result';
 
 export class FakeSummarizationPort implements SummarizationPort {
@@ -15,7 +20,13 @@ export class FakeSummarizationPort implements SummarizationPort {
   constructor(
     private readonly behavior:
       | { kind: 'success'; content: string; provider?: LLMProviderName }
-      | { kind: 'failure'; code: AppErrorCode; message: string },
+      | {
+          kind: 'failure';
+          code: AppErrorCode;
+          message: string;
+          reason?: ErrorReason;
+          attempts?: readonly ProviderAttempt[];
+        },
   ) {}
 
   requestedKinds(): SummaryKind[] {
@@ -25,7 +36,8 @@ export class FakeSummarizationPort implements SummarizationPort {
   async summarize(request: SummarizationRequest): Promise<Result<Summary, AppError>> {
     this.calls.push(request);
     if (this.behavior.kind === 'failure') {
-      return Promise.resolve(err(new AppError(this.behavior.code, this.behavior.message)));
+      const { code, message, reason, attempts = [] } = this.behavior;
+      return Promise.resolve(err(new AppError(code, message, undefined, attempts, reason)));
     }
     const summary = new Summary({
       kind: request.kind,

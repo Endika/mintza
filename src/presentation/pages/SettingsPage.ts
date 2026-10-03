@@ -19,6 +19,7 @@ import {
   ICON_EXTERNAL,
   ICON_TRASH,
 } from '../components/icons';
+import { reasonText } from '../i18n/errorText';
 import { LANGUAGE_NAMES } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
@@ -44,13 +45,6 @@ const GOOGLE_CREDENTIALS_URL = 'https://console.cloud.google.com/apis/credential
 const GOOGLE_API_LIBRARY_URL: Partial<Record<ApiKeyProviderName, string>> = {
   google: 'https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
   googleSpeech: 'https://console.cloud.google.com/apis/library/speech.googleapis.com',
-};
-const REASON_TEXT: Record<CheckFailureReason, TranslationKey> = {
-  invalid_key: 'settings.reason_invalid_key',
-  api_blocked: 'settings.reason_api_blocked',
-  api_disabled: 'settings.reason_api_disabled',
-  network: 'settings.reason_network',
-  unknown: 'settings.reason_unknown',
 };
 
 export class SettingsPage implements Page {
@@ -251,23 +245,34 @@ export class SettingsPage implements Page {
     const result = this.root.querySelector<HTMLElement>(`[data-status="${provider}"]`);
     if (!input || !result) return;
     const tr = this.deps.config.translator;
-    result.innerHTML = `<p class="text-fg-muted">${tr.t('settings.testing')}</p>`;
+    const t: T = (key, vars) => tr.t(key, vars);
+    const key = input.value.trim();
+    if (key.length === 0) {
+      result.innerHTML = checkLine(false, t('settings.key_empty'));
+      return;
+    }
+    result.innerHTML = `<p class="text-fg-muted">${t('settings.testing')}</p>`;
     btn.disabled = true;
-    const outcome = await this.deps.validateApiKey.execute({ provider, key: input.value.trim() });
+    const outcome = await this.deps.validateApiKey.execute({ provider, key });
     btn.disabled = false;
     if (!outcome.ok) {
-      result.innerHTML = checkLine(false, tr.t('settings.test_failed'), outcome.error.message);
+      result.innerHTML = checkLine(
+        false,
+        t('settings.test_failed'),
+        reasonText(outcome.error.reason, t),
+      );
       return;
     }
     result.innerHTML = outcome.value.checks
       .map((c) =>
         c.ok
-          ? checkLine(true, tr.t('settings.check_ok', { service: c.service }))
+          ? checkLine(true, t('settings.check_ok', { service: c.service }))
           : checkLine(
               false,
-              tr.t('settings.check_failed', { service: c.service }),
-              c.reason && tr.t(REASON_TEXT[c.reason]),
-            ) + fixLink(provider, c.reason, tr.t.bind(tr)),
+              t('settings.check_failed', { service: c.service }),
+              c.reason &&
+                (c.reason === 'unknown' ? t('settings.key_rejected') : reasonText(c.reason, t)),
+            ) + fixLink(provider, c.reason, t),
       )
       .join('');
   }

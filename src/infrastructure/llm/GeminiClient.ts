@@ -37,7 +37,15 @@ export class GeminiClient {
   async chat(request: GeminiChatRequest): Promise<Result<GeminiChatResponse, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Gemini: missing Google API key in Settings'));
+      return err(
+        new AppError(
+          'API_KEY_INVALID',
+          'Gemini: missing Gemini API key',
+          undefined,
+          [],
+          'missing_key',
+        ),
+      );
     }
     const url = `${GEMINI_BASE}/${request.model}:generateContent`;
     const body = JSON.stringify({
@@ -63,7 +71,15 @@ export class GeminiClient {
           .map((p) => p.text ?? '')
           .join('') ?? '';
       if (text.length === 0) {
-        return err(new AppError('SUMMARIZATION_FAILED', 'Gemini: empty response'));
+        return err(
+          new AppError(
+            'SUMMARIZATION_FAILED',
+            'Gemini: empty response',
+            undefined,
+            [],
+            'bad_response',
+          ),
+        );
       }
       return ok({
         content: text,
@@ -71,7 +87,15 @@ export class GeminiClient {
         completionTokens: parsed.usageMetadata?.candidatesTokenCount ?? 0,
       });
     } catch (cause) {
-      return err(new AppError('SUMMARIZATION_FAILED', 'Gemini: invalid response body', cause));
+      return err(
+        new AppError(
+          'SUMMARIZATION_FAILED',
+          'Gemini: invalid response body',
+          cause,
+          [],
+          'bad_response',
+        ),
+      );
     }
   }
 }
