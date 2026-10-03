@@ -2,6 +2,7 @@ import type {
   SummarizationPort,
   SummarizationRequest,
 } from '../../src/domain/summary/ports/SummarizationPort';
+import type { SummaryKind } from '../../src/domain/summary/value-objects/SummaryKind';
 import { Summary } from '../../src/domain/summary/entities/Summary';
 import type { LLMProviderName } from '../../src/domain/summary/value-objects/LLMProvider';
 import { TokenCount } from '../../src/domain/tokens/value-objects/TokenCount';
@@ -16,6 +17,10 @@ export class FakeSummarizationPort implements SummarizationPort {
       | { kind: 'success'; content: string; provider?: LLMProviderName }
       | { kind: 'failure'; code: AppErrorCode; message: string },
   ) {}
+
+  requestedKinds(): SummaryKind[] {
+    return this.calls.map((call) => call.kind);
+  }
 
   async summarize(request: SummarizationRequest): Promise<Result<Summary, AppError>> {
     this.calls.push(request);

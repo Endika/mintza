@@ -105,8 +105,12 @@ const pages: HomePage[] = [];
 const mount = async (
   openai: string | undefined,
   summarization: SummarizationPort = new FakeSummarizationPort({ kind: 'success', content: 'ok' }),
+  storedTemplates: object[] = [],
 ): Promise<{ root: HTMLElement; audio: FakeAudio }> => {
   window.localStorage.clear();
+  if (storedTemplates.length > 0) {
+    window.localStorage.setItem('mintza:templates:v1', JSON.stringify(storedTemplates));
+  }
   const config = new ConfigStore(
     new ConfigRepo({ ...DEFAULT_CONFIG, apiKeys: openai ? { openai } : {} }),
   );
@@ -218,6 +222,34 @@ describe('HomePage states', () => {
     );
     expect(labels).toHaveLength(7);
     expect(labels).not.toContain('Sentiment');
+  });
+
+  it('asks the summarizer only for the kinds of the chosen template', async () => {
+    const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
+    const { root, audio } = await mount('sk-test', summarization, [
+      {
+        id: 'custom-1',
+        name: 'Slim',
+        systemRole: 'You summarise.',
+        mindMapStructure: 'topics',
+        summaryKinds: ['decisions', 'action_items', 'next_steps'],
+        featuredOrder: ['decisions'],
+        kindLabels: {},
+        promptOverrides: {},
+      },
+    ]);
+    root.querySelector<HTMLButtonElement>('[data-template="custom-1"]')!.click();
+
+    await recordAndStop(root, audio);
+
+    expect(summarization.requestedKinds().sort()).toEqual([
+      'action_items',
+      'decisions',
+      'next_steps',
+    ]);
+    expect(root.querySelector('#temperature-card')!.classList.contains('hidden')).toBe(true);
+    const labels = [...root.querySelectorAll('#primary-summary h3, #rest-summaries h3')];
+    expect(labels).toHaveLength(3);
   });
 
   it('keeps every failed result marked with its reason', async () => {
