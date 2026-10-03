@@ -42,7 +42,7 @@ export class TemperatureGauge {
             <span class="text-3xl font-bold tabular-nums" style="color:${color}">${percent}</span>
             <span class="text-sm font-medium" style="color:${color}">${translator.t(BAND_LABEL_KEYS[band])}</span>
           </div>
-          <div class="mt-2 h-2 rounded-full bg-ink-100 overflow-hidden">
+          <div class="mt-2 h-2 rounded-full bg-line overflow-hidden">
             <div
               role="progressbar"
               aria-valuenow="${percent}"

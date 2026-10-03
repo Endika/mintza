@@ -41,7 +41,7 @@ export class SettingsPage implements Page {
         <form id="settings-form" class="space-y-6">
           <section class="card">
             <h2 class="mb-3 text-lg font-semibold">${t('settings.api_keys')}</h2>
-            <p class="mb-4 text-sm text-ink-400">${t('settings.api_keys_warning')}</p>
+            <p class="mb-4 text-sm text-fg-muted">${t('settings.api_keys_warning')}</p>
             <div class="space-y-3">
               ${apiKeyInput('openai', t('settings.provider_openai'), cfg.apiKeys.openai, true, t)}
               ${apiKeyInput('google', t('settings.provider_google'), cfg.apiKeys.google, false, t)}
@@ -71,7 +71,7 @@ export class SettingsPage implements Page {
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="text-sm font-medium">${t('settings.interface_language')}</span>
-                <select name="language" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
+                <select name="language" class="mt-1 block w-full rounded-lg border border-line px-3 py-2">
                   <option value="en" ${cfg.language === 'en' ? 'selected' : ''}>English</option>
                   <option value="es" ${cfg.language === 'es' ? 'selected' : ''}>Español</option>
                   <option value="eu" ${cfg.language === 'eu' ? 'selected' : ''}>Euskara</option>
@@ -79,7 +79,7 @@ export class SettingsPage implements Page {
               </label>
               <label class="block">
                 <span class="text-sm font-medium">${t('settings.default_template')}</span>
-                <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2">
+                <select name="defaultTemplate" class="mt-1 block w-full rounded-lg border border-line px-3 py-2">
                   <option value="generic" ${cfg.defaultTemplate === 'generic' ? 'selected' : ''}>${t('template.builtin.generic')}</option>
                   <option value="work" ${cfg.defaultTemplate === 'work' ? 'selected' : ''}>${t('template.builtin.work')}</option>
                   <option value="interview" ${cfg.defaultTemplate === 'interview' ? 'selected' : ''}>${t('template.builtin.interview')}</option>
@@ -92,7 +92,7 @@ export class SettingsPage implements Page {
                   name="azureRegion"
                   value="${escapeHtml(cfg.azureRegion)}"
                   placeholder="${t('settings.azure_region_placeholder')}"
-                  class="mt-1 block w-full rounded-lg border border-ink-100 px-3 py-2 text-sm"
+                  class="mt-1 block w-full rounded-lg border border-line px-3 py-2 text-sm"
                 />
               </label>
             </div>
@@ -102,20 +102,20 @@ export class SettingsPage implements Page {
             <div class="flex items-center justify-between gap-3">
               <div>
                 <h2 class="text-lg font-semibold">${t('templates.title')}</h2>
-                <p class="text-sm text-ink-400 mt-1">${t('templates.manage')}</p>
+                <p class="text-sm text-fg-muted mt-1">${t('templates.manage')}</p>
               </div>
               <a href="#/templates" class="btn-ghost">${t('templates.manage')} →</a>
             </div>
           </section>
 
           <div class="flex justify-between">
-            <button type="button" id="btn-clear" class="btn-ghost text-red-600">${t('settings.btn_clear')}</button>
+            <button type="button" id="btn-clear" class="btn-ghost text-danger">${t('settings.btn_clear')}</button>
             <span class="flex items-center gap-3">
-              <span id="dirty-indicator" class="text-xs text-amber-600 hidden">● ${t('settings.unsaved')}</span>
-              <button type="submit" id="btn-save" class="btn-primary" disabled>${t('settings.btn_save')}</button>
+              <span id="dirty-indicator" class="text-xs text-warning hidden">● ${t('settings.unsaved')}</span>
+              <button type="submit" id="btn-save" class="btn-action" disabled>${t('settings.btn_save')}</button>
             </span>
           </div>
-          <p id="settings-status" class="text-sm text-ink-400"></p>
+          <p id="settings-status" class="text-sm text-fg-muted"></p>
         </form>
       </main>
     `;
@@ -166,28 +166,28 @@ export class SettingsPage implements Page {
     if (!indicator) return;
     const tr = this.deps.config.translator;
     indicator.textContent = tr.t('settings.testing');
-    indicator.className = 'text-xs text-ink-400';
+    indicator.className = 'text-xs text-fg-muted';
     btn.disabled = true;
     const result = await this.deps.validateApiKey.execute({ provider, key: input.value });
     btn.disabled = false;
     if (!result.ok) {
       indicator.textContent = `✗ ${result.error.message}`;
-      indicator.className = 'text-xs text-red-600';
+      indicator.className = 'text-xs text-danger';
       return;
     }
     const checks = result.value.checks;
     const anyOk = checks.some((c) => c.ok);
     const allOk = checks.every((c) => c.ok);
     indicator.className = allOk
-      ? 'text-xs text-primary'
+      ? 'text-xs text-action'
       : anyOk
-        ? 'text-xs text-ink-600'
-        : 'text-xs text-red-600';
+        ? 'text-xs text-fg'
+        : 'text-xs text-danger';
     indicator.innerHTML = checks
       .map((c) =>
         c.ok
           ? `<div>✓ ${escapeHtml(c.service)}</div>`
-          : `<div class="text-red-600">✗ ${escapeHtml(c.service)}${c.message ? ` — ${escapeHtml(c.message)}` : ''}</div>`,
+          : `<div class="text-danger">✗ ${escapeHtml(c.service)}${c.message ? ` — ${escapeHtml(c.message)}` : ''}</div>`,
       )
       .join('');
   }
@@ -293,12 +293,12 @@ const apiKeyInput = (
           autocomplete="off"
           value="${value ? escapeHtml(value) : ''}"
           placeholder="${value ? '••••••••••' : t('settings.key_placeholder')}"
-          class="flex-1 rounded-lg border border-ink-100 px-3 py-2 font-mono text-sm"
+          class="flex-1 rounded-lg border border-line px-3 py-2 font-mono text-sm"
         />
         <button type="button" data-test-key="${escapeHtml(name)}" class="btn-ghost text-sm">${t('settings.btn_test')}</button>
       </div>
     </label>
-    <p data-status="${escapeHtml(name)}" class="mt-1 text-xs text-ink-400 min-h-[1rem]"></p>
+    <p data-status="${escapeHtml(name)}" class="mt-1 text-xs text-fg-muted min-h-[1rem]"></p>
   </div>
 `;
 
@@ -320,11 +320,11 @@ const qualityFieldset = (
       ${options
         .map(
           (opt) => `
-        <label class="flex items-start gap-2 cursor-pointer rounded-lg border border-ink-100 px-3 py-2 hover:bg-ink-50">
+        <label class="flex items-start gap-2 cursor-pointer rounded-lg border border-line px-3 py-2 hover:bg-raised">
           <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(opt.value)}" class="mt-1" ${opt.value === current ? 'checked' : ''} />
           <span>
             <span class="block text-sm font-medium">${opt.label}</span>
-            <span class="block text-xs text-ink-400">${opt.hint}</span>
+            <span class="block text-xs text-fg-muted">${opt.hint}</span>
           </span>
         </label>`,
         )

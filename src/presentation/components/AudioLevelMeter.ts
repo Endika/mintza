@@ -14,11 +14,11 @@ export class AudioLevelMeter {
     this.stop();
     target.innerHTML = `
       <div class="flex items-center gap-3">
-        <span class="text-xs text-ink-400 w-16">${translator.t('home.mic_level')}</span>
+        <span class="text-xs text-fg-muted w-16">${translator.t('home.mic_level')}</span>
         <div class="meter-bar-track flex-1">
-          <div data-bar class="meter-bar-fill bg-primary" style="width:0%"></div>
+          <div data-bar class="meter-bar-fill bg-action" style="width:0%"></div>
         </div>
-        <span data-hint class="text-xs text-ink-400 w-44 text-right"></span>
+        <span data-hint class="text-xs text-fg-muted w-44 text-right"></span>
       </div>
     `;
     const bar = target.querySelector<HTMLElement>('[data-bar]');
@@ -44,12 +44,12 @@ export class AudioLevelMeter {
       bar.style.width = `${percent}%`;
       if (percent < 4) {
         this.silentTicks += 1;
-        bar.classList.remove('bg-primary');
-        bar.classList.add('bg-red-400');
+        bar.classList.remove('bg-action');
+        bar.classList.add('bg-live');
       } else {
         this.silentTicks = 0;
-        bar.classList.remove('bg-red-400');
-        bar.classList.add('bg-primary');
+        bar.classList.remove('bg-live');
+        bar.classList.add('bg-action');
       }
       hint.textContent =
         this.silentTicks > 60

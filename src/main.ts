@@ -12,7 +12,7 @@ const app = new App(root);
 const version = document.createElement('span');
 version.textContent = `v${__APP_VERSION__}`;
 version.className =
-  'fixed bottom-2 right-3 text-[10px] font-mono text-ink-100 pointer-events-none select-none';
+  'fixed bottom-2 right-3 text-[10px] font-mono text-fg-muted pointer-events-none select-none';
 document.body.appendChild(version);
 
 void app.start().then(() => {

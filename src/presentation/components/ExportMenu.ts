@@ -21,7 +21,7 @@ export class ExportMenu {
   render(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     target.innerHTML = `
       <div class="flex flex-wrap items-center gap-2 text-sm">
-        <span class="text-ink-400">${translator.t('export.label')}</span>
+        <span class="text-fg-muted">${translator.t('export.label')}</span>
         ${FORMATS.map(
           (f) =>
             `<button type="button" data-export="${f.value}" class="btn-ghost text-sm">${translator.t(f.labelKey)}</button>`,

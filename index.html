@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#00B380" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbf6f0" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#181614" />
     <meta name="description" content="From talk to insight. AI-powered meeting transcription and summaries." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="MINTZA" />
+    <meta name="apple-mobile-web-app-title" content="Mintza" />
     <meta property="og:title" content="MINTZA" />
     <meta property="og:description" content="From talk to insight. AI-powered meeting transcription and summaries." />
     <meta property="og:type" content="website" />
@@ -18,21 +19,14 @@
     <meta name="twitter:title" content="MINTZA" />
     <meta name="twitter:description" content="From talk to insight." />
     <link rel="manifest" href="/manifest.json" />
-    <title>MINTZA — From talk to insight</title>
+    <title>Mintza</title>
     <style>
-      /* Prevent accidental zoom on mobile: block double-tap zoom, keep scroll/tap. */
       html {
         touch-action: manipulation;
       }
     </style>
-    <script>
-      // iOS Safari ignores user-scalable=no, so block pinch-zoom explicitly.
-      document.addEventListener('gesturestart', function (e) {
-        e.preventDefault()
-      })
-    </script>
   </head>
-  <body class="bg-white text-ink font-sans antialiased">
+  <body class="bg-ground text-fg font-sans antialiased">
     <div id="app" class="min-h-screen"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

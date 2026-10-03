@@ -58,10 +58,10 @@ export class MeetingDetailPage implements Page {
       <main class="mx-auto max-w-3xl px-6 py-12">
         <header class="mb-6 flex items-center justify-between gap-4">
           <a href="#/history" class="btn-ghost">${t.t('nav.back')}</a>
-          <button id="btn-delete" class="btn-ghost text-red-600 text-sm">${t.t('detail.delete')}</button>
+          <button id="btn-delete" class="btn-ghost text-danger text-sm">${t.t('detail.delete')}</button>
         </header>
-        <p id="delete-status" class="mb-4 text-sm text-red-600 hidden" role="status"></p>
-        <div id="detail-body"><em class="text-ink-400">${t.t('history.loading')}</em></div>
+        <p id="delete-status" class="mb-4 text-sm text-danger hidden" role="status"></p>
+        <div id="detail-body"><em class="text-fg-muted">${t.t('history.loading')}</em></div>
       </main>
     `;
 
@@ -73,11 +73,11 @@ export class MeetingDetailPage implements Page {
     const body = root.querySelector<HTMLElement>('#detail-body');
     if (!body) return;
     if (!meetingResult.ok) {
-      body.innerHTML = `<p class="text-red-600">${t.t('detail.load_failed')} ${escapeHtml(meetingResult.error.message)}</p>`;
+      body.innerHTML = `<p class="text-danger">${t.t('detail.load_failed')} ${escapeHtml(meetingResult.error.message)}</p>`;
       return;
     }
     if (!meetingResult.value) {
-      body.innerHTML = `<em class="text-ink-400">${t.t('detail.not_found')}</em>`;
+      body.innerHTML = `<em class="text-fg-muted">${t.t('detail.not_found')}</em>`;
       return;
     }
     this.meeting = meetingResult.value;
@@ -107,7 +107,7 @@ export class MeetingDetailPage implements Page {
     target.innerHTML = `
       <section class="card mb-6">
         <h1 class="text-2xl font-bold tracking-tight">${escapeHtml(meeting.title)}</h1>
-        <p class="mt-1 text-sm text-ink-400">
+        <p class="mt-1 text-sm text-fg-muted">
           ${meeting.startedAt.toLocaleString()} · ${escapeHtml(templateDisplayName(meeting.template, t))} · ${meeting.language.code}
         </p>
         <div id="detail-cost" class="mt-3"></div>
@@ -117,7 +117,7 @@ export class MeetingDetailPage implements Page {
         meeting.temperature
           ? `
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.sentiment')}</h3>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.sentiment')}</h3>
           <div id="detail-temperature"></div>
         </section>`
           : ''
@@ -125,10 +125,10 @@ export class MeetingDetailPage implements Page {
 
       <section class="card mb-6">
         <div class="mb-3 flex items-center justify-between gap-3 flex-wrap">
-          <h3 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.summary')}</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.summary')}</h3>
           ${this.regenerateControlsHtml()}
         </div>
-        <p id="regen-status" class="text-xs text-ink-400 mb-2 hidden"></p>
+        <p id="regen-status" class="text-xs text-fg-muted mb-2 hidden"></p>
         <div id="detail-summaries"></div>
       </section>
 
@@ -136,21 +136,21 @@ export class MeetingDetailPage implements Page {
         meeting.mindMap
           ? `
         <section class="card mb-6">
-          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.mind_map')}</h3>
+          <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.mind_map')}</h3>
           <div id="detail-mindmap"></div>
         </section>`
           : ''
       }
 
       <section class="card mb-6">
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.transcript')}</h3>
-        <div class="whitespace-pre-wrap text-ink-600 text-sm">
-          ${escapeHtml(meeting.fullText().value) || `<em class="text-ink-400">${t.t('detail.no_transcript')}</em>`}
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.transcript')}</h3>
+        <div class="whitespace-pre-wrap text-fg text-sm">
+          ${escapeHtml(meeting.fullText().value) || `<em class="text-fg-muted">${t.t('detail.no_transcript')}</em>`}
         </div>
       </section>
 
       <section class="card mb-6">
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-400">${t.t('home.statistics')}</h3>
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-muted">${t.t('home.statistics')}</h3>
         <div id="detail-stats"></div>
       </section>
 
@@ -191,8 +191,8 @@ export class MeetingDetailPage implements Page {
     const t = this.deps.translator;
     return `
       <div class="flex items-center gap-2 text-sm">
-        <span class="text-ink-400">${t.t('meeting.regenerate')}</span>
-        <select id="regen-template" class="rounded-lg border border-ink-100 px-2 py-1 text-xs">
+        <span class="text-fg-muted">${t.t('meeting.regenerate')}</span>
+        <select id="regen-template" class="rounded-lg border border-line px-2 py-1 text-xs">
           ${this.templates
             .map(
               (tpl) =>
@@ -235,7 +235,7 @@ export class MeetingDetailPage implements Page {
 
   private renderSummaries(target: HTMLElement, meeting: Meeting): void {
     if (meeting.summaries.size === 0) {
-      target.innerHTML = `<em class="text-ink-400">${this.deps.translator.t('detail.no_summaries')}</em>`;
+      target.innerHTML = `<em class="text-fg-muted">${this.deps.translator.t('detail.no_summaries')}</em>`;
       return;
     }
     const order = meeting.template.featuredSummaryOrder();
@@ -248,7 +248,7 @@ export class MeetingDetailPage implements Page {
           this.deps.translator.t(SUMMARY_LABEL_KEYS[kind]),
         );
         return `<article class="mb-4">
-            <h4 class="text-sm font-semibold uppercase tracking-wide text-ink-400">${escapeHtml(label)}</h4>
+            <h4 class="text-sm font-semibold uppercase tracking-wide text-fg-muted">${escapeHtml(label)}</h4>
             <div class="prose-summary mt-1">${renderMarkdown(summary.content)}</div>
           </article>`;
       })
@@ -267,6 +267,6 @@ const parseIdFromHash = (): string | null => {
 const errorShell = (backLabel: string, message: string): string => `
   <main class="mx-auto max-w-3xl px-6 py-12">
     <header class="mb-8"><a href="#/history" class="btn-ghost">${backLabel}</a></header>
-    <p class="text-red-600">${escapeHtml(message)}</p>
+    <p class="text-danger">${escapeHtml(message)}</p>
   </main>
 `;
