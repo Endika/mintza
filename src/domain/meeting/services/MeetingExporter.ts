@@ -10,40 +10,45 @@ export interface ExportedFile {
   readonly content: string;
 }
 
+/** A file name that every file system accepts: lowercase ASCII words joined by hyphens. */
+export const exportFilename = (title: string, extension: string): string =>
+  `${slug(title)}.${extension}`;
+
 export class MeetingExporter {
-  export(meeting: Meeting, format: ExportFormat): ExportedFile {
+  /** `title` is the one people see; it defaults to the stored title. */
+  export(meeting: Meeting, format: ExportFormat, title: string = meeting.title): ExportedFile {
     switch (format) {
       case 'markdown':
         return {
-          filename: `${slug(meeting.title)}.md`,
+          filename: exportFilename(title, 'md'),
           mimeType: 'text/markdown;charset=utf-8',
-          content: this.toMarkdown(meeting),
+          content: this.toMarkdown(meeting, title),
         };
       case 'json':
         return {
-          filename: `${slug(meeting.title)}.json`,
+          filename: exportFilename(title, 'json'),
           mimeType: 'application/json;charset=utf-8',
           content: this.toJson(meeting),
         };
       case 'txt':
         return {
-          filename: `${slug(meeting.title)}.txt`,
+          filename: exportFilename(title, 'txt'),
           mimeType: 'text/plain;charset=utf-8',
-          content: this.toTxt(meeting),
+          content: this.toTxt(meeting, title),
         };
       case 'csv':
         return {
-          filename: `${slug(meeting.title)}.csv`,
+          filename: exportFilename(title, 'csv'),
           mimeType: 'text/csv;charset=utf-8',
           content: this.toCsv(meeting),
         };
     }
   }
 
-  private toMarkdown(meeting: Meeting): string {
+  private toMarkdown(meeting: Meeting, title: string): string {
     const order = meeting.template.featuredSummaryOrder();
     const parts: string[] = [];
-    parts.push(`# ${meeting.title}`, '');
+    parts.push(`# ${title}`, '');
     parts.push(`- Date: ${meeting.startedAt.toISOString()}`);
     parts.push(`- Duration: ${formatDuration(meeting.durationMs)}`);
     parts.push(`- Template: ${meeting.template.kind}`);
@@ -85,13 +90,8 @@ export class MeetingExporter {
     );
   }
 
-  private toTxt(meeting: Meeting): string {
-    const lines = [
-      meeting.title,
-      meeting.startedAt.toISOString(),
-      formatDuration(meeting.durationMs),
-      '',
-    ];
+  private toTxt(meeting: Meeting, title: string): string {
+    const lines = [title, meeting.startedAt.toISOString(), formatDuration(meeting.durationMs), ''];
     for (const segment of meeting.segments) {
       lines.push(`[${formatDuration(segment.startMs)}] ${segment.text.value}`);
     }

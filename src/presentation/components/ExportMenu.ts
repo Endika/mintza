@@ -1,7 +1,12 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
-import { MeetingExporter, type ExportFormat } from '../../domain/meeting/services/MeetingExporter';
+import {
+  MeetingExporter,
+  exportFilename,
+  type ExportFormat,
+} from '../../domain/meeting/services/MeetingExporter';
 import { PdfExporter } from '../../infrastructure/export/PdfExporter';
 import type { Translator } from '../i18n/Translator';
+import { meetingTitle } from '../util/meetingTitle';
 import { ICON_DOWNLOAD } from './icons';
 import type { TranslationKey } from '../i18n/translations';
 
@@ -57,7 +62,7 @@ export class ExportMenu {
         const meeting = getMeeting();
         if (!meeting) return;
         const format = btn.dataset['export'] as Format;
-        void this.download(meeting, format, btn).finally(() => {
+        void this.download(meeting, meetingTitle(meeting, translator), format, btn).finally(() => {
           if (menu) menu.open = false;
         });
       });
@@ -70,18 +75,23 @@ export class ExportMenu {
     this.outsideClick = null;
   }
 
-  private async download(meeting: Meeting, format: Format, btn: HTMLButtonElement): Promise<void> {
+  private async download(
+    meeting: Meeting,
+    title: string,
+    format: Format,
+    btn: HTMLButtonElement,
+  ): Promise<void> {
     if (format === 'pdf') {
       btn.disabled = true;
       try {
-        const blob = await this.pdfExporter.generate(meeting);
-        triggerDownload(blob, `${slugify(meeting.title)}.pdf`);
+        const blob = await this.pdfExporter.generate(meeting, title);
+        triggerDownload(blob, exportFilename(title, 'pdf'));
       } finally {
         btn.disabled = false;
       }
       return;
     }
-    const file = this.exporter.export(meeting, format);
+    const file = this.exporter.export(meeting, format, title);
     const blob = new Blob([file.content], { type: file.mimeType });
     triggerDownload(blob, file.filename);
   }
@@ -97,11 +107,3 @@ const triggerDownload = (blob: Blob, filename: string): void => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
-
-const slugify = (raw: string): string =>
-  raw
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'meeting';
