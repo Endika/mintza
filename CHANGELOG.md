@@ -5,6 +5,21 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.0](https://github.com/Endika/mintza/compare/v1.22.2...v1.23.0) (2026-10-03)
+
+
+### Features
+
+* separate Google Gemini and Speech keys ([aeb8307](https://github.com/Endika/mintza/commit/aeb8307292a23a8b743a231bfa872b20170b6c90))
+
+
+### Bug Fixes
+
+* keep Gemini-only keys away from Speech and explain billing and restriction errors ([7699798](https://github.com/Endika/mintza/commit/7699798feb5aff0ab2deb76a4a78e2fbec03c6cb))
+* show the real reason a key test failed ([fad7a5c](https://github.com/Endika/mintza/commit/fad7a5ca5c8c00a0444b576392902ee2bb8d6a82))
+* summarise with a current Gemini model ([7ec898c](https://github.com/Endika/mintza/commit/7ec898c144135150ccda58646363f74cd1c46386))
+* translate the remaining key and provider errors ([4c32bc8](https://github.com/Endika/mintza/commit/4c32bc8f0ec4aefc14025720de6c16fc4bd647fd))
+
 ## [1.22.2](https://github.com/Endika/mintza/compare/v1.22.1...v1.22.2) (2026-10-03)
 
 
