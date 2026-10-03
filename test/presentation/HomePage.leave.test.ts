@@ -135,7 +135,9 @@ class BrokenMeetingRepository extends InMemoryMeetingRepository {
   constructor(private readonly mode: 'fail' | 'throw') {
     super();
   }
+  attempts = 0;
   override save(): Promise<Result<void, AppError>> {
+    this.attempts += 1;
     if (this.mode === 'throw') return Promise.reject(new Error('disk exploded'));
     return Promise.resolve(err(new AppError('STORAGE_FAILED', 'quota exceeded')));
   }
@@ -193,19 +195,21 @@ describe('HomePage leaving a recording', () => {
   });
 
   it('stays on the page with the error shown when the transcript fails to save', async () => {
-    const { page, root, audio, meetings } = await setup(
+    const meetings = new BrokenMeetingRepository('fail');
+    const { page, root, audio } = await setup(
       new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      meetings,
     );
     audio.emit(chunk());
     await settle();
-    meetings.failNextSave(new AppError('STORAGE_FAILED', 'quota exceeded'));
     window.confirm = () => true;
 
     const left = await page.canLeave();
+    await settle();
 
     expect(left).toBe(false);
+    expect(meetings.attempts).toBe(2);
     expect(root.querySelector('#status')!.textContent).toContain('quota exceeded');
-    expect(meetings.saves).toHaveLength(0);
   });
 
   it('lets the page go during processing only once the transcript is in the repository', async () => {
@@ -281,5 +285,35 @@ describe('HomePage leaving a recording', () => {
       'Stop and save this recording before leaving?',
       "This meeting isn't saved. Leave and lose it?",
     ]);
+  });
+
+  it('asks before starting over on a meeting that no save could store', async () => {
+    const { root, audio } = await setup(
+      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      new BrokenMeetingRepository('fail'),
+    );
+    audio.emit(chunk());
+    await settle();
+    root.querySelector<HTMLButtonElement>('#btn-stop')!.click();
+    await settle();
+    const asked: string[] = [];
+    let answer = false;
+    window.confirm = (message?: string) => {
+      asked.push(message ?? '');
+      return answer;
+    };
+
+    root.querySelector<HTMLButtonElement>('#btn-new')!.click();
+    await settle();
+    expect(asked).toEqual(["This meeting isn't saved. Leave and lose it?"]);
+    expect(root.querySelector('#status')!.textContent).toContain('quota exceeded');
+    expect(root.querySelector('#transcription')!.textContent).toContain('hello team');
+
+    answer = true;
+    root.querySelector<HTMLButtonElement>('#btn-new')!.click();
+    await settle();
+    expect(root.querySelector('#transcription')!.textContent).not.toContain('hello team');
+    expect(root.querySelector('#btn-record')!.hasAttribute('disabled')).toBe(false);
+    expect(unload().defaultPrevented).toBe(false);
   });
 });
