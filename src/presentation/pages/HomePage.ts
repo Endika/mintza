@@ -39,6 +39,7 @@ import {
   ICON_SPARKLE,
   ICON_STOP,
 } from '../components/icons';
+import { bindDisclosures, disclosureHtml } from '../components/Disclosure';
 import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
@@ -205,6 +206,7 @@ export class HomePage implements Page {
       </div>
     `;
 
+    bindDisclosures(this.qs<HTMLElement>('#rest-summaries'));
     if (hasKey) this.bind();
     this.applyScreenState();
     void this.renderLastMeeting();
@@ -1015,15 +1017,14 @@ export class HomePage implements Page {
     if (restEl) {
       const listed = finished ? rest : primary ? [primary, ...rest] : [];
       restEl.innerHTML = listed
-        .map(
-          (kind, i) => `
-          <details class="group" ${!finished && i === 0 ? 'open' : ''}>
-            <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 sm:px-6 [&::-webkit-details-marker]:hidden">
-              <h3 class="text-base font-semibold">${escapeHtml(this.summaryLabel(meeting.template, kind))}</h3>
-              <span class="shrink-0 text-fg-muted transition-transform duration-150 group-open:rotate-90">${ICON_CHEVRON}</span>
-            </summary>
-            <div class="prose-summary px-5 pb-5 leading-relaxed sm:px-6">${this.summaryHtml(kind)}</div>
-          </details>`,
+        .map((kind, i) =>
+          disclosureHtml({
+            id: `home-result-${kind}`,
+            kind,
+            label: escapeHtml(this.summaryLabel(meeting.template, kind)),
+            bodyHtml: this.summaryHtml(kind),
+            expanded: !finished && i === 0,
+          }),
         )
         .join('');
     }
