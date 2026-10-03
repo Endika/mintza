@@ -77,7 +77,7 @@ export class CostCounter {
       <p class="flex flex-wrap gap-x-2 text-sm text-fg-muted">
         <span class="tabular">${formatDuration(meeting.durationMs)}</span><span aria-hidden="true">·</span>
         <span>${translator.t('cost.words', { count: meeting.fullText().wordCount() })}</span><span aria-hidden="true">·</span>
-        <span class="tabular">${translator.t('cost.total')} ${total.format(3)}</span>
+        <span class="tabular">${translator.t('cost.total')} ${total.format(total.toUsd() >= 0.1 ? 2 : 3)}</span>
       </p>
     `;
   }

@@ -56,12 +56,16 @@ export class AudioLevelMeter {
 
     const buffer = new Uint8Array(analyser.frequencyBinCount);
     let band: Band | null = null;
+    let shown = -1;
     const tick = (): void => {
       analyser.getByteFrequencyData(buffer);
       const avg = average(buffer);
       this.smoothed = this.smoothed * SMOOTHING + avg * (1 - SMOOTHING);
       const percent = Math.min(100, Math.round((this.smoothed / 180) * 100));
-      bar.style.width = `${percent}%`;
+      if (percent !== shown) {
+        shown = percent;
+        bar.style.width = `${percent}%`;
+      }
       this.silentTicks = percent < 4 ? this.silentTicks + 1 : 0;
       const next = bandFor(percent, this.silentTicks);
       if (next !== band) {
