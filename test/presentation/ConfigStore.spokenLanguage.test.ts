@@ -1,27 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { FakeConfigRepo } from '../fakes/FakeConfigRepo';
 import { ConfigStore } from '../../src/presentation/state/ConfigStore';
-import {
-  DEFAULT_CONFIG,
-  type AppConfig,
-  type ConfigRepository,
-} from '../../src/domain/meeting/ports/ConfigRepository';
-import { ok, type Result } from '../../src/shared/result/Result';
-import type { AppError } from '../../src/shared/errors/AppError';
-
-class FakeConfigRepo implements ConfigRepository {
-  constructor(public saved: AppConfig | null = null) {}
-  load(): Promise<Result<AppConfig, AppError>> {
-    return Promise.resolve(ok(this.saved ?? DEFAULT_CONFIG));
-  }
-  save(config: AppConfig): Promise<Result<void, AppError>> {
-    this.saved = config;
-    return Promise.resolve(ok(undefined));
-  }
-  clear(): Promise<Result<void, AppError>> {
-    this.saved = null;
-    return Promise.resolve(ok(undefined));
-  }
-}
+import { DEFAULT_CONFIG } from '../../src/domain/meeting/ports/ConfigRepository';
 
 describe('ConfigStore spoken language', () => {
   it('falls back to the interface language for a v1 config that never stored one', async () => {

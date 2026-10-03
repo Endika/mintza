@@ -51,7 +51,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
     case 'openai':
       return [
         {
-          service: 'OpenAI (Whisper + GPT)',
+          service: 'OpenAI',
           request: {
             url: 'https://api.openai.com/v1/models',
             method: 'GET',
@@ -62,7 +62,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
     case 'anthropic':
       return [
         {
-          service: 'Anthropic Claude',
+          service: 'Anthropic',
           request: {
             url: 'https://api.anthropic.com/v1/messages',
             method: 'POST',
@@ -94,7 +94,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
     case 'google':
       return [
         {
-          service: 'Gemini',
+          service: 'Google Gemini',
           request: {
             url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
             method: 'GET',
@@ -103,7 +103,7 @@ const buildProbes = (provider: ApiKeyProviderName, key: string): readonly Probe[
             'Generative Language API not enabled. Visit console.cloud.google.com/apis/library/generativelanguage.googleapis.com',
         },
         {
-          service: 'Speech-to-Text',
+          service: 'Google Speech',
           request: {
             url: `https://speech.googleapis.com/v1/operations?key=${encodeURIComponent(key)}`,
             method: 'GET',

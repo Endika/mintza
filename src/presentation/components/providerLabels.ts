@@ -13,3 +13,6 @@ export const LLM_LABEL: Record<LLMProviderName, string> = {
   anthropic: 'Claude',
   gemini: 'Gemini',
 };
+
+export const transcriptionLabel = (id: string): string =>
+  (TRANSCRIPTION_LABEL as Readonly<Record<string, string | undefined>>)[id] ?? id;

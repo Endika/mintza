@@ -51,8 +51,12 @@ describe('TemplatesPage', () => {
     root.querySelector<HTMLInputElement>('input[name="systemRole"]')!.value = 'a daily standup';
     root.querySelector<HTMLTextAreaElement>('textarea[name="mindMapStructure"]')!.value = 'Team';
     root.querySelector<HTMLButtonElement>('[data-kind="bullet_points"]')!.click();
-    expect(root.querySelector('#tpl-main')!.textContent).toContain('Action items');
-    root.querySelector<HTMLButtonElement>('[data-make-main="decisions"]')!.click();
+    expect(root.querySelector<HTMLSelectElement>('#tpl-main-select')!.value).toBe('action_items');
+    const main = root.querySelector<HTMLSelectElement>('#tpl-main-select')!;
+    main.value = 'decisions';
+    main.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(root.querySelector('[data-kind="decisions"] .sr-only')).not.toBeNull();
+    root.querySelector<HTMLInputElement>('input[name="label_bullet_points"]')!.value = 'Gone';
     root
       .querySelector<HTMLFormElement>('#tpl-form')!
       .dispatchEvent(new Event('submit', { cancelable: true }));
@@ -63,6 +67,7 @@ describe('TemplatesPage', () => {
     expect(saved?.featuredOrder[0]).toBe('decisions');
     expect(saved?.summaryKinds).not.toContain('bullet_points');
     expect(saved?.promptOverrides).toEqual({});
+    expect(saved?.kindLabels).toEqual({});
     root.remove();
   });
 });

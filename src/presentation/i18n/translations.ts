@@ -223,7 +223,6 @@ export type TranslationKey =
   | 'templates.edit_title'
   | 'templates.field_kinds_hint'
   | 'templates.main_result'
-  | 'templates.make_main'
   | 'templates.customise'
   | 'templates.customise_hint'
   | 'templates.field_label'
@@ -462,7 +461,6 @@ const EN: Translations = {
   'templates.field_kinds_hint':
     'Choose what Mintza prepares after each meeting. The main result is shown first.',
   'templates.main_result': 'Main result',
-  'templates.make_main': 'Make main',
   'templates.customise': 'Customise wording',
   'templates.customise_hint': "Leave a box empty to keep Mintza's wording.",
   'templates.field_label': 'Name shown',
@@ -700,7 +698,6 @@ const ES: Translations = {
   'templates.field_kinds_hint':
     'Elige qué prepara Mintza después de cada reunión. El resultado principal se muestra primero.',
   'templates.main_result': 'Resultado principal',
-  'templates.make_main': 'Hacer principal',
   'templates.customise': 'Personalizar el texto',
   'templates.customise_hint': 'Deja un campo vacío para mantener el texto de Mintza.',
   'templates.field_label': 'Nombre que se muestra',
@@ -933,17 +930,16 @@ const EU: Translations = {
     'Gako guztiak nabigatzaile honetatik kendu? Grabatzeko berriro itsatsi beharko dituzu.',
   'settings.leave_unsaved': 'Gorde gabeko aldaketak dituzu. Gorde gabe irten?',
   'settings.quality_hint':
-    'Kalitate handiagoak gehiago balio du. Hornitzaile bakoitzari zuzenean ordaintzen diozu.',
+    'Kalitate handiagoa gehiago kostatzen da. Hornitzaile bakoitzari zuzenean ordaintzen diozu.',
   'settings.default_template_hint': 'Bilera berriak txantiloi honekin hasten dira.',
   'settings.about': 'Mintzari buruz',
   'settings.licence': 'Kode irekia, MIT lizentziapean',
   'templates.result_count': '{count} emaitza',
-  'templates.result_count_one': 'Emaitza 1',
+  'templates.result_count_one': 'Emaitza bat',
   'templates.edit_title': 'Editatu txantiloia',
   'templates.field_kinds_hint':
     'Aukeratu Mintzak bilera bakoitzaren ondoren zer prestatzen duen. Emaitza nagusia lehenengo erakusten da.',
   'templates.main_result': 'Emaitza nagusia',
-  'templates.make_main': 'Nagusi bihurtu',
   'templates.customise': 'Testua pertsonalizatu',
   'templates.customise_hint': 'Utzi eremu bat hutsik Mintzaren testua mantentzeko.',
   'templates.field_label': 'Erakusten den izena',
