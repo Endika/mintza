@@ -4,13 +4,14 @@ import type {
 } from '../../domain/temperature/value-objects/TemperatureScore';
 import type { TranslationKey } from '../i18n/translations';
 import type { Translator } from '../i18n/Translator';
+import { escapeHtml } from '../util/escapeHtml';
 
-const BAND_COLORS: Record<TemperatureBand, string> = {
-  very_negative: '#7f1d1d',
-  negative: '#ea580c',
-  neutral: '#eab308',
-  positive: '#16a34a',
-  very_positive: '#6366F1',
+const BAND_TEXT: Record<TemperatureBand, string> = {
+  very_negative: 'text-danger',
+  negative: 'text-warning',
+  neutral: 'text-fg-muted',
+  positive: 'text-success',
+  very_positive: 'text-action',
 };
 
 const BAND_LABEL_KEYS: Record<TemperatureBand, TranslationKey> = {
@@ -21,38 +22,32 @@ const BAND_LABEL_KEYS: Record<TemperatureBand, TranslationKey> = {
   very_positive: 'sentiment.very_positive',
 };
 
-const BAND_EMOJI: Record<TemperatureBand, string> = {
-  very_negative: '🥶',
-  negative: '😕',
-  neutral: '😐',
-  positive: '🙂',
-  very_positive: '🔥',
-};
+const SCALE =
+  'linear-gradient(90deg, var(--color-danger), var(--color-warning), var(--color-fg-muted), var(--color-success), var(--color-action))';
 
 export class TemperatureGauge {
   render(target: HTMLElement, score: TemperatureScore, translator: Translator): void {
     const band = score.band();
-    const color = BAND_COLORS[band];
+    const label = escapeHtml(translator.t(BAND_LABEL_KEYS[band]));
     const percent = Math.round(score.value);
+    // Stretching the gradient to the full track keeps each colour at its place on the 0–100 scale.
+    const size = percent > 0 ? (100 / percent) * 100 : 100;
     target.innerHTML = `
-      <div class="flex items-center gap-4">
-        <div class="text-4xl" aria-hidden="true">${BAND_EMOJI[band]}</div>
-        <div class="flex-1">
-          <div class="flex items-baseline justify-between">
-            <span class="text-3xl font-bold tabular-nums" style="color:${color}">${percent}</span>
-            <span class="text-sm font-medium" style="color:${color}">${translator.t(BAND_LABEL_KEYS[band])}</span>
-          </div>
-          <div class="mt-2 h-2 rounded-full bg-line overflow-hidden">
-            <div
-              role="progressbar"
-              aria-valuenow="${percent}"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              class="h-full rounded-full transition-all duration-500 ease-smooth"
-              style="width:${percent}%; background: linear-gradient(90deg, #7f1d1d, #ea580c, #eab308, #16a34a, #6366F1)"
-            ></div>
-          </div>
-        </div>
+      <div class="flex items-baseline justify-between gap-3 ${BAND_TEXT[band]}">
+        <span class="text-4xl font-semibold tracking-tight tabular">${percent}</span>
+        <span class="font-semibold">${label}</span>
+      </div>
+      <div class="meter-bar-track mt-3">
+        <div
+          role="progressbar"
+          aria-label="${escapeHtml(translator.t('sentiment.overall'))}"
+          aria-valuenow="${percent}"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuetext="${label}"
+          class="meter-bar-fill transition-[width] duration-500 ease-smooth"
+          style="width:${percent}%; background-image:${SCALE}; background-size:${size}% 100%"
+        ></div>
       </div>
     `;
   }

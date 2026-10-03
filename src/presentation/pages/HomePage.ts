@@ -23,7 +23,7 @@ import type { TranscriptSegment } from '../../domain/transcription/entities/Tran
 import type { ProviderAttempt } from '../../shared/errors/AppError';
 import type { AppShell } from '../components/AppShell';
 import { AudioLevelMeter } from '../components/AudioLevelMeter';
-import { CostCounter, formatDuration } from '../components/CostCounter';
+import { CostCounter } from '../components/CostCounter';
 import { ExportMenu } from '../components/ExportMenu';
 import {
   ICON_ALERT,
@@ -48,6 +48,7 @@ import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
 import { Router, type Page } from '../router/Router';
 import type { ConfigStore } from '../state/ConfigStore';
+import { formatDuration } from '../util/formatDuration';
 import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
 import { escapeHtml } from '../util/escapeHtml';
@@ -177,9 +178,9 @@ export class HomePage implements Page {
               <h3 class="mb-3 text-lg font-semibold">${t('home.statistics')}</h3>
               <div id="stats-body"></div>
             </section>
-            <section id="export-card" class="card hidden">
+            <div id="export-card" class="hidden">
               <div id="export-menu"></div>
-            </section>
+            </div>
           </div>
         </section>
 
@@ -947,7 +948,7 @@ export class HomePage implements Page {
       timeStyle: 'short',
     }).format(item.startedAt);
     const template = this.templates.find((tpl) => tpl.id === item.templateKind);
-    const parts = [when, formatDuration(item.durationMs)];
+    const parts = [when, formatDuration(item.durationMs / 1000, this.t.language)];
     if (template) parts.push(templateDisplayName(template, this.t));
     return parts.join(' · ');
   }
