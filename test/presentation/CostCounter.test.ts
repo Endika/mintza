@@ -10,7 +10,7 @@ const line = (transcript: string, language: 'en' | 'es' | 'eu'): string => {
     finishedMeeting({ title: 'Sync', seconds: 60, transcript }),
     new Translator(language),
   );
-  return target.textContent.replace(/\s+/g, ' ');
+  return [...target.querySelectorAll('.meta-line > span')].map((s) => s.textContent).join(' | ');
 };
 
 describe('CostCounter summary line', () => {

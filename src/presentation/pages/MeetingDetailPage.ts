@@ -96,6 +96,8 @@ export class MeetingDetailPage implements Page {
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <a href="#/history" class="btn-ghost -ml-3 mb-3 px-3">${ICON_BACK}<span>${t.t('nav.history')}</span></a>
         <div id="detail-body"></div>
+        <p id="regen-status" role="status" class="mt-2 text-sm text-fg-muted empty:hidden"></p>
+        <div id="detail-rest"></div>
         <div class="mt-10 border-t border-line pt-6">
           <button type="button" id="btn-delete" class="btn-ghost -ml-3 text-danger">${ICON_TRASH}<span>${t.t('detail.delete_meeting')}</span></button>
           <p id="delete-status" class="mt-2 text-sm text-danger hidden" role="status"></p>
@@ -139,10 +141,14 @@ export class MeetingDetailPage implements Page {
 
   private renderMeeting(meeting: Meeting): void {
     const target = this.root?.querySelector<HTMLElement>('#detail-body');
-    if (!target) return;
+    const rest = this.root?.querySelector<HTMLElement>('#detail-rest');
+    if (!this.root || !target || !rest) return;
     const t = this.t;
     const lang = t.language;
-    const when = meeting.startedAt.toLocaleString(lang, { dateStyle: 'full', timeStyle: 'short' });
+    const when = meeting.startedAt.toLocaleString(lang, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
     const transcript = escapeHtml(meeting.fullText().value);
 
     target.innerHTML = `
@@ -154,7 +160,8 @@ export class MeetingDetailPage implements Page {
 
       ${this.summariesHtml(meeting)}
       ${this.regenerateHtml()}
-
+    `;
+    rest.innerHTML = `
       <details class="card group mt-4 p-0 sm:p-0">
         <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-[var(--radius-card)] px-5 py-3 font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
           <span>${t.t('home.transcript')}</span>
@@ -202,25 +209,18 @@ export class MeetingDetailPage implements Page {
     );
     if (meeting.temperature) {
       this.gauge.render(
-        target.querySelector<HTMLElement>('#detail-temperature')!,
+        rest.querySelector<HTMLElement>('#detail-temperature')!,
         meeting.temperature,
         t,
       );
     }
     if (meeting.mindMap) {
-      this.mindMapView.render(
-        target.querySelector<HTMLElement>('#detail-mindmap')!,
-        meeting.mindMap,
-      );
+      this.mindMapView.render(rest.querySelector<HTMLElement>('#detail-mindmap')!, meeting.mindMap);
     }
-    this.statsPanel.render(target.querySelector<HTMLElement>('#detail-stats')!, meeting, t);
-    this.costCounter.renderBreakdown(
-      target.querySelector<HTMLElement>('#detail-cost')!,
-      meeting,
-      t,
-    );
+    this.statsPanel.render(rest.querySelector<HTMLElement>('#detail-stats')!, meeting, t);
+    this.costCounter.renderBreakdown(rest.querySelector<HTMLElement>('#detail-cost')!, meeting, t);
     this.exportMenu.render(
-      target.querySelector<HTMLElement>('#detail-export')!,
+      rest.querySelector<HTMLElement>('#detail-export')!,
       () => this.meeting,
       t,
     );
@@ -301,7 +301,6 @@ export class MeetingDetailPage implements Page {
           </select>
         </div>
         <button type="button" id="btn-regen" class="btn-secondary">${t.t('detail.regenerate')}</button>
-        <p id="regen-status" class="w-full text-sm text-fg-muted hidden" role="status"></p>
       </div>
     `;
   }
@@ -320,10 +319,7 @@ export class MeetingDetailPage implements Page {
       template: newTemplate,
     });
     this.meeting = transient;
-    // Reusing the same live region lets screen readers announce the result; a fresh one stays silent.
-    const region = this.root.querySelector<HTMLElement>('#regen-status');
     this.renderMeeting(transient);
-    if (region) this.root.querySelector('#regen-status')?.replaceWith(region);
     this.root.querySelector<HTMLButtonElement>('#btn-regen')?.focus();
     this.setRegenStatus(
       this.t.t('home.summaries_result', { ok: output.successCount, failed: output.failureCount }),
@@ -334,7 +330,6 @@ export class MeetingDetailPage implements Page {
     const status = this.root?.querySelector<HTMLElement>('#regen-status');
     if (!status) return;
     status.textContent = message;
-    status.classList.remove('hidden');
   }
 }
 

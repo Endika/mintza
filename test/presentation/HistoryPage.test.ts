@@ -172,18 +172,15 @@ describe('HistoryPage', () => {
     expect(root.querySelectorAll('#list li')).toHaveLength(1);
   });
 
-  it('keeps each meta value whole and starts each separator on the value it introduces', async () => {
+  it('lays the meta values out as a wrapping row with no separator characters', async () => {
     const repo = new InMemoryMeetingRepository();
     await repo.save(finishedMeeting({ title: 'Budget review', seconds: 2520 }));
     const { root } = await renderHistory(repo);
 
-    const parts = [...root.querySelectorAll<HTMLElement>('#list li p span')].map(
-      (span) => span.textContent,
-    );
+    const row = root.querySelector<HTMLElement>('#list li .meta-line')!;
+    const parts = [...row.children].map((span) => span.textContent);
     expect(parts).toHaveLength(3);
-    expect(parts[0]).not.toContain('·');
-    expect(parts[1]).toBe('· 42 min');
-    expect(parts[2]).toBe('· Work');
-    expect(parts.every((part) => !part.trimEnd().endsWith('·'))).toBe(true);
+    expect(parts.slice(1)).toEqual(['42 min', 'Work']);
+    expect(row.textContent).not.toContain('·');
   });
 });
