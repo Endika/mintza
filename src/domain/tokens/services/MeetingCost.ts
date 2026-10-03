@@ -16,7 +16,7 @@ export interface MeetingCostBreakdown {
 const FALLBACK_MODEL: Record<LLMProviderName, string> = {
   openai: 'gpt-4o-mini',
   anthropic: 'claude-sonnet-4-5',
-  gemini: 'gemini-2.0-flash',
+  gemini: 'gemini-3.1-flash-lite',
 };
 
 const calculator = new CostCalculator();

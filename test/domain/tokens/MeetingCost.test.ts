@@ -101,4 +101,39 @@ describe('meetingCost', () => {
     expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(3, 6);
     expect(cost.mindMap.toUsd()).toBeCloseTo(0.15, 6);
   });
+
+  describe('Gemini', () => {
+    const geminiMeeting = (model?: string): Meeting => {
+      const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+      meeting.setSummary(
+        new Summary({
+          kind: 'decisions',
+          content: '- ship it',
+          tokensIn: MILLION,
+          tokensOut: MILLION,
+          provider: 'gemini',
+          ...(model ? { model } : {}),
+          generatedAt: new Date(),
+        }),
+      );
+      return meeting;
+    };
+
+    it('prices the current default model at its own rates', () => {
+      expect(
+        meetingCost(geminiMeeting('gemini-3.1-flash-lite')).llm.get('gemini')!.toUsd(),
+      ).toBeCloseTo(0.25 + 1.5, 6);
+    });
+
+    it('prices a summary saved without a model at the current default', () => {
+      expect(meetingCost(geminiMeeting()).llm.get('gemini')!.toUsd()).toBeCloseTo(0.25 + 1.5, 6);
+    });
+
+    it('keeps pricing meetings summarised with the retired gemini-2.0-flash', () => {
+      expect(meetingCost(geminiMeeting('gemini-2.0-flash')).llm.get('gemini')!.toUsd()).toBeCloseTo(
+        0.1 + 0.4,
+        6,
+      );
+    });
+  });
 });

@@ -18,11 +18,13 @@ import type { AppError } from '../../../src/shared/errors/AppError';
 import { ok, type Result } from '../../../src/shared/result/Result';
 
 class CannedHttp extends HttpClient {
+  readonly sent: HttpRequest[] = [];
   constructor(private readonly body: unknown) {
     super();
   }
 
-  override send(_request: HttpRequest): Promise<Result<HttpResponse, AppError>> {
+  override send(request: HttpRequest): Promise<Result<HttpResponse, AppError>> {
+    this.sent.push(request);
     const body = this.body;
     return Promise.resolve(
       ok({
@@ -83,6 +85,19 @@ describe('LLM adapters record the model that ran', () => {
     const result = await adapter.summarize(request);
     if (!result.ok) throw new Error('expected a summary');
     expect(result.value.model).toBe('gemini-2.0-flash');
+  });
+
+  it('summarises with a Gemini model that is still served when none is given', async () => {
+    const http = new CannedHttp({
+      candidates: [{ content: { parts: [{ text: '- ship' }] } }],
+      usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5 },
+    });
+    const result = await new GeminiSummarizationAdapter(new GeminiClient(http, key)).summarize(
+      request,
+    );
+    if (!result.ok) throw new Error('expected a summary');
+    expect(result.value.model).toBe('gemini-3.1-flash-lite');
+    expect(http.sent[0]?.url).toContain('/models/gemini-3.1-flash-lite:generateContent');
   });
 
   it("keeps the mind map call's model and tokens", async () => {
