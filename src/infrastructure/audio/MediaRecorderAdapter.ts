@@ -2,6 +2,7 @@ import type {
   AudioCapturePort,
   AudioChunkHandler,
   RecordingState,
+  StopOutcome,
   Unsubscribe,
 } from '../../domain/audio/ports/AudioCapturePort';
 import { AudioChunk } from '../../domain/audio/value-objects/AudioChunk';
@@ -100,8 +101,8 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     return Promise.resolve();
   }
 
-  async stop(): Promise<void> {
-    if (this.status === 'idle' || this.status === 'stopped') return;
+  async stop(): Promise<StopOutcome> {
+    if (this.status === 'idle' || this.status === 'stopped') return { timedOut: false };
     this.status = 'stopped';
     this.clearTimer();
     this.isRotating = false;
@@ -109,10 +110,14 @@ export class MediaRecorderAdapter implements AudioCapturePort {
     const stream = this.stream;
     this.recorder = null;
     let timer: number | undefined;
+    let timedOut = false;
     try {
       if (recorder && recorder.state !== 'inactive') {
         await new Promise<void>((resolve) => {
-          timer = window.setTimeout(resolve, this.stopTimeoutMs);
+          timer = window.setTimeout(() => {
+            timedOut = true;
+            resolve();
+          }, this.stopTimeoutMs);
           const previousOnStop = recorder.onstop;
           recorder.onstop = (event) => {
             try {
@@ -131,6 +136,7 @@ export class MediaRecorderAdapter implements AudioCapturePort {
       this.stream = null;
       this.mimeType = null;
     }
+    return { timedOut };
   }
 
   private startCycle(): void {

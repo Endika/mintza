@@ -12,6 +12,7 @@ import type {
   AudioCapturePort,
   AudioChunkHandler,
   RecordingState,
+  StopOutcome,
   Unsubscribe,
 } from '../../src/domain/audio/ports/AudioCapturePort';
 import { AudioChunk } from '../../src/domain/audio/value-objects/AudioChunk';
@@ -63,9 +64,9 @@ class FakeAudio implements AudioCapturePort {
     this.status = 'recording';
     return Promise.resolve();
   }
-  stop(): Promise<void> {
+  stop(): Promise<StopOutcome> {
     this.status = 'stopped';
-    return Promise.resolve();
+    return Promise.resolve({ timedOut: false });
   }
   state(): RecordingState {
     return this.status;
@@ -366,6 +367,38 @@ describe('HomePage states', () => {
     expect(root.querySelector('#temperature-card')!.classList.contains('hidden')).toBe(true);
     const labels = [...root.querySelectorAll('#primary-summary h3, #rest-summaries h3')];
     expect(labels).toHaveLength(3);
+  });
+
+  it('summarize-now, mid-recording, asks only for the kinds of the chosen template', async () => {
+    const summarization = new FakeSummarizationPort({ kind: 'success', content: 'ok' });
+    const { root, audio } = await mount('sk-test', summarization, [
+      {
+        id: 'custom-1',
+        name: 'Slim',
+        systemRole: 'You summarise.',
+        mindMapStructure: 'topics',
+        summaryKinds: ['decisions', 'action_items', 'next_steps'],
+        featuredOrder: ['decisions'],
+        kindLabels: {},
+        promptOverrides: {},
+      },
+    ]);
+    root.querySelector<HTMLButtonElement>('[data-template="custom-1"]')!.click();
+    root.querySelector<HTMLButtonElement>('#btn-record')!.click();
+    await settle();
+    audio.emit(
+      new AudioChunk({ blob: new Blob(['a']), startMs: 0, endMs: 1000, mimeType: 'audio/webm' }),
+    );
+    await settle();
+
+    root.querySelector<HTMLButtonElement>('#btn-summarize')!.click();
+    await settle();
+
+    expect(summarization.requestedKinds().sort()).toEqual([
+      'action_items',
+      'decisions',
+      'next_steps',
+    ]);
   });
 
   it('keeps every failed result marked with its reason', async () => {
