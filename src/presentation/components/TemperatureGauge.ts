@@ -46,7 +46,7 @@ export class TemperatureGauge {
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuetext="${label}"
-          class="meter-bar-fill transition-[width] duration-500 ease-smooth"
+          class="meter-bar-fill"
           style="width:${percent}%; background-image:${SCALE}; background-size:${size}% 100%"
         ></div>
       </div>
