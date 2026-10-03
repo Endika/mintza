@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { bootDocumentScript } from '../../src/bootstrap/bootDocument';
+import { bootDocumentScript, scriptLiteral } from '../../src/bootstrap/bootDocument';
 import { Translator } from '../../src/presentation/i18n/Translator';
 
 const KEY = 'mintza:config:v1';
@@ -109,5 +109,15 @@ describe('the inline boot script', () => {
     ]);
     expect(runtimeImports('src/presentation/i18n/translations.ts')).toEqual([]);
     expect(runtimeImports('src/shared/constants/storageKeys.ts')).toEqual([]);
+  });
+});
+
+describe('scriptLiteral', () => {
+  it('keeps values that could close the script or break the line inert', () => {
+    const value = { a: '</script><script>alert(1)</script>', b: 'x\u2028y\u2029z', c: '<!--' };
+    const literal = scriptLiteral(value);
+
+    expect(literal).not.toMatch(/[<>/\u2028\u2029]/);
+    expect(JSON.parse(literal)).toEqual(value);
   });
 });

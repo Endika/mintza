@@ -9,6 +9,18 @@ const PAGE_TITLES: Record<string, TranslationKey> = {
   '/templates': 'templates.title',
 };
 
+const UNSAFE_IN_SCRIPT: Record<string, string> = {
+  '<': '\\u003c',
+  '>': '\\u003e',
+  '/': '\\u002f',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+};
+
+/** JSON that is safe to place inside an inline <script>. */
+export const scriptLiteral = (value: unknown): string =>
+  JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (ch) => UNSAFE_IN_SCRIPT[ch] ?? ch);
+
 /** Runs before the app hydrates, so the first paint and announcement use the stored language. */
 export const bootDocumentScript = (): string => {
   const titles = Object.fromEntries(
@@ -18,5 +30,5 @@ export const bootDocumentScript = (): string => {
     ]),
   );
   const own = 'Object.prototype.hasOwnProperty.call';
-  return `(function(){try{var T=${JSON.stringify(titles).replace(/</g, '\\u003c')};var c=JSON.parse(localStorage.getItem(${JSON.stringify(CONFIG_STORAGE_KEY)})||'null');var l=c&&c.language;if(typeof l!=='string'||!${own}(T,l))return;document.documentElement.lang=l;var p=(location.hash.replace(/^#/,'')||'/').split('?')[0].toLowerCase();if(p==='/meeting')return;document.title=(${own}(T[l],p)?T[l][p]:T[l]['/'])+' · Mintza'}catch(e){}})();`;
+  return `(function(){try{var T=${scriptLiteral(titles)};var c=JSON.parse(localStorage.getItem(${scriptLiteral(CONFIG_STORAGE_KEY)})||'null');var l=c&&c.language;if(typeof l!=='string'||!${own}(T,l))return;document.documentElement.lang=l;var p=(location.hash.replace(/^#/,'')||'/').split('?')[0].toLowerCase();if(p==='/meeting')return;document.title=(${own}(T[l],p)?T[l][p]:T[l]['/'])+' · Mintza'}catch(e){}})();`;
 };
