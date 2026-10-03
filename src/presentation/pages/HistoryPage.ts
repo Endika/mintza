@@ -86,7 +86,7 @@ export class HistoryPage implements Page {
     const result = await this.deps.listMeetings.execute();
     if (!result.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">Error: ${result.error.message}</p>`;
+        `<p class="text-red-600">Error: ${escapeHtml(result.error.message)}</p>`;
       this.qs<HTMLButtonElement>('#btn-clear').classList.add('hidden');
       this.qs<HTMLElement>('#filters').classList.add('hidden');
       return;

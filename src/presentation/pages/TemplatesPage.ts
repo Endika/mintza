@@ -59,7 +59,7 @@ export class TemplatesPage implements Page {
     ]);
     if (!templatesResult.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-red-600">Error: ${templatesResult.error.message}</p>`;
+        `<p class="text-red-600">Error: ${escapeHtml(templatesResult.error.message)}</p>`;
       return;
     }
     this.templates = templatesResult.value;

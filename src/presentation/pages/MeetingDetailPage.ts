@@ -74,7 +74,7 @@ export class MeetingDetailPage implements Page {
     const body = root.querySelector<HTMLElement>('#detail-body');
     if (!body) return;
     if (!meetingResult.ok) {
-      body.innerHTML = `<p class="text-red-600">Error: ${meetingResult.error.message}</p>`;
+      body.innerHTML = `<p class="text-red-600">Error: ${escapeHtml(meetingResult.error.message)}</p>`;
       return;
     }
     if (!meetingResult.value) {
