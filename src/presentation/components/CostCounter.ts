@@ -6,18 +6,27 @@ import { formatDuration } from '../util/formatDuration';
 import { metaLine } from '../util/metaLine';
 import { LLM_LABEL, TRANSCRIPTION_LABEL } from './providerLabels';
 
+interface LiveNodes {
+  readonly elapsed: Text;
+  readonly cost: Text;
+  readonly words: Text;
+}
+
 export class CostCounter {
   private interval: number | null = null;
-  private live: { elapsed: Text; cost: Text } | null = null;
+  private live: LiveNodes | null = null;
 
   startLive(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     this.stop();
-    const { elapsed, cost } = this.liveNodes(target);
+    const { elapsed, cost, words } = this.liveNodes(target);
     const tick = (): void => {
       const meeting = getMeeting();
       if (!meeting) return;
       elapsed.data = formatClock(meeting.durationMs);
-      cost.data = this.liveCostText(meeting, translator);
+      const [costText, wordsText] = this.liveCostText(meeting, translator);
+      cost.data = costText;
+      words.data = wordsText;
+      if (words.parentElement) words.parentElement.hidden = wordsText === '';
     };
     tick();
     this.interval = window.setInterval(tick, 1000);
@@ -72,28 +81,36 @@ export class CostCounter {
   }
 
   /** Built once per recording so each tick only rewrites two text nodes. */
-  private liveNodes(target: HTMLElement): { elapsed: Text; cost: Text } {
+  private liveNodes(target: HTMLElement): LiveNodes {
     if (!this.live || !target.contains(this.live.elapsed)) {
       const elapsedEl = document.createElement('p');
       elapsedEl.className =
         'text-[length:clamp(4rem,20vw,4.5rem)] leading-none font-semibold tracking-tight tabular';
       const costEl = document.createElement('p');
-      costEl.className = 'mt-2 text-base text-fg-muted tabular';
+      costEl.className = 'meta-line mt-2 justify-center text-base text-fg-muted tabular';
       const elapsed = document.createTextNode('');
       const cost = document.createTextNode('');
+      const words = document.createTextNode('');
+      const costSpan = document.createElement('span');
+      const wordsSpan = document.createElement('span');
+      costSpan.append(cost);
+      wordsSpan.append(words);
       elapsedEl.append(elapsed);
-      costEl.append(cost);
+      costEl.append(costSpan, wordsSpan);
       target.replaceChildren(elapsedEl, costEl);
-      this.live = { elapsed, cost };
+      this.live = { elapsed, cost, words };
     }
     return this.live;
   }
 
-  private liveCostText(meeting: Meeting, translator: Translator): string {
+  private liveCostText(meeting: Meeting, translator: Translator): [string, string] {
     const transcribedMs = meeting.segments.reduce((sum, s) => sum + s.durationMs, 0);
-    if (transcribedMs === 0) return translator.t('home.chunks_wait');
+    if (transcribedMs === 0) return [translator.t('home.chunks_wait'), ''];
     const soFar = sumAll(meetingCost(meeting).transcription.values());
-    return `${translator.t('cost.so_far', { amount: soFar.format(3) })} ·\u00a0${wordCount(meeting, translator)}`;
+    return [
+      translator.t('cost.so_far', { amount: soFar.format(3) }),
+      wordCount(meeting, translator),
+    ];
   }
 }
 

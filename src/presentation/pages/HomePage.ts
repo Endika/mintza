@@ -610,7 +610,7 @@ export class HomePage implements Page {
     const status = this.qsOptional('#status');
     if (!status) return;
     status.classList.remove('text-danger');
-    status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a> <span class="tabular">·&nbsp;${escapeHtml(detail)}</span>`;
+    status.innerHTML = `<a href="#/meeting?id=${escapeHtml(meeting.id.value)}" class="mr-3 font-semibold text-fg underline decoration-line underline-offset-4 hover:decoration-fg">${this.t.t('home.saved_to_history')}</a><span class="tabular">${escapeHtml(detail)}</span>`;
   }
 
   private handleNewMeeting(): void {

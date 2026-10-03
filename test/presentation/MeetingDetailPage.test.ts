@@ -178,6 +178,7 @@ describe('MeetingDetailPage', () => {
 
     expect(root.querySelector('#regen-status')).toBe(region);
     expect(region?.isConnected).toBe(true);
+    expect(root.querySelector('#detail-body')!.contains(region)).toBe(false);
     expect(region?.textContent).toMatch(/\d+ ready · \d+ failed/);
   });
 

@@ -44,7 +44,7 @@ export class MindMapView {
           ${
             node.isLeaf()
               ? `<span class="break-words font-medium">${label}</span>`
-              : `<button type="button" data-toggle aria-expanded="true" class="min-h-11 break-words text-left font-medium hover:underline">${label}</button>`
+              : `<button type="button" data-toggle aria-expanded="true" class="min-h-11 min-w-11 break-words text-left font-medium hover:underline">${label}</button>`
           }
         </div>
         ${node.isLeaf() ? '' : `<ul class="ml-1 flex flex-col gap-1.5 border-l-2 border-[var(--branch)] pl-4">${node.children.map((c) => this.renderLeaf(c)).join('')}</ul>`}

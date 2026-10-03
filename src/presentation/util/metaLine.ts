@@ -1,9 +1,7 @@
 import { escapeHtml } from './escapeHtml';
 
-/** Each value stays whole and carries the separator before it, so no line ends on a "·". */
+/** The gap separates the values, so a wrapped line never starts or ends on a stray separator. */
 export const metaLine = (parts: readonly string[]): string =>
-  parts
-    .map(
-      (part, i) => `<span class="whitespace-nowrap">${i > 0 ? '· ' : ''}${escapeHtml(part)}</span>`,
-    )
-    .join(' ');
+  `<span class="meta-line">${parts
+    .map((part) => `<span class="min-w-0 max-w-full break-words">${escapeHtml(part)}</span>`)
+    .join('')}</span>`;
