@@ -65,8 +65,8 @@ describe.each(['light', 'dark'] as Theme[])('%s tokens', (theme) => {
     expect(ratio(t[fg]!, t[bg]!)).toBeGreaterThanOrEqual(3),
   );
   it.each(['ground', 'surface'])(
-    'the recording badge text on its tint over %s reaches 4.5:1',
-    (bg) => expect(ratio(t.live!, over(t.live!, t[bg]!, BADGE_TINT))).toBeGreaterThanOrEqual(4.5),
+    'the recording badge text on its tint over %s keeps headroom at 4.8:1',
+    (bg) => expect(ratio(t.live!, over(t.live!, t[bg]!, BADGE_TINT))).toBeGreaterThanOrEqual(4.8),
   );
 });
 

@@ -24,4 +24,10 @@ describe('index.css', () => {
     expect(dock).toContain('fixed');
     expect(dock).not.toContain('max-md:');
   });
+
+  it('scales a pressed button only when it can be pressed', () => {
+    const btn = block('@utility btn {');
+    expect(btn).toContain('not-disabled:active:scale-[0.98]');
+    expect(btn).not.toMatch(/(^|\s)active:scale/);
+  });
 });
