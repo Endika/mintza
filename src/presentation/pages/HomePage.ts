@@ -20,7 +20,7 @@ import { SUMMARY_KINDS, type SummaryKind } from '../../domain/summary/value-obje
 import { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import { estimateOpenAiHourlyCost } from '../../domain/tokens/services/HourlyCostEstimate';
 import type { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
-import type { ProviderAttempt } from '../../shared/errors/AppError';
+import type { AppError } from '../../shared/errors/AppError';
 import type { AppShell } from '../components/AppShell';
 import { AudioLevelMeter } from '../components/AudioLevelMeter';
 import { CostCounter } from '../components/CostCounter';
@@ -44,6 +44,7 @@ import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
+import { errorLines } from '../i18n/errorText';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
@@ -84,7 +85,6 @@ interface ChunkProgress {
   transcribed: number;
   skipped: number;
   failed: number;
-  lastError: string | null;
 }
 
 const PANELS: Record<ScreenState, string> = {
@@ -127,7 +127,6 @@ export class HomePage implements Page {
     transcribed: 0,
     skipped: 0,
     failed: 0,
-    lastError: null,
   };
   private templates: Template[] = [];
   private selectedTemplate: TemplateKind = 'generic';
@@ -504,7 +503,7 @@ export class HomePage implements Page {
     const meeting = result.value.meeting;
     this.meeting = meeting;
     this.kinds = template.summaryKinds;
-    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0 };
     this.qs<HTMLElement>('#transcription').innerHTML = '';
     this.qs<HTMLElement>('#last-error').classList.add('hidden');
     this.qs<HTMLElement>('#live-context').innerHTML = metaLine([
@@ -595,7 +594,11 @@ export class HomePage implements Page {
       onSummary: (attempt) =>
         attempt.result.ok
           ? this.setStep(attempt.kind, 'ready')
-          : this.setStep(attempt.kind, 'failed', attempt.result.error.message),
+          : this.setStep(
+              attempt.kind,
+              'failed',
+              errorLines(attempt.result.error, (k) => this.t.t(k)).join(' · '),
+            ),
     });
     this.persisted = result.summariesSaved;
 
@@ -700,7 +703,7 @@ export class HomePage implements Page {
     this.persisted = false;
     this.transcriptStored = false;
     this.kinds = SUMMARY_KINDS;
-    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0, lastError: null };
+    this.progress = { received: 0, transcribed: 0, skipped: 0, failed: 0 };
     this.screenState = 'idle';
     void this.render(this.root);
   }
@@ -756,8 +759,7 @@ export class HomePage implements Page {
       }
     } else {
       this.progress.failed += 1;
-      this.progress.lastError = result.error.message;
-      this.showLastError(result.error.message, result.error.attempts);
+      this.showLastError(result.error);
     }
     this.updateProgress();
   }
@@ -794,19 +796,20 @@ export class HomePage implements Page {
     el.innerHTML = metaLine(parts);
   }
 
-  private showLastError(message: string, attempts: readonly ProviderAttempt[] = []): void {
+  /** Takes a provider error, or a line that is already translated. */
+  private showLastError(error: AppError | string): void {
     const el = this.qsOptional('#last-error');
     if (!el) return;
     el.classList.remove('hidden');
     const label = this.t.t('home.last_error');
-    if (attempts.length === 0) {
-      el.textContent = `${label}: ${message}`;
+    const lines = typeof error === 'string' ? [error] : errorLines(error, (k) => this.t.t(k));
+    if (typeof error === 'string' || error.attempts.length === 0) {
+      el.textContent = `${label}: ${lines.join('')}`;
       return;
     }
-    const lines = attempts
-      .map((a) => `  • ${escapeHtml(a.provider)}: ${escapeHtml(a.message)}`)
-      .join('<br/>');
-    el.innerHTML = `<strong>${escapeHtml(message)}</strong><br/>${lines}`;
+    el.innerHTML = `<strong>${escapeHtml(label)}</strong><br/>${lines
+      .map((line) => `  • ${escapeHtml(line)}`)
+      .join('<br/>')}`;
   }
 
   /** Busy flags change at once; only the card's look waits for the morph. */
@@ -1077,7 +1080,7 @@ export class HomePage implements Page {
     if (!this.meeting) return;
     const result = await this.deps.generateMindMap.execute({ meeting: this.meeting });
     if (!result.ok) {
-      this.showLastError(result.error.message, result.error.attempts);
+      this.showLastError(result.error);
       return;
     }
     this.renderMindMap(result.value);

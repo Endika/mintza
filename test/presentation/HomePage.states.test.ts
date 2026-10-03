@@ -24,6 +24,7 @@ import {
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
 import type { SummarizationPort } from '../../src/domain/summary/ports/SummarizationPort';
 import type { ScreenWakePort } from '../../src/domain/system/ports/ScreenWakePort';
+import type { TranscriptionPort } from '../../src/domain/transcription/ports/TranscriptionPort';
 import { SentimentScoreParser } from '../../src/domain/temperature/services/SentimentScoreParser';
 import { LocalStorageTemplateRepository } from '../../src/infrastructure/persistence/LocalStorageTemplateRepository';
 import { HomePage } from '../../src/presentation/pages/HomePage';
@@ -108,13 +109,18 @@ const mount = async (
   openai: string | undefined,
   summarization: SummarizationPort = new FakeSummarizationPort({ kind: 'success', content: 'ok' }),
   storedTemplates: object[] = [],
+  extra: { transcription?: TranscriptionPort; language?: AppConfig['language'] } = {},
 ): Promise<{ root: HTMLElement; audio: FakeAudio }> => {
   window.localStorage.clear();
   if (storedTemplates.length > 0) {
     window.localStorage.setItem('mintza:templates:v1', JSON.stringify(storedTemplates));
   }
   const config = new ConfigStore(
-    new ConfigRepo({ ...DEFAULT_CONFIG, apiKeys: openai ? { openai } : {} }),
+    new ConfigRepo({
+      ...DEFAULT_CONFIG,
+      language: extra.language ?? DEFAULT_CONFIG.language,
+      apiKeys: openai ? { openai } : {},
+    }),
   );
   await config.hydrate();
   const audio = new FakeAudio();
@@ -128,7 +134,8 @@ const mount = async (
     startRecording: new StartRecordingUseCase(audio),
     stopRecording: new StopRecordingUseCase(audio),
     transcribeChunk: new TranscribeChunkUseCase(
-      new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
+      extra.transcription ??
+        new FakeTranscriptionPort({ kind: 'success', text: 'hello team', provider: 'whisper' }),
     ),
     generateSummaries: new GenerateSummariesUseCase(summarization),
     generateMindMap: new GenerateMindMapUseCase(mindMap),
@@ -404,7 +411,12 @@ describe('HomePage states', () => {
   it('keeps every failed result marked with its reason', async () => {
     const { root, audio } = await mount(
       'sk-test',
-      new FakeSummarizationPort({ kind: 'failure', code: 'API_KEY_INVALID', message: 'bad key' }),
+      new FakeSummarizationPort({
+        kind: 'failure',
+        code: 'API_KEY_INVALID',
+        message: 'bad key',
+        reason: 'invalid_key',
+      }),
     );
 
     await recordAndStop(root, audio);
@@ -414,8 +426,69 @@ describe('HomePage states', () => {
     expect(rows).toHaveLength(8);
     rows.forEach((row) => {
       expect(row.querySelector('[data-step-state]')!.textContent).toBe('Failed');
-      expect(row.querySelector('[data-step-error]')!.textContent).toBe('bad key');
+      expect(row.querySelector('[data-step-error]')!.textContent).toBe("The key isn't valid.");
     });
+  });
+
+  it('names each summary provider that failed and why, in the interface language', async () => {
+    const { root, audio } = await mount(
+      'sk-test',
+      new FakeSummarizationPort({
+        kind: 'failure',
+        code: 'SUMMARIZATION_FAILED',
+        message: 'All 2 summarization providers failed',
+        attempts: [
+          { provider: 'Gemini', code: 'API_KEY_INVALID', message: 'x', reason: 'api_blocked' },
+          { provider: 'Claude', code: 'API_KEY_INVALID', message: 'x', reason: 'missing_key' },
+        ],
+      }),
+      [],
+      { language: 'es' },
+    );
+
+    await recordAndStop(root, audio);
+
+    const error = root.querySelector('#failed-steps [data-step-error]')!.textContent;
+    expect(error).toBe(
+      'Gemini: Las restricciones de esta clave no permiten usar esta API. · Claude: No hay clave para este servicio en Ajustes.',
+    );
+  });
+
+  it('explains a failed chunk by provider without English diagnostics', async () => {
+    const { root, audio } = await mount('sk-test', undefined, [], {
+      transcription: new FakeTranscriptionPort({
+        kind: 'failure',
+        code: 'TRANSCRIPTION_FAILED',
+        message: 'All 2 transcription providers failed',
+        attempts: [
+          {
+            provider: 'Google Speech',
+            code: 'API_KEY_INVALID',
+            message: 'x',
+            reason: 'api_disabled',
+          },
+          {
+            provider: 'Whisper',
+            code: 'NETWORK_ERROR',
+            message: 'Timeout after 30000ms',
+            reason: 'network',
+          },
+        ],
+      }),
+    });
+    root.querySelector<HTMLButtonElement>('#btn-record')!.click();
+    await settle();
+    audio.emit(
+      new AudioChunk({ blob: new Blob(['a']), startMs: 0, endMs: 1000, mimeType: 'audio/webm' }),
+    );
+    await settle();
+
+    const text = root.querySelector('#last-error')!.textContent ?? '';
+    expect(text).toContain('Last error');
+    expect(text).toContain("Google Speech: This API isn't turned on in your Google Cloud project.");
+    expect(text).toContain("Whisper: Couldn't reach the service. Check your connection.");
+    expect(text).not.toContain('providers failed');
+    expect(text).not.toContain('Timeout');
   });
 
   it('renders a hostile template name as text in the chips and the select', async () => {

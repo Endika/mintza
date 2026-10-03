@@ -32,7 +32,15 @@ export class WhisperClient {
   ): Promise<Result<WhisperTranscriptionResult, AppError>> {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
-      return err(new AppError('API_KEY_INVALID', 'Whisper: missing OpenAI API key in Settings'));
+      return err(
+        new AppError(
+          'API_KEY_INVALID',
+          'Whisper: missing OpenAI API key',
+          undefined,
+          [],
+          'missing_key',
+        ),
+      );
     }
     const form = new FormData();
     form.append('file', audio, `chunk.${extensionFor(audio.type)}`);
@@ -57,7 +65,15 @@ export class WhisperClient {
       };
       return ok(result);
     } catch (cause) {
-      return err(new AppError('TRANSCRIPTION_FAILED', 'Whisper: invalid response body', cause));
+      return err(
+        new AppError(
+          'TRANSCRIPTION_FAILED',
+          'Whisper: invalid response body',
+          cause,
+          [],
+          'bad_response',
+        ),
+      );
     }
   }
 }

@@ -10,10 +10,23 @@ export type AppErrorCode =
   | 'NETWORK_ERROR'
   | 'UNKNOWN';
 
+/** Why a provider call failed, in terms the interface can translate; `message` stays for diagnostics. */
+export type ErrorReason =
+  | 'missing_key'
+  | 'missing_region'
+  | 'invalid_key'
+  | 'api_blocked'
+  | 'api_disabled'
+  | 'network'
+  | 'no_speech'
+  | 'bad_response'
+  | 'unknown';
+
 export interface ProviderAttempt {
   readonly provider: string;
   readonly code: AppErrorCode;
   readonly message: string;
+  readonly reason?: ErrorReason;
 }
 
 export class AppError extends Error {
@@ -24,6 +37,7 @@ export class AppError extends Error {
     message: string,
     public readonly cause?: unknown,
     attempts: readonly ProviderAttempt[] = [],
+    public readonly reason?: ErrorReason,
   ) {
     super(message);
     this.name = 'AppError';

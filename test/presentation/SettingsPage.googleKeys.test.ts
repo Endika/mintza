@@ -198,4 +198,18 @@ describe('SettingsPage Google keys', () => {
     await settle();
     expect(repo.saved?.apiKeys.google).toBe(aqKey);
   });
+
+  it('asks for a key instead of testing an empty field', async () => {
+    const { root, validator } = await render({ language: 'eu' });
+    await test(root, 'googleSpeech');
+    expect(validator.asked).toEqual([]);
+    expect(result(root, 'googleSpeech').textContent).toContain('Itsatsi gako bat lehenik.');
+  });
+
+  it('lists every optional service by its new name', async () => {
+    const { root } = await render({ language: 'es' });
+    expect(root.querySelector('details summary')?.textContent?.trim()).toBe(
+      'Servicios de respaldo opcionales (Google Gemini, Google Speech, Azure, Anthropic)',
+    );
+  });
 });

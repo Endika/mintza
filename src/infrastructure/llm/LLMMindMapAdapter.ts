@@ -37,7 +37,9 @@ export class LLMMindMapAdapter implements MindMapPort {
         }),
       );
     } catch (cause) {
-      return err(new AppError('SUMMARIZATION_FAILED', 'Invalid mind map JSON', cause));
+      return err(
+        new AppError('SUMMARIZATION_FAILED', 'Invalid mind map JSON', cause, [], 'bad_response'),
+      );
     }
   }
 }

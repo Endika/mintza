@@ -31,12 +31,26 @@ export class AzureSpeechClient {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
       return err(
-        new AppError('API_KEY_INVALID', 'Azure Speech: missing subscription key in Settings'),
+        new AppError(
+          'API_KEY_INVALID',
+          'Azure Speech: missing subscription key',
+          undefined,
+          [],
+          'missing_key',
+        ),
       );
     }
     const region = this.regionProvider();
     if (region.trim().length === 0) {
-      return err(new AppError('CONFIG_INVALID', 'Azure Speech: missing region in Settings'));
+      return err(
+        new AppError(
+          'CONFIG_INVALID',
+          'Azure Speech: missing region',
+          undefined,
+          [],
+          'missing_region',
+        ),
+      );
     }
     const tag = LANGUAGE_TAG[language.code] ?? 'en-US';
     const url = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${encodeURIComponent(tag)}&format=detailed`;
@@ -58,20 +72,27 @@ export class AzureSpeechClient {
           new AppError(
             'TRANSCRIPTION_FAILED',
             `Azure recognition status: ${body.RecognitionStatus}`,
+            undefined,
+            [],
+            'no_speech',
           ),
         );
       }
       const best = body.NBest?.[0];
       const text = best?.Display ?? body.DisplayText ?? '';
       if (text.length === 0) {
-        return err(new AppError('TRANSCRIPTION_FAILED', 'Empty Azure response'));
+        return err(
+          new AppError('TRANSCRIPTION_FAILED', 'Empty Azure response', undefined, [], 'no_speech'),
+        );
       }
       return ok({
         text,
         ...(best?.Confidence !== undefined ? { confidence: best.Confidence } : {}),
       });
     } catch (cause) {
-      return err(new AppError('TRANSCRIPTION_FAILED', 'Invalid Azure response', cause));
+      return err(
+        new AppError('TRANSCRIPTION_FAILED', 'Invalid Azure response', cause, [], 'bad_response'),
+      );
     }
   }
 }

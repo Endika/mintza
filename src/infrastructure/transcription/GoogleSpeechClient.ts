@@ -35,7 +35,13 @@ export class GoogleSpeechClient {
     const apiKey = this.apiKeyProvider();
     if (!apiKey) {
       return err(
-        new AppError('API_KEY_INVALID', 'Google Speech: missing Google API key in Settings'),
+        new AppError(
+          'API_KEY_INVALID',
+          'Google Speech: missing Speech API key',
+          undefined,
+          [],
+          'missing_key',
+        ),
       );
     }
     const base64 = await blobToBase64(audio);
@@ -54,17 +60,7 @@ export class GoogleSpeechClient {
       headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
       body,
     });
-    if (!response.ok) {
-      if (response.error.code === 'API_KEY_INVALID') {
-        return err(
-          new AppError(
-            'API_KEY_INVALID',
-            'Google Speech: 401 unauthorized. Enable Speech-to-Text at console.cloud.google.com/apis/library/speech.googleapis.com and make sure billing is active.',
-          ),
-        );
-      }
-      return response;
-    }
+    if (!response.ok) return response;
     try {
       const parsed = await response.value.json<GoogleResponseBody>();
       const first = parsed.results?.[0]?.alternatives?.[0];
@@ -73,7 +69,10 @@ export class GoogleSpeechClient {
         return err(
           new AppError(
             'TRANSCRIPTION_FAILED',
-            'Google Speech: empty response (no audio detected?)',
+            'Google Speech: empty response',
+            undefined,
+            [],
+            'no_speech',
           ),
         );
       }
@@ -83,7 +82,13 @@ export class GoogleSpeechClient {
       });
     } catch (cause) {
       return err(
-        new AppError('TRANSCRIPTION_FAILED', 'Google Speech: invalid response body', cause),
+        new AppError(
+          'TRANSCRIPTION_FAILED',
+          'Google Speech: invalid response body',
+          cause,
+          [],
+          'bad_response',
+        ),
       );
     }
   }
