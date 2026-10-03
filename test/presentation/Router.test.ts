@@ -205,4 +205,146 @@ describe('Router', () => {
     expect(window.location.hash).toBe('#/');
     expect(root.textContent).toBe('Home');
   });
+
+  it('asks before re-rendering the shown hash and keeps the page when refused', async () => {
+    let renders = 0;
+    class Counting extends StubPage {
+      override render(r: HTMLElement): Promise<void> {
+        renders++;
+        return super.render(r);
+      }
+    }
+    const busy = new Counting('Recording', false);
+    router = new Router(root, new Map([['/', () => busy]]), () => busy);
+    router.start();
+    await flush();
+    Router.navigate('#/');
+    await flush();
+    expect(busy.asked).toBe(1);
+    expect(busy.disposed).toBe(false);
+    expect(renders).toBe(1);
+    expect(root.textContent).toBe('Recording');
+    expect(window.location.hash).toBe('#/');
+
+    busy.leave = true;
+    Router.navigate('#/');
+    await flush();
+    expect(busy.asked).toBe(2);
+    expect(busy.disposed).toBe(true);
+    expect(renders).toBe(2);
+  });
+
+  it('asks again after a Back cancelled a pending leave check', async () => {
+    const slow = new StubPage('Home', true, 0, 30);
+    router = new Router(
+      root,
+      new Map([
+        ['/', () => slow],
+        ['/history', () => new StubPage('History')],
+        ['/settings', () => new StubPage('Settings')],
+      ]),
+      () => slow,
+    );
+    router.start();
+    await flush();
+    window.location.hash = '#/history';
+    await flush(5);
+    window.location.hash = '#/';
+    await flush(5);
+    await go('#/settings', 80);
+    expect(slow.asked).toBe(2);
+    expect(root.textContent).toBe('Settings');
+  });
+
+  describe('with the Navigation API', () => {
+    class FakeNavigation extends EventTarget {
+      announce(navigationType: 'push' | 'traverse'): void {
+        this.dispatchEvent(Object.assign(new Event('navigate'), { navigationType }));
+      }
+    }
+    let navigation: FakeNavigation;
+    beforeEach(() => {
+      navigation = new FakeNavigation();
+      Object.defineProperty(window, 'navigation', { value: navigation, configurable: true });
+    });
+    afterEach(() => {
+      Reflect.deleteProperty(window, 'navigation');
+    });
+
+    it('steps back over a refused push instead of leaving a duplicate entry', async () => {
+      const busy = new StubPage('Recording', false);
+      router = new Router(
+        root,
+        new Map([
+          ['/', () => busy],
+          ['/history', () => new StubPage('History')],
+        ]),
+        () => busy,
+      );
+      history.replaceState({ entry: 'home' }, '', '#/');
+      router.start();
+      await flush();
+      const length = history.length;
+
+      navigation.announce('push');
+      await go('#/history', 10);
+
+      expect(window.location.hash).toBe('#/');
+      expect(history.state).toEqual({ entry: 'home' });
+      expect(history.length).toBe(length + 1);
+      expect(busy.asked).toBe(1);
+      expect(root.textContent).toBe('Recording');
+    });
+
+    it('steps back over every push a refused leave check covered', async () => {
+      const busy = new StubPage('Recording', false, 0, 20);
+      router = new Router(
+        root,
+        new Map([
+          ['/', () => busy],
+          ['/history', () => new StubPage('History')],
+          ['/settings', () => new StubPage('Settings')],
+        ]),
+        () => busy,
+      );
+      history.replaceState({ entry: 'home' }, '', '#/');
+      router.start();
+      await flush();
+
+      navigation.announce('push');
+      window.location.hash = '#/history';
+      await flush(5);
+      navigation.announce('push');
+      await go('#/settings', 60);
+
+      expect(window.location.hash).toBe('#/');
+      expect(history.state).toEqual({ entry: 'home' });
+      expect(busy.asked).toBe(1);
+      expect(root.textContent).toBe('Recording');
+    });
+
+    it('replaces the entry when a Back is refused', async () => {
+      const busy = new StubPage('Recording', false);
+      router = new Router(
+        root,
+        new Map([
+          ['/', () => new StubPage('Home')],
+          ['/history', () => busy],
+        ]),
+        () => new StubPage('Home'),
+      );
+      window.location.hash = '#/history';
+      await flush();
+      router.start();
+      await flush();
+
+      navigation.announce('traverse');
+      history.back();
+      await flush(10);
+
+      expect(window.location.hash).toBe('#/history');
+      expect(busy.asked).toBe(1);
+      expect(root.textContent).toBe('Recording');
+    });
+  });
 });
