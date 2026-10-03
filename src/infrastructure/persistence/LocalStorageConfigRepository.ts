@@ -4,9 +4,8 @@ import {
   type ConfigRepository,
 } from '../../domain/meeting/ports/ConfigRepository';
 import { AppError } from '../../shared/errors/AppError';
+import { CONFIG_STORAGE_KEY } from '../../shared/constants/storageKeys';
 import { err, ok, type Result } from '../../shared/result/Result';
-
-export const CONFIG_STORAGE_KEY = 'mintza:config:v1';
 
 export class LocalStorageConfigRepository implements ConfigRepository {
   constructor(private readonly storage: Storage = window.localStorage) {}

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { bootDocumentScript } from '../../src/bootstrap/bootDocument';
 import { Translator } from '../../src/presentation/i18n/Translator';
@@ -94,5 +95,19 @@ describe('the inline boot script', () => {
 
     expect(document.documentElement.lang).toBe('en');
     expect(document.title).toBe('Mintza');
+  });
+
+  it('reaches only dependency-free modules, since the build config imports it', () => {
+    const runtimeImports = (file: string): string[] =>
+      [...readFileSync(file, 'utf8').matchAll(/^import (?!type )[^;]*?from '([^']+)';/gms)].map(
+        (m) => m[1]!,
+      );
+
+    expect(runtimeImports('src/bootstrap/bootDocument.ts').sort()).toEqual([
+      '../presentation/i18n/translations',
+      '../shared/constants/storageKeys',
+    ]);
+    expect(runtimeImports('src/presentation/i18n/translations.ts')).toEqual([]);
+    expect(runtimeImports('src/shared/constants/storageKeys.ts')).toEqual([]);
   });
 });
