@@ -5,6 +5,15 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.1](https://github.com/Endika/mintza/compare/v1.23.0...v1.23.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* move on to the next provider when Claude refuses or runs out of room ([b152ae7](https://github.com/Endika/mintza/commit/b152ae787ea0468921a3a2c1da92ec990b539b5b))
+* price unrecorded models historically and check Claude keys without a paid call ([0f6d35d](https://github.com/Endika/mintza/commit/0f6d35deeca4194177b11405e5768cca3d8a08e8))
+* summarise with Claude Sonnet 5.5 before Sonnet 4.5 retires ([ad3419d](https://github.com/Endika/mintza/commit/ad3419dcbc32a6cfd36fba2e07d9747a50ece826))
+
 ## [1.23.0](https://github.com/Endika/mintza/compare/v1.22.2...v1.23.0) (2026-10-03)
 
 
