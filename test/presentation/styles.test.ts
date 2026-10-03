@@ -29,5 +29,7 @@ describe('index.css', () => {
     const btn = block('@utility btn {');
     expect(btn).toContain('not-disabled:active:scale-[0.98]');
     expect(btn).not.toMatch(/(^|\s)active:scale/);
+    // v4's scale-* sets the `scale` property, which a `transform` transition never animates.
+    expect(btn).toContain('transition-[background-color,scale]');
   });
 });

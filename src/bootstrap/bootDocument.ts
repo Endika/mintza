@@ -1,6 +1,5 @@
-import { CONFIG_STORAGE_KEY } from '../infrastructure/persistence/LocalStorageConfigRepository';
-import type { TranslationKey } from '../presentation/i18n/translations';
-import { TRANSLATIONS } from '../presentation/i18n/translations';
+import { CONFIG_STORAGE_KEY } from '../shared/constants/storageKeys';
+import { TRANSLATIONS, type TranslationKey } from '../presentation/i18n/translations';
 
 // The h1 each route renders; a meeting's title is only known once it loads.
 const PAGE_TITLES: Record<string, TranslationKey> = {
