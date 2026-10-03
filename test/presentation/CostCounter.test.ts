@@ -64,4 +64,35 @@ describe('CostCounter live line', () => {
   it('shows the amount once there is one', () => {
     expect(liveCost(recording('whisper', 60))).toBe('Cost so far: $0.006');
   });
+
+  it('counts the words again only when a new part arrives', () => {
+    const meeting = recording('whisper', 60);
+    const fullText = meeting.fullText.bind(meeting);
+    let counted = 0;
+    meeting.fullText = () => {
+      counted++;
+      return fullText();
+    };
+    const counter = new CostCounter();
+    const target = document.createElement('div');
+    const translator = new Translator('en');
+    counter.startLive(target, () => meeting, translator);
+    counter.startLive(target, () => meeting, translator);
+    counter.startLive(target, () => meeting, translator);
+    expect(counted).toBe(1);
+
+    meeting.appendSegment(
+      new TranscriptSegment({
+        id: 's2',
+        startMs: 60_000,
+        endMs: 70_000,
+        text: TranscriptText.of('and more'),
+        provider: 'whisper',
+      }),
+    );
+    counter.startLive(target, () => meeting, translator);
+    counter.stop();
+    expect(counted).toBe(2);
+    expect(target.textContent).toContain('4 words');
+  });
 });

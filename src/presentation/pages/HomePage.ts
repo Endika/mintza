@@ -958,7 +958,6 @@ export class HomePage implements Page {
   private renderSummaries(): void {
     if (!this.meeting) return;
     const meeting = this.meeting;
-    // Once finished, the sentiment gauge under "More about this meeting" shows it better than its raw text.
     const gaugeShown = meeting.isFinished && meeting.temperature !== undefined;
     const generated = this.kinds.filter(
       (kind) => meeting.summaries.has(kind) && !(gaugeShown && kind === 'sentiment'),

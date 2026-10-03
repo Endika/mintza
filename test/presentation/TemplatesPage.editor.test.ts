@@ -5,6 +5,7 @@ import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTempla
 import { SaveTemplateUseCase } from '../../src/application/use-cases/SaveTemplateUseCase';
 import { TemplateRegistry } from '../../src/domain/meeting/services/TemplateRegistry';
 import { BUILT_IN_TEMPLATES } from '../../src/domain/meeting/value-objects/Template';
+import { SUMMARY_KINDS } from '../../src/domain/summary/value-objects/SummaryKind';
 import { LocalStorageTemplateRepository } from '../../src/infrastructure/persistence/LocalStorageTemplateRepository';
 import { Translator } from '../../src/presentation/i18n/Translator';
 import { TemplatesPage } from '../../src/presentation/pages/TemplatesPage';
@@ -68,6 +69,39 @@ describe('TemplatesPage', () => {
     expect(saved?.summaryKinds).not.toContain('bullet_points');
     expect(saved?.promptOverrides).toEqual({});
     expect(saved?.kindLabels).toEqual({});
+    root.remove();
+  });
+
+  it('keeps the same main-result select, its choice and focus while results change', async () => {
+    const { root } = await setup();
+    root.querySelector<HTMLButtonElement>('#btn-new')!.click();
+    const select = root.querySelector<HTMLSelectElement>('#tpl-main-select')!;
+    const options = (): string[] => [...select.options].map((o) => o.value);
+    select.focus();
+    select.value = 'decisions';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(root.querySelector('#tpl-main-select')).toBe(select);
+    expect(document.activeElement).toBe(select);
+    expect(select.value).toBe('decisions');
+    expect(options()[0]).toBe('decisions');
+
+    root.querySelector<HTMLButtonElement>('[data-kind="bullet_points"]')!.click();
+    expect(root.querySelector('#tpl-main-select')).toBe(select);
+    expect(options()).not.toContain('bullet_points');
+    expect(select.value).toBe('decisions');
+
+    for (const kind of SUMMARY_KINDS) {
+      if (options().includes(kind)) {
+        root.querySelector<HTMLButtonElement>(`[data-kind="${kind}"]`)!.click();
+      }
+    }
+    expect(root.querySelector<HTMLElement>('#tpl-main')!.hidden).toBe(true);
+    root.querySelector<HTMLButtonElement>('[data-kind="action_items"]')!.click();
+    expect(root.querySelector('#tpl-main-select')).toBe(select);
+    expect(root.querySelector<HTMLElement>('#tpl-main')!.hidden).toBe(false);
+    expect(options()).toEqual(['action_items']);
+    expect(select.value).toBe('action_items');
     root.remove();
   });
 });

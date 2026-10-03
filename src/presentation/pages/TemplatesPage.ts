@@ -214,7 +214,10 @@ export class TemplatesPage implements Page {
           <legend class="font-semibold">${t.t('templates.field_kinds')}</legend>
           <p class="mt-2 text-sm text-fg-muted">${t.t('templates.field_kinds_hint')}</p>
           <div id="tpl-chips" class="mt-3 flex flex-wrap gap-2"></div>
-          <div id="tpl-main" class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 empty:hidden"></div>
+          <div id="tpl-main" class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <label for="tpl-main-select" class="flex items-center gap-2 font-semibold">${ICON_STAR_FILLED}<span>${t.t('templates.main_result')}</span></label>
+            <select id="tpl-main-select" class="field w-auto min-w-0 max-w-full"></select>
+          </div>
         </fieldset>
         <div class="flex min-w-0 flex-col gap-2">
           <label for="tpl-mindmap" class="font-semibold">${t.t('templates.field_mindmap')}</label>
@@ -304,20 +307,27 @@ export class TemplatesPage implements Page {
         isMain ? `<span class="sr-only">(${t.t('templates.main_result')})</span>` : ''
       }</button>`;
     }).join('');
-    this.qs<HTMLElement>('#tpl-main').innerHTML = main
-      ? `<label for="tpl-main-select" class="flex items-center gap-2 font-semibold">${ICON_STAR_FILLED}<span>${t.t('templates.main_result')}</span></label>
-         <select id="tpl-main-select" class="field w-auto min-w-0 max-w-full">${this.order
-           .map(
-             (k) =>
-               `<option value="${k}"${k === main ? ' selected' : ''}>${t.t(SUMMARY_LABEL_KEYS[k])}</option>`,
-           )
-           .join('')}</select>`
-      : '';
+    this.qs<HTMLElement>('#tpl-main').hidden = !main;
+    this.syncMainSelect(main);
     for (const k of SUMMARY_KINDS) {
       this.qs<HTMLElement>(`[data-row="${k}"]`).classList.toggle('hidden', !this.order.includes(k));
       this.qs<HTMLElement>(`[data-row-main="${k}"]`).innerHTML =
         k === main ? `<span class="${BADGE}">${t.t('templates.main_result')}</span>` : '';
     }
+  }
+
+  /** Rewrites the options in place so the select keeps its identity and focus. */
+  private syncMainSelect(main: SummaryKind | undefined): void {
+    const select = this.qs<HTMLSelectElement>('#tpl-main-select');
+    const t = this.deps.translator;
+    this.order.forEach((k, i) => {
+      const label = t.t(SUMMARY_LABEL_KEYS[k]);
+      const option = select.options[i] ?? select.appendChild(document.createElement('option'));
+      if (option.value !== k) option.value = k;
+      if (option.textContent !== label) option.textContent = label;
+    });
+    while (select.options.length > this.order.length) select.options[this.order.length]?.remove();
+    if (main) select.value = main;
   }
 
   private closeEditor(): void {
