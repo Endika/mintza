@@ -84,18 +84,26 @@ export class Router {
     if (generation !== this.generation) return;
     this.current = page;
     this.currentHash = target;
-    await page.render(this.root);
+    // A superseded render then writes into a detached node instead of the screen.
+    const container = document.createElement('div');
+    this.root.replaceChildren(container);
+    await page.render(container);
     if (generation !== this.generation) return;
     this.options.onNavigate?.(path);
-    this.announce(initial);
+    this.announce(container, initial);
   }
 
-  private announce(initial: boolean): void {
-    const heading = this.root.querySelector('h1');
-    const text = heading?.textContent?.trim();
-    document.title = text ? `${text} · Mintza` : 'Mintza';
+  private announce(container: HTMLElement, initial: boolean): void {
+    const heading = titleFromHeading(container);
     if (initial || !heading) return;
     heading.setAttribute('tabindex', '-1');
     heading.focus({ preventScroll: true });
   }
 }
+
+export const titleFromHeading = (container: HTMLElement): HTMLHeadingElement | null => {
+  const heading = container.querySelector('h1');
+  const text = heading?.textContent?.trim();
+  document.title = text ? `${text} · Mintza` : 'Mintza';
+  return heading;
+};
