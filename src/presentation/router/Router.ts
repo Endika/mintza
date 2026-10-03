@@ -16,6 +16,8 @@ export class Router {
   private currentHash = '';
   private generation = 0;
   private firstRender = true;
+  private leaving: Promise<boolean> | undefined;
+  private readonly abort = new AbortController();
 
   constructor(
     private readonly root: HTMLElement,
@@ -25,10 +27,19 @@ export class Router {
   ) {}
 
   start(): void {
-    window.addEventListener('hashchange', () => {
-      void this.handle();
-    });
+    window.addEventListener(
+      'hashchange',
+      (e) => {
+        if (e.oldURL && window.location.hash === this.currentHash) return;
+        void this.handle();
+      },
+      { signal: this.abort.signal },
+    );
     void this.handle();
+  }
+
+  stop(): void {
+    this.abort.abort();
   }
 
   static navigate(path: string): void {
@@ -42,14 +53,21 @@ export class Router {
 
   private async handle(): Promise<void> {
     const target = window.location.hash;
-    if (this.current?.canLeave && target !== this.currentHash) {
-      const leave = await this.current.canLeave();
+    const initial = this.firstRender;
+    this.firstRender = false;
+    const generation = ++this.generation;
+    const guarded = this.current;
+    if (guarded?.canLeave && target !== this.currentHash) {
+      this.leaving ??= Promise.resolve(guarded.canLeave()).finally(() => {
+        this.leaving = undefined;
+      });
+      const leave = await this.leaving;
+      if (generation !== this.generation) return;
       if (!leave) {
         history.replaceState(null, '', this.currentHash || '#/');
         return;
       }
     }
-    const generation = ++this.generation;
     this.current?.dispose?.();
     this.current = undefined;
     const raw = target.replace(/^#/, '') || '/';
@@ -61,19 +79,15 @@ export class Router {
     await page.render(this.root);
     if (generation !== this.generation) return;
     this.options.onNavigate?.(path);
-    this.announce();
+    this.announce(initial);
   }
 
-  private announce(): void {
+  private announce(initial: boolean): void {
     const heading = this.root.querySelector('h1');
-    document.title = heading?.textContent ? `${heading.textContent.trim()} · Mintza` : 'Mintza';
-    if (this.firstRender) {
-      this.firstRender = false;
-      return;
-    }
-    if (heading) {
-      heading.setAttribute('tabindex', '-1');
-      heading.focus({ preventScroll: true });
-    }
+    const text = heading?.textContent?.trim();
+    document.title = text ? `${text} · Mintza` : 'Mintza';
+    if (initial || !heading) return;
+    heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll: true });
   }
 }

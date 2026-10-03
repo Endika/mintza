@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Router, type Page } from '../../src/presentation/router/Router';
 
 class StubPage implements Page {
@@ -9,6 +9,7 @@ class StubPage implements Page {
     private readonly heading: string,
     public leave: boolean = true,
     private readonly delayMs = 0,
+    private readonly leaveDelayMs = 0,
   ) {}
   async render(root: HTMLElement): Promise<void> {
     if (this.delayMs) await new Promise((r) => setTimeout(r, this.delayMs));
@@ -18,8 +19,9 @@ class StubPage implements Page {
   dispose(): void {
     this.disposed = true;
   }
-  canLeave(): boolean {
+  async canLeave(): Promise<boolean> {
     this.asked++;
+    if (this.leaveDelayMs) await new Promise((r) => setTimeout(r, this.leaveDelayMs));
     return this.leave;
   }
 }
@@ -32,14 +34,16 @@ const go = async (hash: string, ms = 0): Promise<void> => {
 
 describe('Router', () => {
   let root: HTMLElement;
+  let router: Router | undefined;
   beforeEach(() => {
     document.body.innerHTML = '<main id="main"></main>';
     root = document.getElementById('main') as HTMLElement;
     window.location.hash = '#/';
   });
+  afterEach(() => router?.stop());
 
   it('titles the document and focuses the heading after navigating', async () => {
-    const router = new Router(
+    router = new Router(
       root,
       new Map([
         ['/', () => new StubPage('Home')],
@@ -56,7 +60,7 @@ describe('Router', () => {
 
   it('stays on a page that refuses to leave and restores its hash', async () => {
     const busy = new StubPage('Recording', false);
-    const router = new Router(
+    router = new Router(
       root,
       new Map([
         ['/', () => busy],
@@ -69,12 +73,12 @@ describe('Router', () => {
     await go('#/history');
     expect(root.textContent).toBe('Recording');
     expect(busy.asked).toBeGreaterThan(0);
+    expect(busy.disposed).toBe(false);
     expect(window.location.hash).toBe('#/');
-    busy.leave = true;
   });
 
   it('only shows the last of two quick navigations', async () => {
-    const router = new Router(
+    router = new Router(
       root,
       new Map([
         ['/', () => new StubPage('Home')],
@@ -87,6 +91,46 @@ describe('Router', () => {
     await flush();
     window.location.hash = '#/history';
     await go('#/settings', 60);
+    expect(root.textContent).toBe('Settings');
+  });
+
+  it('re-renders when navigating to the hash already shown', async () => {
+    let renders = 0;
+    class Counting extends StubPage {
+      override render(r: HTMLElement): Promise<void> {
+        renders++;
+        return super.render(r);
+      }
+    }
+    router = new Router(
+      root,
+      new Map([['/', () => new Counting('Home')]]),
+      () => new Counting('Home'),
+    );
+    router.start();
+    await flush();
+    Router.navigate('#/');
+    await flush();
+    expect(renders).toBe(2);
+  });
+
+  it('asks once while a leave check is pending and renders the last target', async () => {
+    const slow = new StubPage('Home', true, 0, 30);
+    router = new Router(
+      root,
+      new Map([
+        ['/', () => slow],
+        ['/history', () => new StubPage('History')],
+        ['/settings', () => new StubPage('Settings')],
+      ]),
+      () => slow,
+    );
+    router.start();
+    await flush();
+    window.location.hash = '#/history';
+    await flush(5);
+    await go('#/settings', 80);
+    expect(slow.asked).toBe(1);
     expect(root.textContent).toBe('Settings');
   });
 });
