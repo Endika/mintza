@@ -12,7 +12,12 @@ const HEADING_RE = /^(#{1,4})\s+(.+)$/;
 const BULLET_RE = /^\s*[-*]\s+/;
 const ORDERED_RE = /^\s*\d+\.\s+/;
 
-export const renderMarkdown = (markdown: string): string => {
+export interface RenderMarkdownOptions {
+  readonly headingOffset?: number;
+}
+
+export const renderMarkdown = (markdown: string, opts: RenderMarkdownOptions = {}): string => {
+  const offset = opts.headingOffset ?? 0;
   const lines = markdown.replace(/\r\n/g, '\n').split('\n');
   const out: string[] = [];
   let i = 0;
@@ -24,7 +29,7 @@ export const renderMarkdown = (markdown: string): string => {
     }
     const heading = HEADING_RE.exec(line);
     if (heading) {
-      const level = heading[1]?.length ?? 1;
+      const level = Math.min(6, (heading[1]?.length ?? 1) + offset);
       out.push(`<h${level}>${renderInline(heading[2] ?? '')}</h${level}>`);
       i += 1;
       continue;
