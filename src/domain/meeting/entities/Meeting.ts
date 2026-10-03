@@ -183,10 +183,6 @@ export class Meeting {
     this.state.mindMap = mindMap;
   }
 
-  addCost(amount: Money): void {
-    this.state.cost = this.state.cost.add(amount);
-  }
-
   toggleStar(): void {
     this.state.starred = !this.state.starred;
   }

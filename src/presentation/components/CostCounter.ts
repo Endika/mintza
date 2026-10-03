@@ -15,6 +15,8 @@ interface LiveNodes {
 export class CostCounter {
   private interval: number | null = null;
   private live: LiveNodes | null = null;
+  private words: { meeting: Meeting; segments: number; text: string; language: string } | null =
+    null;
 
   startLive(target: HTMLElement, getMeeting: () => Meeting | null, translator: Translator): void {
     this.stop();
@@ -108,7 +110,23 @@ export class CostCounter {
     if (transcribedMs === 0) return [translator.t('home.chunks_wait'), ''];
     const soFar = sumAll(meetingCost(meeting).transcription.values());
     const amount = Math.round(soFar.toUsd() * 1000) > 0 ? soFar.format(3) : '—';
-    return [translator.t('cost.so_far', { amount }), wordCount(meeting, translator)];
+    return [translator.t('cost.so_far', { amount }), this.liveWordCount(meeting, translator)];
+  }
+
+  /** The tick runs every second; the transcript only changes when a part arrives. */
+  private liveWordCount(meeting: Meeting, translator: Translator): string {
+    const segments = meeting.segments.length;
+    const cached = this.words;
+    if (
+      cached?.meeting === meeting &&
+      cached.segments === segments &&
+      cached.language === translator.language
+    ) {
+      return cached.text;
+    }
+    const text = wordCount(meeting, translator);
+    this.words = { meeting, segments, text, language: translator.language };
+    return text;
   }
 }
 
