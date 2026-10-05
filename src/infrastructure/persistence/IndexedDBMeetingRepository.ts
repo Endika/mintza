@@ -17,8 +17,9 @@ import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
 import { TranscriptSegment } from '../../domain/transcription/entities/TranscriptSegment';
 import { TranscriptText } from '../../domain/transcription/value-objects/TranscriptText';
 import type { TranscriptionProviderName } from '../../domain/transcription/value-objects/TranscriptionProvider';
-import { AppError } from '../../shared/errors/AppError';
+import type { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
+import { storageError } from './storageError';
 
 const DB_NAME = 'mintza-db';
 const DB_VERSION = 1;
@@ -115,7 +116,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
       });
       return ok(undefined);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to save meeting', cause));
+      return err(storageError('Failed to save meeting', cause));
     }
   }
 
@@ -132,7 +133,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
       const template = await this.resolveTemplate(persisted.template);
       return ok(fromPersisted(persisted, template));
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to load meeting', cause));
+      return err(storageError('Failed to load meeting', cause));
     }
   }
 
@@ -159,7 +160,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
         .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
       return ok(items);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to list meetings', cause));
+      return err(storageError('Failed to list meetings', cause));
     }
   }
 
@@ -174,7 +175,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
       });
       return ok(undefined);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to delete meeting', cause));
+      return err(storageError('Failed to delete meeting', cause));
     }
   }
 
@@ -189,7 +190,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
       });
       return ok(undefined);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to clear meetings', cause));
+      return err(storageError('Failed to clear meetings', cause));
     }
   }
 }

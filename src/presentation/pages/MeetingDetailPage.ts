@@ -13,6 +13,7 @@ import { ICON_BACK, ICON_CHEVRON, ICON_TRASH } from '../components/icons';
 import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
+import { errorText } from '../i18n/errorText';
 import type { Translator } from '../i18n/Translator';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
 import { languageName } from '../i18n/languageName';
@@ -85,7 +86,10 @@ export class MeetingDetailPage implements Page {
     ]);
     this.templates = templatesResult.ok ? templatesResult.value : [];
     if (!meetingResult.ok) {
-      root.innerHTML = this.problemShell(t.t('detail.load_failed'), meetingResult.error.message);
+      root.innerHTML = this.problemShell(
+        t.t('detail.load_failed'),
+        errorText(meetingResult.error, t),
+      );
       return;
     }
     if (!meetingResult.value) {
@@ -136,7 +140,7 @@ export class MeetingDetailPage implements Page {
     }
     const status = this.root?.querySelector<HTMLElement>('#delete-status');
     if (status) {
-      status.textContent = `${this.t.t('meeting.delete_failed')} ${result.error.message}`;
+      status.textContent = `${this.t.t('meeting.delete_failed')} ${errorText(result.error, this.t)}`;
     }
   }
 

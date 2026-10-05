@@ -16,6 +16,10 @@ const REASON_TEXT: Record<ErrorReason, TranslationKey> = {
   bad_response: 'error.bad_response',
   refused: 'error.refused',
   truncated: 'error.truncated',
+  storage_full: 'error.storage_full',
+  storage_unavailable: 'error.storage_unavailable',
+  builtin_readonly: 'error.builtin_readonly',
+  id_collision: 'error.id_collision',
   unknown: 'error.unknown',
 };
 
@@ -33,3 +37,9 @@ export const errorLines = (
   error.attempts.length > 0
     ? error.attempts.map((a) => `${a.provider}: ${reasonText(a.reason, t)}`)
     : [reasonText(error.reason, t)];
+
+/** The translated line for one failed operation, in place of its English `message`. */
+export const errorText = (
+  error: { readonly reason?: ErrorReason | undefined },
+  translator: { t(key: TranslationKey): string },
+): string => reasonText(error.reason, (key) => translator.t(key));

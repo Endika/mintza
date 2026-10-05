@@ -150,7 +150,9 @@ class BrokenMeetingRepository extends InMemoryMeetingRepository {
   override save(): Promise<Result<void, AppError>> {
     this.attempts += 1;
     if (this.mode === 'throw') return Promise.reject(new Error('disk exploded'));
-    return Promise.resolve(err(new AppError('STORAGE_FAILED', 'quota exceeded')));
+    return Promise.resolve(
+      err(new AppError('STORAGE_FAILED', 'quota exceeded', undefined, [], 'storage_full')),
+    );
   }
 }
 
@@ -163,7 +165,9 @@ class FlakyMeetingRepository extends InMemoryMeetingRepository {
   override save(meeting: Meeting): Promise<Result<void, AppError>> {
     this.attempt += 1;
     if (this.failing.includes(this.attempt)) {
-      return Promise.resolve(err(new AppError('STORAGE_FAILED', 'quota exceeded')));
+      return Promise.resolve(
+        err(new AppError('STORAGE_FAILED', 'quota exceeded', undefined, [], 'storage_full')),
+      );
     }
     return super.save(meeting);
   }
@@ -245,7 +249,8 @@ describe('HomePage leaving a recording', () => {
 
     expect(left).toBe(false);
     expect(meetings.attempts).toBe(2);
-    expect(root.querySelector('#status')!.textContent).toContain('quota exceeded');
+    expect(root.querySelector('#status')!.textContent).toContain("Your browser's storage is full.");
+    expect(root.querySelector('#status')!.textContent).not.toContain('quota exceeded');
   });
 
   it('lets the page go during processing only once the transcript is in the repository', async () => {
@@ -315,7 +320,7 @@ describe('HomePage leaving a recording', () => {
 
     expect(await page.canLeave()).toBe(false);
     await settle();
-    expect(root.querySelector('#status')!.textContent).toContain('disk exploded');
+    expect(root.querySelector('#status')!.textContent).toContain('Something went wrong.');
     expect(root.querySelector('#btn-new')!.classList.contains('hidden')).toBe(false);
 
     expect(await page.canLeave()).toBe(true);
@@ -344,7 +349,7 @@ describe('HomePage leaving a recording', () => {
     root.querySelector<HTMLButtonElement>('#btn-new')!.click();
     await settle();
     expect(asked).toEqual(["This meeting isn't saved. Leave and lose it?"]);
-    expect(root.querySelector('#status')!.textContent).toContain('quota exceeded');
+    expect(root.querySelector('#status')!.textContent).toContain("Your browser's storage is full.");
     expect(root.querySelector('#transcription')!.textContent).toContain('hello team');
 
     answer = true;

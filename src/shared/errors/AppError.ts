@@ -24,6 +24,10 @@ export type ErrorReason =
   | 'bad_response'
   | 'refused'
   | 'truncated'
+  | 'storage_full'
+  | 'storage_unavailable'
+  | 'builtin_readonly'
+  | 'id_collision'
   | 'unknown';
 
 export interface ProviderAttempt {

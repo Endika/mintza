@@ -44,7 +44,7 @@ import { MindMapView } from '../components/MindMapView';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { TemperatureGauge } from '../components/TemperatureGauge';
 import type { Translator } from '../i18n/Translator';
-import { errorLines } from '../i18n/errorText';
+import { errorLines, errorText } from '../i18n/errorText';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
@@ -257,8 +257,8 @@ export class HomePage implements Page {
   /** Resolves with whether the transcript reached the repository; summaries keep finalizing after. */
   private stop(): Promise<boolean> {
     this.transcriptSaved ??= new Promise<boolean>((resolve) => {
-      this.handleStop(resolve).catch((error: unknown) => {
-        this.showSaveError(error instanceof Error ? error.message : String(error));
+      this.handleStop(resolve).catch(() => {
+        this.showSaveError(this.t.t('error.unknown'));
         this.setScreenState('done');
         resolve(false);
       });
@@ -585,7 +585,7 @@ export class HomePage implements Page {
       this.transcriptStored = true;
     }
     onTranscriptSaved(transcriptSaved.ok);
-    if (!transcriptSaved.ok) this.showSaveError(transcriptSaved.error.message);
+    if (!transcriptSaved.ok) this.showSaveError(errorText(transcriptSaved.error, this.t));
 
     steps.forEach((kind) => this.setStep(kind, 'writing'));
     const result = await this.deps.finalizeMeeting.execute({
@@ -618,7 +618,7 @@ export class HomePage implements Page {
         : transcriptSaved.ok
           ? 'home.summaries_save_failed'
           : 'home.save_failed';
-      this.showRetrySave(meeting, what, result.saveError.message, detail);
+      this.showRetrySave(meeting, what, errorText(result.saveError, this.t), detail);
     } else {
       this.showSaved(meeting, detail);
     }
@@ -663,7 +663,7 @@ export class HomePage implements Page {
           if (hadFocus) this.qsOptional('#status a')?.focus();
           return;
         }
-        this.showRetrySave(meeting, what, saved.error.message, detail);
+        this.showRetrySave(meeting, what, errorText(saved.error, this.t), detail);
         if (hadFocus) this.qsOptional('#btn-retry-save')?.focus();
       })();
     });

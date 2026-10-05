@@ -16,6 +16,22 @@ import { TranscriptSegment } from '../../../src/domain/transcription/entities/Tr
 import { TranscriptText } from '../../../src/domain/transcription/value-objects/TranscriptText';
 import { IndexedDBMeetingRepository } from '../../../src/infrastructure/persistence/IndexedDBMeetingRepository';
 
+/** A browser that refuses IndexedDB outright, as some private modes do. */
+class RefusingIDBFactory implements IDBFactory {
+  open(): IDBOpenDBRequest {
+    throw new DOMException('IndexedDB is not available.', 'InvalidStateError');
+  }
+  deleteDatabase(): IDBOpenDBRequest {
+    throw new DOMException('IndexedDB is not available.', 'InvalidStateError');
+  }
+  cmp(): number {
+    return 0;
+  }
+  databases(): Promise<IDBDatabaseInfo[]> {
+    return Promise.resolve([]);
+  }
+}
+
 describe('IndexedDBMeetingRepository', () => {
   let repo: IndexedDBMeetingRepository;
 
@@ -293,6 +309,11 @@ describe('IndexedDBMeetingRepository', () => {
       0.0045,
       6,
     );
+  });
+
+  it('says the storage is unavailable when the browser refuses IndexedDB', async () => {
+    const listed = await new IndexedDBMeetingRepository(new RefusingIDBFactory()).list();
+    expect(listed.ok || listed.error.reason).toBe('storage_unavailable');
   });
 });
 

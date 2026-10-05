@@ -246,6 +246,10 @@ export type TranslationKey =
   | 'error.bad_response'
   | 'error.refused'
   | 'error.truncated'
+  | 'error.storage_full'
+  | 'error.storage_unavailable'
+  | 'error.builtin_readonly'
+  | 'error.id_collision'
   | 'error.unknown'
   | 'settings.key_empty'
   | 'error.key_restricted'
@@ -525,6 +529,11 @@ const EN: Translations = {
   'error.bad_response': "The service sent an answer Mintza couldn't read.",
   'error.refused': 'The service declined to summarise this content.',
   'error.truncated': 'The answer was cut off before it finished.',
+  'error.storage_full': "Your browser's storage is full. Delete old meetings to make room.",
+  'error.storage_unavailable':
+    "Your browser didn't let Mintza use its storage. Private browsing can block it.",
+  'error.builtin_readonly': "Built-in templates can't be changed or deleted.",
+  'error.id_collision': 'A built-in template already uses that name. Pick another one.',
   'error.unknown': 'Something went wrong. Try again in a moment.',
   'settings.key_empty': 'Paste a key first.',
   'error.key_restricted': "This key's restrictions don't allow this site or app.",
@@ -806,6 +815,12 @@ const ES: Translations = {
   'error.bad_response': 'El servicio ha devuelto una respuesta que Mintza no puede leer.',
   'error.refused': 'El servicio se ha negado a resumir este contenido.',
   'error.truncated': 'La respuesta se ha cortado antes de terminar.',
+  'error.storage_full':
+    'El almacenamiento del navegador está lleno. Borra reuniones antiguas para hacer sitio.',
+  'error.storage_unavailable':
+    'El navegador no ha dejado a Mintza usar su almacenamiento. La navegación privada puede bloquearlo.',
+  'error.builtin_readonly': 'Las plantillas integradas no se pueden cambiar ni borrar.',
+  'error.id_collision': 'Ese nombre ya lo usa una plantilla integrada. Elige otro.',
   'error.unknown': 'Algo ha fallado. Vuelve a intentarlo en un momento.',
   'settings.key_empty': 'Pega primero una clave.',
   'error.key_restricted': 'Las restricciones de esta clave no permiten este sitio ni esta app.',
@@ -1091,6 +1106,12 @@ const EU: Translations = {
   'error.bad_response': 'Zerbitzuak Mintzak irakurri ezin duen erantzuna itzuli du.',
   'error.refused': 'Zerbitzuak ez du eduki hau laburtu nahi izan.',
   'error.truncated': 'Erantzuna amaitu aurretik moztu da.',
+  'error.storage_full':
+    'Nabigatzailearen biltegia beteta dago. Ezabatu bilera zaharrak lekua egiteko.',
+  'error.storage_unavailable':
+    'Nabigatzaileak ez dio Mintzari bere biltegia erabiltzen utzi. Nabigatze pribatuak blokea dezake.',
+  'error.builtin_readonly': 'Txantiloi integratuak ezin dira aldatu edo ezabatu.',
+  'error.id_collision': 'Izen hori txantiloi integratu batek darabil. Aukeratu beste bat.',
   'error.unknown': 'Zerbait gaizki joan da. Saiatu berriro pixka bat barru.',
   'settings.key_empty': 'Itsatsi gako bat lehenik.',
   'error.key_restricted': 'Gako honen murrizketek ez dute gune edo aplikazio hau onartzen.',
