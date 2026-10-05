@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.3](https://github.com/Endika/mintza/compare/v1.23.2...v1.23.3) (2026-10-05)
+
+
+### Bug Fixes
+
+* show storage and template errors in the interface language ([a39c704](https://github.com/Endika/mintza/commit/a39c704726afb09b1abdf74b96b18d722300f9b3))
+
 ## [1.23.2](https://github.com/Endika/mintza/compare/v1.23.1...v1.23.2) (2026-10-03)
 
 
