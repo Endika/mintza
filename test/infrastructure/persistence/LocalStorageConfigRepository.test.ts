@@ -53,6 +53,12 @@ class ThrowingSetStorage extends FakeStorage {
   }
 }
 
+class FullStorage extends FakeStorage {
+  override setItem(): never {
+    throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+  }
+}
+
 describe('LocalStorageConfigRepository', () => {
   it('returns defaults when nothing is stored yet', async () => {
     const repo = new LocalStorageConfigRepository(new FakeStorage());
@@ -140,5 +146,21 @@ describe('LocalStorageConfigRepository', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe('STORAGE_FAILED');
+  });
+
+  it('says the storage is full when the browser runs out of quota', async () => {
+    const result = await new LocalStorageConfigRepository(new FullStorage()).save(DEFAULT_CONFIG);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.reason).toBe('storage_full');
+  });
+
+  it('says the storage is unavailable for any other failure', async () => {
+    const saved = await new LocalStorageConfigRepository(new ThrowingSetStorage()).save(
+      DEFAULT_CONFIG,
+    );
+    const loaded = await new LocalStorageConfigRepository(new ThrowingGetStorage()).load();
+    expect(saved.ok || saved.error.reason).toBe('storage_unavailable');
+    expect(loaded.ok || loaded.error.reason).toBe('storage_unavailable');
   });
 });

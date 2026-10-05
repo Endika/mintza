@@ -10,6 +10,7 @@ import {
 } from '../../domain/summary/value-objects/SummaryKind';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
+import { storageError } from './storageError';
 
 const STORAGE_KEY = 'mintza:templates:v1';
 
@@ -38,18 +39,32 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
         .map(fromPersisted);
       return Promise.resolve(ok(defs));
     } catch (cause) {
-      return Promise.resolve(
-        err(new AppError('STORAGE_FAILED', 'Failed to load templates', cause)),
-      );
+      return Promise.resolve(err(storageError('Failed to load templates', cause)));
     }
   }
 
   async save(definition: TemplateDefinition): Promise<Result<void, AppError>> {
     if (definition.builtIn) {
-      return err(new AppError('CONFIG_INVALID', 'Built-in templates cannot be modified'));
+      return err(
+        new AppError(
+          'CONFIG_INVALID',
+          'Built-in templates cannot be modified',
+          undefined,
+          [],
+          'builtin_readonly',
+        ),
+      );
     }
     if (definition.id in BUILT_IN_TEMPLATES) {
-      return err(new AppError('CONFIG_INVALID', 'Template id collides with a built-in id'));
+      return err(
+        new AppError(
+          'CONFIG_INVALID',
+          'Template id collides with a built-in id',
+          undefined,
+          [],
+          'id_collision',
+        ),
+      );
     }
     const loaded = await this.load();
     if (!loaded.ok) return loaded;
@@ -59,13 +74,21 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
       this.storage.setItem(STORAGE_KEY, JSON.stringify(next.map(toPersisted)));
       return ok(undefined);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to save template', cause));
+      return err(storageError('Failed to save template', cause));
     }
   }
 
   async delete(id: string): Promise<Result<void, AppError>> {
     if (id in BUILT_IN_TEMPLATES) {
-      return err(new AppError('CONFIG_INVALID', 'Built-in templates cannot be deleted'));
+      return err(
+        new AppError(
+          'CONFIG_INVALID',
+          'Built-in templates cannot be deleted',
+          undefined,
+          [],
+          'builtin_readonly',
+        ),
+      );
     }
     const loaded = await this.load();
     if (!loaded.ok) return loaded;
@@ -74,7 +97,7 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
       this.storage.setItem(STORAGE_KEY, JSON.stringify(remaining.map(toPersisted)));
       return ok(undefined);
     } catch (cause) {
-      return err(new AppError('STORAGE_FAILED', 'Failed to delete template', cause));
+      return err(storageError('Failed to delete template', cause));
     }
   }
 }

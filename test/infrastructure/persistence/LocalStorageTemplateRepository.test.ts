@@ -48,6 +48,12 @@ class ThrowingGetStorage implements Storage {
   setItem(): void {}
 }
 
+class FullStorage extends FakeStorage {
+  override setItem(): never {
+    throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+  }
+}
+
 const customTemplate: TemplateDefinition = {
   id: 'standup',
   name: 'Daily standup',
@@ -133,5 +139,26 @@ describe('LocalStorageTemplateRepository', () => {
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) return;
     expect(loaded.value).toEqual([customTemplate]);
+  });
+
+  it('refuses to change or delete a built-in template, saying why', async () => {
+    const repo = new LocalStorageTemplateRepository(new FakeStorage());
+    const saved = await repo.save({ ...customTemplate, builtIn: true });
+    const deleted = await repo.delete('generic');
+    expect(saved.ok || saved.error.reason).toBe('builtin_readonly');
+    expect(deleted.ok || deleted.error.reason).toBe('builtin_readonly');
+  });
+
+  it('refuses a custom template whose id is a built-in one, saying why', async () => {
+    const saved = await new LocalStorageTemplateRepository(new FakeStorage()).save({
+      ...customTemplate,
+      id: 'generic',
+    });
+    expect(saved.ok || saved.error.reason).toBe('id_collision');
+  });
+
+  it('says the storage is full when saving runs out of quota', async () => {
+    const saved = await new LocalStorageTemplateRepository(new FullStorage()).save(customTemplate);
+    expect(saved.ok || saved.error.reason).toBe('storage_full');
   });
 });

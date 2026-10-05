@@ -19,7 +19,7 @@ import {
   ICON_EXTERNAL,
   ICON_TRASH,
 } from '../components/icons';
-import { reasonText } from '../i18n/errorText';
+import { errorText, reasonText } from '../i18n/errorText';
 import { LANGUAGE_NAMES } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { TranslationKey } from '../i18n/translations';
@@ -289,7 +289,7 @@ export class SettingsPage implements Page {
     const languageChanged = current.language !== next.language;
     const result = await this.deps.config.update(next);
     if (!result.ok) {
-      this.setStatus(`${tr.t('settings.save_failed')} ${result.error.message}`);
+      this.setStatus(`${tr.t('settings.save_failed')} ${errorText(result.error, tr)}`);
       return;
     }
     if (languageChanged) {
@@ -313,7 +313,7 @@ export class SettingsPage implements Page {
     if (!this.confirm(tr.t('settings.confirm_clear'))) return;
     const result = await this.deps.config.update({ ...current, apiKeys: {} });
     if (!result.ok) {
-      this.setStatus(`${tr.t('settings.clear_failed')} ${result.error.message}`);
+      this.setStatus(`${tr.t('settings.clear_failed')} ${errorText(result.error, tr)}`);
       return;
     }
     if (this.root) await this.render(this.root);

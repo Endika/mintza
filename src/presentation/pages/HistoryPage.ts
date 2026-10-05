@@ -8,6 +8,7 @@ import type { MeetingListItem } from '../../domain/meeting/ports/MeetingReposito
 import { MeetingId } from '../../domain/meeting/value-objects/MeetingId';
 import { Template } from '../../domain/meeting/value-objects/Template';
 import { ICON_RECORD, ICON_STAR, ICON_STAR_FILLED, ICON_TRASH } from '../components/icons';
+import { errorText } from '../i18n/errorText';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
@@ -109,7 +110,7 @@ export class HistoryPage implements Page {
       this.qs<HTMLElement>('#list').innerHTML = `
         <div class="card">
           <p class="font-medium text-danger">${this.t.t('history.load_failed')}</p>
-          <p class="mt-1 break-words text-sm text-fg-muted">${escapeHtml(result.error.message)}</p>
+          <p class="mt-1 break-words text-sm text-fg-muted">${errorText(result.error, this.t)}</p>
         </div>`;
       return;
     }
@@ -242,7 +243,7 @@ export class HistoryPage implements Page {
     meeting.toggleStar();
     const saved = await this.deps.saveMeeting.execute({ meeting });
     if (!saved.ok) {
-      this.setStatus(`${this.t.t('history.star_failed')} ${saved.error.message}`);
+      this.setStatus(`${this.t.t('history.star_failed')} ${errorText(saved.error, this.t)}`);
       return null;
     }
     return meeting.starred;
@@ -268,7 +269,7 @@ export class HistoryPage implements Page {
       this.renderList();
       this.qs<HTMLElement>('h1').focus();
     } else {
-      this.setStatus(`${this.t.t('history.delete_failed')} ${result.error.message}`);
+      this.setStatus(`${this.t.t('history.delete_failed')} ${errorText(result.error, this.t)}`);
     }
   }
 
@@ -280,7 +281,7 @@ export class HistoryPage implements Page {
       this.renderList();
       this.qs<HTMLElement>('h1').focus();
     } else {
-      this.setStatus(`${this.t.t('history.clear_failed')} ${result.error.message}`);
+      this.setStatus(`${this.t.t('history.clear_failed')} ${errorText(result.error, this.t)}`);
     }
   }
 

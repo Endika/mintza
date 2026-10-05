@@ -3,9 +3,10 @@ import {
   type AppConfig,
   type ConfigRepository,
 } from '../../domain/meeting/ports/ConfigRepository';
-import { AppError } from '../../shared/errors/AppError';
+import type { AppError } from '../../shared/errors/AppError';
 import { CONFIG_STORAGE_KEY } from '../../shared/constants/storageKeys';
 import { err, ok, type Result } from '../../shared/result/Result';
+import { storageError } from './storageError';
 
 export class LocalStorageConfigRepository implements ConfigRepository {
   constructor(private readonly storage: Storage = window.localStorage) {}
@@ -17,9 +18,7 @@ export class LocalStorageConfigRepository implements ConfigRepository {
       const parsed = JSON.parse(raw) as Partial<AppConfig>;
       return Promise.resolve(ok({ ...DEFAULT_CONFIG, ...parsed, apiKeys: { ...parsed.apiKeys } }));
     } catch (cause) {
-      return Promise.resolve(
-        err(new AppError('STORAGE_FAILED', 'Failed to load configuration', cause)),
-      );
+      return Promise.resolve(err(storageError('Failed to load configuration', cause)));
     }
   }
 
@@ -28,9 +27,7 @@ export class LocalStorageConfigRepository implements ConfigRepository {
       this.storage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
       return Promise.resolve(ok(undefined));
     } catch (cause) {
-      return Promise.resolve(
-        err(new AppError('STORAGE_FAILED', 'Failed to save configuration', cause)),
-      );
+      return Promise.resolve(err(storageError('Failed to save configuration', cause)));
     }
   }
 
@@ -39,9 +36,7 @@ export class LocalStorageConfigRepository implements ConfigRepository {
       this.storage.removeItem(CONFIG_STORAGE_KEY);
       return Promise.resolve(ok(undefined));
     } catch (cause) {
-      return Promise.resolve(
-        err(new AppError('STORAGE_FAILED', 'Failed to clear configuration', cause)),
-      );
+      return Promise.resolve(err(storageError('Failed to clear configuration', cause)));
     }
   }
 }

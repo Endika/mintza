@@ -16,6 +16,7 @@ import {
   ICON_STAR_FILLED,
   ICON_TRASH,
 } from '../components/icons';
+import { errorText } from '../i18n/errorText';
 import { SUMMARY_LABEL_KEYS } from '../i18n/summaryLabelKey';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
@@ -75,7 +76,7 @@ export class TemplatesPage implements Page {
     ]);
     if (!templatesResult.ok) {
       this.qs<HTMLElement>('#list').innerHTML =
-        `<p class="text-danger">${this.deps.translator.t('templates.load_failed')} ${escapeHtml(templatesResult.error.message)}</p>`;
+        `<p class="text-danger">${this.deps.translator.t('templates.load_failed')} ${errorText(templatesResult.error, this.deps.translator)}</p>`;
       return;
     }
     this.templates = templatesResult.value;
@@ -173,7 +174,7 @@ export class TemplatesPage implements Page {
       await this.refresh();
     } else {
       this.qs<HTMLElement>('#list-status').textContent =
-        `${t.t('templates.delete_failed')} ${result.error.message}`;
+        `${t.t('templates.delete_failed')} ${errorText(result.error, t)}`;
     }
   }
 
@@ -374,7 +375,7 @@ export class TemplatesPage implements Page {
     };
     const result = await this.deps.saveTemplate.execute({ definition });
     if (!result.ok) {
-      this.showFormError(result.error.message);
+      this.showFormError(errorText(result.error, this.deps.translator));
       return;
     }
     this.closeEditor();
