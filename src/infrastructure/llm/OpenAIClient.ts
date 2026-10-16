@@ -10,7 +10,10 @@ export interface OpenAIChatRequest {
   readonly user: string;
   readonly temperature?: number;
   readonly maxTokens?: number;
+  readonly reasoningEffort?: OpenAIReasoningEffort;
 }
+
+export type OpenAIReasoningEffort = 'none' | 'low';
 
 export interface OpenAIChatResponse {
   readonly content: string;
@@ -45,10 +48,13 @@ export class OpenAIClient {
         ),
       );
     }
+    const reasoningEffort = request.reasoningEffort ?? 'none';
     const body = JSON.stringify({
       model: request.model,
-      temperature: request.temperature ?? 0.2,
-      max_tokens: request.maxTokens ?? 1024,
+      reasoning_effort: reasoningEffort,
+      // Reasoning models only take a temperature with reasoning off.
+      ...(reasoningEffort === 'none' ? { temperature: request.temperature ?? 0.2 } : {}),
+      max_completion_tokens: request.maxTokens ?? 1024,
       messages: [
         { role: 'system', content: request.system },
         { role: 'user', content: request.user },
