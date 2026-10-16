@@ -9,9 +9,9 @@ describe('estimateOpenAiHourlyCost', () => {
   });
 
   it('prices the hour of audio at the gpt-transcribe rate', () => {
-    // 60 min at $0.0045, plus the mind map: 13,500 tokens in and 1,500 out on gpt-4o-mini.
+    // 60 min at $0.0045, plus the mind map: 13,500 tokens in and 1,500 out on gpt-6-luna.
     const usd = estimateOpenAiHourlyCost('balanced', 0).toUsd();
-    expect(usd).toBeCloseTo(0.27 + 0.013_5 * 0.15 + 0.001_5 * 0.6, 6);
+    expect(usd).toBeCloseTo(0.27 + 0.013_5 * 0.1 + 0.001_5 * 0.5, 6);
   });
 
   it('costs more on premium than on balanced', () => {

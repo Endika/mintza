@@ -7,7 +7,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
 import type { OpenAIClient } from './OpenAIClient';
 
-const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_MODEL = 'gpt-6-luna';
 
 export class LLMMindMapAdapter implements MindMapPort {
   private readonly prompts = new MindMapPromptBuilder();

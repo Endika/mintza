@@ -114,12 +114,12 @@ export const buildAppDeps = (): AppDeps => {
 
   const openai = new OpenAIClient(http, () => configStore.openAIKey());
   const openaiAdapter: NamedSummarizationPort = {
-    name: 'GPT-4o-mini',
+    name: 'GPT-6 Luna',
     port: new OpenAISummarizationAdapter(openai),
   };
   const openaiPremiumAdapter: NamedSummarizationPort = {
-    name: 'GPT-4o',
-    port: new OpenAISummarizationAdapter(openai, { model: 'gpt-4o' }),
+    name: 'GPT-6 Luna (reasoning)',
+    port: new OpenAISummarizationAdapter(openai, { reasoningEffort: 'low' }),
   };
 
   const claude = new ClaudeClient(http, () => configStore.anthropicKey());

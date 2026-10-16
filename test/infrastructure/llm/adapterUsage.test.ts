@@ -50,6 +50,33 @@ const openAiBody = (content: string): object => ({
   usage: { prompt_tokens: 1200, completion_tokens: 340 },
 });
 
+const sentBody = (http: CannedHttp): Record<string, unknown> =>
+  JSON.parse(http.sent[0]?.body as string) as Record<string, unknown>;
+
+describe('OpenAI summaries on GPT-6 Luna', () => {
+  it('summarises on gpt-6-luna with reasoning off and a completion-token limit', async () => {
+    const http = new CannedHttp(openAiBody('- ship'));
+    await new OpenAISummarizationAdapter(new OpenAIClient(http, key)).summarize(request);
+    const body = sentBody(http);
+    expect(body.model).toBe('gpt-6-luna');
+    expect(body.reasoning_effort).toBe('none');
+    expect(body.temperature).toBe(0.2);
+    expect(body.max_completion_tokens).toBe(1024);
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
+  it('lets premium reason, without a temperature and with room for the reasoning', async () => {
+    const http = new CannedHttp(openAiBody('- ship'));
+    await new OpenAISummarizationAdapter(new OpenAIClient(http, key), {
+      reasoningEffort: 'low',
+    }).summarize(request);
+    const body = sentBody(http);
+    expect(body.reasoning_effort).toBe('low');
+    expect(body).not.toHaveProperty('temperature');
+    expect(body.max_completion_tokens).toBe(4096);
+  });
+});
+
 describe('LLM adapters record the model that ran', () => {
   it('stamps an OpenAI summary with its model', async () => {
     const adapter = new OpenAISummarizationAdapter(

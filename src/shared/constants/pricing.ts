@@ -17,6 +17,8 @@ export const PRICING = {
     webspeech: { perMinuteUsd: 0 },
   } as Readonly<Record<string, TranscriptionPricing>>,
   llm: {
+    'gpt-6-luna': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
+    // Removed on 2027-01-14; kept so meetings summarised with them still price correctly.
     'gpt-4o-mini': { inputPerMillion: 0.15, outputPerMillion: 0.6 },
     'gpt-4o': { inputPerMillion: 2.5, outputPerMillion: 10 },
     'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
