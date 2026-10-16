@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.4](https://github.com/Endika/mintza/compare/v1.23.3...v1.23.4) (2026-10-16)
+
+
+### Bug Fixes
+
+* **openai:** move summaries and mind map from gpt-4o to gpt-6-luna ([d62fb5f](https://github.com/Endika/mintza/commit/d62fb5f3b84ebe7c4fe597561492b2a8778bfa7b))
+
 ## [1.23.3](https://github.com/Endika/mintza/compare/v1.23.2...v1.23.3) (2026-10-05)
 
 
