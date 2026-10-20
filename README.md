@@ -9,6 +9,7 @@
 [![Last commit](https://img.shields.io/github/last-commit/Endika/mintza?style=flat-square)](https://github.com/Endika/mintza/commits/main)
 [![Conventional Commits](https://img.shields.io/badge/conventional_commits-1.0.0-FE5196?style=flat-square)](https://www.conventionalcommits.org)
 [![License: MIT](https://img.shields.io/github/license/Endika/mintza?style=flat-square&color=10B981)](./LICENSE)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Endika/badge.svg)](https://hub.xerj.org/contributors/Endika)
 
 Mintza is a client-only PWA that records meetings from your microphone, transcribes them with the cloud provider of your choice, and turns the raw transcript into eight kinds of summaries, a sentiment score and a mind map. Everything stays in your browser — no server, no account, no tracking.
 
