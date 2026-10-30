@@ -5,6 +5,13 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.23.5](https://github.com/Endika/mintza/compare/v1.23.4...v1.23.5) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** bump dompurify to 3.4.17 ([fb16212](https://github.com/Endika/mintza/commit/fb162126bf0356d04d3f87c21d435f7bee3d2f11))
+
 ## [1.23.4](https://github.com/Endika/mintza/compare/v1.23.3...v1.23.4) (2026-10-16)
 
 
