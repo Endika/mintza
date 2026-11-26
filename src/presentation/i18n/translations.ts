@@ -187,6 +187,11 @@ export type TranslationKey =
   | 'settings.key_placeholder'
   | 'templates.load_failed'
   | 'templates.copy_name'
+  | 'templates.export'
+  | 'templates.import'
+  | 'templates.imported'
+  | 'templates.imported_one'
+  | 'templates.copy_suffix'
   | 'templates.delete_failed'
   | 'templates.field_meeting_type'
   | 'templates.field_meeting_type_hint'
@@ -471,6 +476,11 @@ const EN: Translations = {
   'settings.key_placeholder': 'Paste your key',
   'templates.load_failed': "Couldn't load your templates.",
   'templates.copy_name': '{name} copy',
+  'templates.export': 'Export',
+  'templates.import': 'Import',
+  'templates.imported': '{count} templates imported',
+  'templates.imported_one': '1 template imported',
+  'templates.copy_suffix': 'imported',
   'templates.delete_failed': "Couldn't delete this template.",
   'templates.field_meeting_type': 'What kind of meeting is this?',
   'templates.field_meeting_type_hint':
@@ -760,6 +770,11 @@ const ES: Translations = {
   'settings.key_placeholder': 'Pega tu clave',
   'templates.load_failed': 'No se pudieron cargar tus plantillas.',
   'templates.copy_name': '{name} (copia)',
+  'templates.export': 'Exportar',
+  'templates.import': 'Importar',
+  'templates.imported': '{count} plantillas importadas',
+  'templates.imported_one': '1 plantilla importada',
+  'templates.copy_suffix': 'importada',
   'templates.delete_failed': 'No se pudo borrar esta plantilla.',
   'templates.field_meeting_type': '¿Qué tipo de reunión es?',
   'templates.field_meeting_type_hint':
@@ -1055,6 +1070,11 @@ const EU: Translations = {
   'settings.key_placeholder': 'Itsatsi zure gakoa',
   'templates.load_failed': 'Ezin izan dira zure txantiloiak kargatu.',
   'templates.copy_name': '{name} (kopia)',
+  'templates.export': 'Esportatu',
+  'templates.import': 'Inportatu',
+  'templates.imported': '{count} txantiloi inportatu dira',
+  'templates.imported_one': 'Txantiloi 1 inportatu da',
+  'templates.copy_suffix': 'inportatua',
   'templates.delete_failed': 'Ezin izan da txantiloi hau ezabatu.',
   'templates.field_meeting_type': 'Zer bilera mota da hau?',
   'templates.field_meeting_type_hint':

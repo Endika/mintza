@@ -6,6 +6,7 @@ import {
 } from '../../domain/meeting/services/MeetingExporter';
 import { PdfExporter } from '../../infrastructure/export/PdfExporter';
 import type { Translator } from '../i18n/Translator';
+import { triggerDownload } from '../util/download';
 import { meetingTitle } from '../util/meetingTitle';
 import { ICON_DOWNLOAD } from './icons';
 import type { TranslationKey } from '../i18n/translations';
@@ -96,14 +97,3 @@ export class ExportMenu {
     triggerDownload(blob, file.filename);
   }
 }
-
-const triggerDownload = (blob: Blob, filename: string): void => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
