@@ -49,9 +49,13 @@ describe('MeetingExporter', () => {
     expect(file.content).toContain('A short meeting.');
   });
 
-  it('produces a JSON file with full structure', () => {
+  it('produces the lossless meeting transfer document as JSON', () => {
     const file = exporter.export(buildMeeting(), 'json');
-    const parsed = JSON.parse(file.content) as { summaries: Record<string, { content: string }> };
+    const parsed = JSON.parse(file.content) as {
+      format: string;
+      summaries: Record<string, { content: string }>;
+    };
+    expect(parsed.format).toBe('mintza-meeting');
     expect(parsed.summaries['one_liner']?.content).toBe('A short meeting.');
   });
 

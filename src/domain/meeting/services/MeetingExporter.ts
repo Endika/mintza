@@ -1,6 +1,6 @@
 import type { Meeting } from '../entities/Meeting';
 import type { SummaryKind } from '../../summary/value-objects/SummaryKind';
-import type { TranscriptSegment } from '../../transcription/entities/TranscriptSegment';
+import { serializeMeeting } from './MeetingTransfer';
 
 export type ExportFormat = 'markdown' | 'json' | 'txt' | 'csv';
 
@@ -28,7 +28,7 @@ export class MeetingExporter {
         return {
           filename: exportFilename(title, 'json'),
           mimeType: 'application/json;charset=utf-8',
-          content: this.toJson(meeting),
+          content: serializeMeeting(meeting),
         };
       case 'txt':
         return {
@@ -67,29 +67,6 @@ export class MeetingExporter {
     return parts.join('\n');
   }
 
-  private toJson(meeting: Meeting): string {
-    const summaries: Record<string, { content: string; provider: string }> = {};
-    for (const [kind, summary] of meeting.summaries.entries()) {
-      summaries[kind] = { content: summary.content, provider: summary.provider };
-    }
-    return JSON.stringify(
-      {
-        id: meeting.id.value,
-        title: meeting.title,
-        template: meeting.template.kind,
-        language: meeting.language.code,
-        startedAt: meeting.startedAt.toISOString(),
-        endedAt: meeting.endedAt?.toISOString(),
-        durationMs: meeting.durationMs,
-        temperature: meeting.temperature?.value,
-        segments: meeting.segments.map(toSegmentDto),
-        summaries,
-      },
-      null,
-      2,
-    );
-  }
-
   private toTxt(meeting: Meeting, title: string): string {
     const lines = [title, meeting.startedAt.toISOString(), formatDuration(meeting.durationMs), ''];
     for (const segment of meeting.segments) {
@@ -109,14 +86,6 @@ export class MeetingExporter {
 
 const humanLabel = (kind: SummaryKind): string =>
   kind.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-const toSegmentDto = (s: TranscriptSegment): unknown => ({
-  startMs: s.startMs,
-  endMs: s.endMs,
-  text: s.text.value,
-  provider: s.provider,
-  confidence: s.confidence,
-});
 
 const slug = (raw: string): string =>
   raw
