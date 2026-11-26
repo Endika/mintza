@@ -249,6 +249,10 @@ export type TranslationKey =
   | 'error.storage_full'
   | 'error.storage_unavailable'
   | 'error.builtin_readonly'
+  | 'error.import_not_json'
+  | 'error.import_wrong_format'
+  | 'error.import_unsupported_version'
+  | 'error.import_empty'
   | 'error.id_collision'
   | 'error.unknown'
   | 'settings.key_empty'
@@ -533,6 +537,10 @@ const EN: Translations = {
   'error.storage_unavailable':
     "Your browser didn't let Mintza use its storage. Private browsing can block it.",
   'error.builtin_readonly': "Built-in templates can't be changed or deleted.",
+  'error.import_not_json': 'That file is not valid JSON.',
+  'error.import_wrong_format': 'That file is not a Mintza template file.',
+  'error.import_unsupported_version': 'That file was made by a newer version of Mintza.',
+  'error.import_empty': 'The file contains no valid template.',
   'error.id_collision': 'A built-in template already uses that name. Pick another one.',
   'error.unknown': 'Something went wrong. Try again in a moment.',
   'settings.key_empty': 'Paste a key first.',
@@ -820,6 +828,10 @@ const ES: Translations = {
   'error.storage_unavailable':
     'El navegador no ha dejado a Mintza usar su almacenamiento. La navegación privada puede bloquearlo.',
   'error.builtin_readonly': 'Las plantillas integradas no se pueden cambiar ni borrar.',
+  'error.import_not_json': 'Ese archivo no es un JSON válido.',
+  'error.import_wrong_format': 'Ese archivo no es un archivo de plantillas de Mintza.',
+  'error.import_unsupported_version': 'Ese archivo lo creó una versión más nueva de Mintza.',
+  'error.import_empty': 'El archivo no contiene ninguna plantilla válida.',
   'error.id_collision': 'Ese nombre ya lo usa una plantilla integrada. Elige otro.',
   'error.unknown': 'Algo ha fallado. Vuelve a intentarlo en un momento.',
   'settings.key_empty': 'Pega primero una clave.',
@@ -1111,6 +1123,10 @@ const EU: Translations = {
   'error.storage_unavailable':
     'Nabigatzaileak ez dio Mintzari bere biltegia erabiltzen utzi. Nabigatze pribatuak blokea dezake.',
   'error.builtin_readonly': 'Txantiloi integratuak ezin dira aldatu edo ezabatu.',
+  'error.import_not_json': 'Fitxategi hori ez da JSON baliozkoa.',
+  'error.import_wrong_format': 'Fitxategi hori ez da Mintzaren txantiloi-fitxategia.',
+  'error.import_unsupported_version': 'Fitxategi hori Mintzaren bertsio berriago batek sortu du.',
+  'error.import_empty': 'Fitxategiak ez dauka txantiloi baliozkorik.',
   'error.id_collision': 'Izen hori txantiloi integratu batek darabil. Aukeratu beste bat.',
   'error.unknown': 'Zerbait gaizki joan da. Saiatu berriro pixka bat barru.',
   'settings.key_empty': 'Itsatsi gako bat lehenik.',
