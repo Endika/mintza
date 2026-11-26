@@ -11,6 +11,7 @@ import { ListTemplatesUseCase } from '../application/use-cases/ListTemplatesUseC
 import { RegenerateSummariesUseCase } from '../application/use-cases/RegenerateSummariesUseCase';
 import { SaveMeetingUseCase } from '../application/use-cases/SaveMeetingUseCase';
 import { ExportTemplateUseCase } from '../application/use-cases/ExportTemplateUseCase';
+import { ImportMeetingUseCase } from '../application/use-cases/ImportMeetingUseCase';
 import { ImportTemplatesUseCase } from '../application/use-cases/ImportTemplatesUseCase';
 import { SaveTemplateUseCase } from '../application/use-cases/SaveTemplateUseCase';
 import { StartRecordingUseCase } from '../application/use-cases/StartRecordingUseCase';
@@ -73,6 +74,7 @@ export interface AppDeps {
   readonly saveTemplate: SaveTemplateUseCase;
   readonly exportTemplate: ExportTemplateUseCase;
   readonly importTemplates: ImportTemplatesUseCase;
+  readonly importMeeting: ImportMeetingUseCase;
   readonly deleteTemplate: DeleteTemplateUseCase;
   readonly regenerateSummaries: RegenerateSummariesUseCase;
   readonly templateRegistry: TemplateRegistry;
@@ -148,6 +150,9 @@ export const buildAppDeps = (): AppDeps => {
 
   const mindMapPort = new LLMMindMapAdapter(openai);
   const sentimentParser = new SentimentScoreParser();
+  const importTemplates = new ImportTemplatesUseCase(templateRegistry);
+  const regenerateSummaries = new RegenerateSummariesUseCase(summarization, meetingRepo);
+  const generateMindMap = new GenerateMindMapUseCase(mindMapPort);
 
   const audio = new MediaRecorderAdapter();
   const screenWake = new WakeLockAdapter();
@@ -160,7 +165,7 @@ export const buildAppDeps = (): AppDeps => {
     stopRecording: new StopRecordingUseCase(audio),
     transcribeChunk: new TranscribeChunkUseCase(transcription),
     generateSummaries: new GenerateSummariesUseCase(summarization),
-    generateMindMap: new GenerateMindMapUseCase(mindMapPort),
+    generateMindMap,
     finalizeMeeting: new FinalizeMeetingUseCase(
       summarization,
       mindMapPort,
@@ -178,9 +183,17 @@ export const buildAppDeps = (): AppDeps => {
     listTemplates: new ListTemplatesUseCase(templateRegistry),
     saveTemplate: new SaveTemplateUseCase(templateRegistry),
     exportTemplate: new ExportTemplateUseCase(templateRegistry),
-    importTemplates: new ImportTemplatesUseCase(templateRegistry),
+    importTemplates,
+    importMeeting: new ImportMeetingUseCase(
+      meetingRepo,
+      templateRegistry,
+      importTemplates,
+      regenerateSummaries,
+      generateMindMap,
+      sentimentParser,
+    ),
     deleteTemplate: new DeleteTemplateUseCase(templateRegistry, meetingRepo),
-    regenerateSummaries: new RegenerateSummariesUseCase(summarization, meetingRepo),
+    regenerateSummaries,
     templateRegistry,
   };
 };

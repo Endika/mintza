@@ -71,6 +71,7 @@ export class App {
       saveMeeting: this.deps.saveMeeting,
       deleteMeeting: this.deps.deleteMeeting,
       clearMeetings: this.deps.clearMeetings,
+      importMeeting: this.deps.importMeeting,
       translator: this.deps.configStore.translator,
     });
   }

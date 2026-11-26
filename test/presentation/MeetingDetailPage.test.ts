@@ -16,6 +16,8 @@ import { Translator } from '../../src/presentation/i18n/Translator';
 import { MeetingDetailPage } from '../../src/presentation/pages/MeetingDetailPage';
 import { FakeSummarizationPort } from '../fakes/FakeSummarizationPort';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
+import { buildImporters } from './importFixtures';
+import { serializeMeeting } from '../../src/domain/meeting/services/MeetingTransfer';
 import { expectCollapsibleResult } from './disclosureAssertions';
 import { finishedMeeting, settle } from './meetingFixtures';
 
@@ -57,6 +59,30 @@ afterEach(() => {
 });
 
 describe('MeetingDetailPage', () => {
+  it('shows an imported badge only on imported meetings', async () => {
+    const repo = new InMemoryMeetingRepository();
+    const plain = finishedMeeting({ title: 'Plain', seconds: 60 });
+    await repo.save(plain);
+    const { importMeeting } = buildImporters(repo);
+    const preview = await importMeeting.inspect(
+      serializeMeeting(finishedMeeting({ title: 'Brought', seconds: 60 })),
+    );
+    if (!preview.ok) throw preview.error;
+    const done = await importMeeting.execute({
+      parsed: preview.value.parsed,
+      choice: { kind: 'as-is' },
+      titleSuffix: 'imported',
+      copySuffix: 'imported',
+    });
+    if (!done.ok) throw done.error;
+
+    const plainPage = await renderDetail(repo, plain.id.value);
+    expect(plainPage.textContent).not.toContain('Imported');
+    document.body.innerHTML = '';
+    const importedPage = await renderDetail(repo, done.value.meetingId.value);
+    expect(importedPage.textContent).toContain('Imported');
+  });
+
   it("leads with the template's main result and folds the rest away", async () => {
     const repo = new InMemoryMeetingRepository();
     const meeting = finishedMeeting({

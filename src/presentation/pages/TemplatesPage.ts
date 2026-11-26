@@ -25,6 +25,7 @@ import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { Confirm } from '../lifecycle/LeaveGuard';
 import type { Page } from '../router/Router';
+import { BADGE } from '../util/badge';
 import { triggerDownload } from '../util/download';
 import { escapeHtml } from '../util/escapeHtml';
 import { pickTextFile } from '../util/pickTextFile';
@@ -41,8 +42,6 @@ export interface TemplatesPageDeps {
   readonly pickFile?: () => Promise<string | null>;
   readonly download?: (blob: Blob, filename: string) => void;
 }
-
-const BADGE = 'rounded-full bg-raised px-2.5 py-0.5 text-xs font-semibold text-fg';
 
 export class TemplatesPage implements Page {
   private root: HTMLElement | null = null;
