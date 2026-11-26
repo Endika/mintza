@@ -5,6 +5,7 @@ import type { MindMapPort } from '../../domain/mindmap/ports/MindMapPort';
 import type { Summary } from '../../domain/summary/entities/Summary';
 import type { SummarizationPort } from '../../domain/summary/ports/SummarizationPort';
 import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
+import { applySentimentScore } from '../../domain/temperature/services/applySentimentScore';
 import type { SentimentScoreParser } from '../../domain/temperature/services/SentimentScoreParser';
 import type { AppError } from '../../shared/errors/AppError';
 
@@ -58,11 +59,7 @@ export class FinalizeMeetingUseCase {
     const summarySuccessCount = summaryAttempts.filter((a) => a.result.ok).length;
     const summaryFailureCount = summaryAttempts.filter((a) => !a.result.ok).length;
 
-    const sentiment = input.meeting.summaries.get('sentiment');
-    if (sentiment) {
-      const score = this.sentimentParser.parse(sentiment.content);
-      if (score) input.meeting.setTemperature(score);
-    }
+    applySentimentScore(input.meeting, this.sentimentParser);
 
     const savedAfterSummaries = await this.repository.save(input.meeting);
     if (!savedAfterSummaries.ok) {
