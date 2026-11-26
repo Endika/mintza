@@ -2,6 +2,7 @@ import type { DeleteTemplateUseCase } from '../../application/use-cases/DeleteTe
 import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { SaveTemplateUseCase } from '../../application/use-cases/SaveTemplateUseCase';
+import { generateTemplateId } from '../../domain/meeting/value-objects/TemplateId';
 import {
   BUILT_IN_TEMPLATES,
   type Template,
@@ -150,7 +151,7 @@ export class TemplatesPage implements Page {
     const def = source.toDefinition();
     this.openEditor({
       ...def,
-      id: generateId(def.name),
+      id: generateTemplateId(def.name),
       name: this.deps.translator.t('templates.copy_name', {
         name: templateDisplayName(source, this.deps.translator),
       }),
@@ -361,7 +362,7 @@ export class TemplatesPage implements Page {
       if (prompt.length > 0) promptOverrides[k] = prompt;
     }
 
-    const id = this.editing.id || generateId(name);
+    const id = this.editing.id || generateTemplateId(name);
     const definition: TemplateDefinition = {
       id,
       name,
@@ -405,17 +406,6 @@ const blankTemplate = (): TemplateDefinition => ({
   kindLabels: {},
   promptOverrides: {},
 });
-
-const generateId = (seed: string): string => {
-  const slug = seed
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  const suffix = Math.random().toString(36).slice(2, 6);
-  return slug ? `${slug}-${suffix}` : `tpl-${suffix}`;
-};
 
 const field = (data: FormData, key: string): string => {
   const value = data.get(key);
