@@ -8,9 +8,9 @@ const valid = {
   systemRole: 'You summarize standups.',
   mindMapStructure: 'Topics',
   summaryKinds: ['decisions', 'nope'],
-  featuredOrder: ['decisions'],
-  kindLabels: { decisions: 'Calls' },
-  promptOverrides: { decisions: 'List calls.' },
+  featuredOrder: ['decisions', 'nope'],
+  kindLabels: { decisions: 'Calls', bogus: 'x', action_items: '  ' },
+  promptOverrides: { decisions: 'List calls.', next_steps: 3 },
 };
 
 describe('sanitizeTemplate', () => {
@@ -21,28 +21,36 @@ describe('sanitizeTemplate', () => {
     [],
     {},
     { ...valid, id: 4 },
-    { ...valid, id: ' ' },
-    { ...valid, name: '' },
+    { ...valid, systemRole: 1 },
+    { ...valid, mindMapStructure: null },
     { ...valid, summaryKinds: 'x' },
   ])('rejects %j', (raw) => {
     expect(sanitizeTemplate(raw)).toBeNull();
   });
 
-  it('returns a custom definition without unknown kinds', () => {
+  it('returns a custom definition keeping only recognised entries', () => {
     expect(sanitizeTemplate(valid)).toEqual({
       ...valid,
       builtIn: false,
       summaryKinds: ['decisions'],
+      featuredOrder: ['decisions'],
+      kindLabels: { decisions: 'Calls' },
+      promptOverrides: { decisions: 'List calls.' },
     });
   });
 
-  it('tolerates missing label and override records', () => {
-    const { kindLabels: _l, promptOverrides: _p, ...bare } = valid;
-    expect(sanitizeTemplate(bare)).toMatchObject({ kindLabels: {}, promptOverrides: {} });
+  it.each([undefined, null, 'x'])('tolerates %j label and override records', (value) => {
+    expect(sanitizeTemplate({ ...valid, kindLabels: value, promptOverrides: value })).toMatchObject(
+      { kindLabels: {}, promptOverrides: {} },
+    );
   });
 
-  it('falls back to every summary kind when none is recognised', () => {
-    const result = sanitizeTemplate({ ...valid, summaryKinds: ['nope'] });
-    expect(result?.summaryKinds).toEqual(SUMMARY_KINDS);
+  it.each([
+    [{ summaryKinds: ['nope'] }, 'summaryKinds', SUMMARY_KINDS],
+    [{ featuredOrder: ['nope'] }, 'featuredOrder', ['decisions']],
+  ])('falls back when none is recognised in %j', (override, field, expected) => {
+    expect(sanitizeTemplate({ ...valid, ...override })?.[field as 'summaryKinds']).toEqual(
+      expected,
+    );
   });
 });
