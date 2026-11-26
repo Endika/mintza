@@ -1,4 +1,6 @@
 import type { DeleteTemplateUseCase } from '../../application/use-cases/DeleteTemplateUseCase';
+import type { ExportTemplateUseCase } from '../../application/use-cases/ExportTemplateUseCase';
+import type { ImportTemplatesUseCase } from '../../application/use-cases/ImportTemplatesUseCase';
 import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { SaveTemplateUseCase } from '../../application/use-cases/SaveTemplateUseCase';
@@ -23,15 +25,21 @@ import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { Confirm } from '../lifecycle/LeaveGuard';
 import type { Page } from '../router/Router';
+import { triggerDownload } from '../util/download';
 import { escapeHtml } from '../util/escapeHtml';
+import { pickTextFile } from '../util/pickTextFile';
 
 export interface TemplatesPageDeps {
   readonly listTemplates: ListTemplatesUseCase;
   readonly listMeetings: ListMeetingsUseCase;
   readonly saveTemplate: SaveTemplateUseCase;
   readonly deleteTemplate: DeleteTemplateUseCase;
+  readonly exportTemplate: ExportTemplateUseCase;
+  readonly importTemplates: ImportTemplatesUseCase;
   readonly translator: Translator;
   readonly confirm?: Confirm;
+  readonly pickFile?: () => Promise<string | null>;
+  readonly download?: (blob: Blob, filename: string) => void;
 }
 
 const BADGE = 'rounded-full bg-raised px-2.5 py-0.5 text-xs font-semibold text-fg';
@@ -44,9 +52,13 @@ export class TemplatesPage implements Page {
   /** Active results, main result first: this order is saved as featuredOrder. */
   private order: SummaryKind[] = [];
   private readonly confirm: Confirm;
+  private readonly pickFile: () => Promise<string | null>;
+  private readonly download: (blob: Blob, filename: string) => void;
 
   constructor(private readonly deps: TemplatesPageDeps) {
     this.confirm = deps.confirm ?? ((m) => window.confirm(m));
+    this.pickFile = deps.pickFile ?? (() => pickTextFile());
+    this.download = deps.download ?? triggerDownload;
   }
 
   async render(root: HTMLElement): Promise<void> {
@@ -58,7 +70,10 @@ export class TemplatesPage implements Page {
         <button id="back-list" type="button" class="btn-ghost -ml-3 mb-2 hidden">${ICON_BACK}<span>${t.t('templates.title')}</span></button>
         <header class="mb-5 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
           <h1 id="page-title" tabindex="-1" class="min-w-0 break-words text-3xl font-semibold tracking-tight sm:text-4xl">${t.t('templates.title')}</h1>
-          <button id="btn-new" type="button" class="btn-action">${ICON_PLUS}<span>${t.t('templates.new')}</span></button>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-import" type="button" class="btn-secondary">${t.t('templates.import')}</button>
+            <button id="btn-new" type="button" class="btn-action">${ICON_PLUS}<span>${t.t('templates.new')}</span></button>
+          </div>
         </header>
         <p id="list-status" role="status" class="mb-4 text-sm text-danger empty:sr-only"></p>
         <div id="list" class="flex flex-col gap-3"></div>
@@ -66,6 +81,10 @@ export class TemplatesPage implements Page {
       </div>
     `;
     this.qs<HTMLButtonElement>('#btn-new').addEventListener('click', () => this.openEditor(null));
+    this.qs<HTMLButtonElement>('#btn-import').addEventListener(
+      'click',
+      () => void this.handleImport(),
+    );
     this.qs<HTMLButtonElement>('#back-list').addEventListener('click', () => this.closeEditor());
     await this.refresh();
   }
@@ -125,7 +144,8 @@ export class TemplatesPage implements Page {
               ${
                 tpl.builtIn
                   ? ''
-                  : `<button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-secondary">${t.t('templates.edit')}</button>
+                  : `<button type="button" data-export="${escapeHtml(tpl.id)}" class="btn-secondary">${t.t('templates.export')}</button>
+                     <button type="button" data-edit="${escapeHtml(tpl.id)}" class="btn-secondary">${t.t('templates.edit')}</button>
                      <button type="button" data-delete="${escapeHtml(tpl.id)}" class="btn-ghost text-danger disabled:text-fg-muted"${
                        inUse ? ` disabled aria-describedby="${usageId}"` : ''
                      }>${ICON_TRASH}<span>${t.t('templates.delete')}</span></button>`
@@ -136,6 +156,9 @@ export class TemplatesPage implements Page {
       .join('');
     list.querySelectorAll<HTMLButtonElement>('[data-duplicate]').forEach((btn) => {
       btn.addEventListener('click', () => this.duplicateFrom(btn.dataset['duplicate'] ?? ''));
+    });
+    list.querySelectorAll<HTMLButtonElement>('[data-export]').forEach((btn) => {
+      btn.addEventListener('click', () => void this.handleExport(btn.dataset['export'] ?? ''));
     });
     list.querySelectorAll<HTMLButtonElement>('[data-edit]').forEach((btn) => {
       btn.addEventListener('click', () => this.editExisting(btn.dataset['edit'] ?? ''));
@@ -179,10 +202,47 @@ export class TemplatesPage implements Page {
     }
   }
 
+  private async handleExport(id: string): Promise<void> {
+    const result = await this.deps.exportTemplate.execute(id);
+    if (!result.ok) {
+      this.showStatus(errorText(result.error, this.deps.translator));
+      return;
+    }
+    const { content, filename } = result.value;
+    this.download(new Blob([content], { type: 'application/json' }), filename);
+  }
+
+  private async handleImport(): Promise<void> {
+    const t = this.deps.translator;
+    const text = await this.pickFile();
+    if (text === null) return;
+    const result = await this.deps.importTemplates.execute({
+      text,
+      copySuffix: t.t('templates.copy_suffix'),
+    });
+    if (!result.ok) {
+      this.showStatus(errorText(result.error, t));
+      return;
+    }
+    const count = result.value.length;
+    this.showStatus(
+      count === 1 ? t.t('templates.imported_one') : t.t('templates.imported', { count }),
+      false,
+    );
+    await this.refresh();
+  }
+
+  private showStatus(message: string, failed = true): void {
+    const status = this.qs<HTMLElement>('#list-status');
+    status.classList.toggle('text-danger', failed);
+    status.classList.toggle('text-fg-muted', !failed);
+    status.textContent = message;
+  }
+
   private setView(editing: boolean, title: string): void {
     this.qs<HTMLElement>('#back-settings').classList.toggle('hidden', editing);
     this.qs<HTMLElement>('#back-list').classList.toggle('hidden', !editing);
-    this.qs<HTMLElement>('#btn-new').classList.toggle('hidden', editing);
+    this.qs<HTMLElement>('#btn-new').parentElement?.classList.toggle('hidden', editing);
     this.qs<HTMLElement>('#list').classList.toggle('hidden', editing);
     this.qs<HTMLElement>('#list-status').classList.toggle('hidden', editing);
     this.qs<HTMLElement>('#editor').classList.toggle('hidden', !editing);

@@ -10,6 +10,8 @@ import { ListMeetingsUseCase } from '../application/use-cases/ListMeetingsUseCas
 import { ListTemplatesUseCase } from '../application/use-cases/ListTemplatesUseCase';
 import { RegenerateSummariesUseCase } from '../application/use-cases/RegenerateSummariesUseCase';
 import { SaveMeetingUseCase } from '../application/use-cases/SaveMeetingUseCase';
+import { ExportTemplateUseCase } from '../application/use-cases/ExportTemplateUseCase';
+import { ImportTemplatesUseCase } from '../application/use-cases/ImportTemplatesUseCase';
 import { SaveTemplateUseCase } from '../application/use-cases/SaveTemplateUseCase';
 import { StartRecordingUseCase } from '../application/use-cases/StartRecordingUseCase';
 import { StopRecordingUseCase } from '../application/use-cases/StopRecordingUseCase';
@@ -69,6 +71,8 @@ export interface AppDeps {
   readonly validateApiKey: ValidateApiKeyUseCase;
   readonly listTemplates: ListTemplatesUseCase;
   readonly saveTemplate: SaveTemplateUseCase;
+  readonly exportTemplate: ExportTemplateUseCase;
+  readonly importTemplates: ImportTemplatesUseCase;
   readonly deleteTemplate: DeleteTemplateUseCase;
   readonly regenerateSummaries: RegenerateSummariesUseCase;
   readonly templateRegistry: TemplateRegistry;
@@ -173,6 +177,8 @@ export const buildAppDeps = (): AppDeps => {
     validateApiKey: new ValidateApiKeyUseCase(new HttpApiKeyValidator(http)),
     listTemplates: new ListTemplatesUseCase(templateRegistry),
     saveTemplate: new SaveTemplateUseCase(templateRegistry),
+    exportTemplate: new ExportTemplateUseCase(templateRegistry),
+    importTemplates: new ImportTemplatesUseCase(templateRegistry),
     deleteTemplate: new DeleteTemplateUseCase(templateRegistry, meetingRepo),
     regenerateSummaries: new RegenerateSummariesUseCase(summarization, meetingRepo),
     templateRegistry,

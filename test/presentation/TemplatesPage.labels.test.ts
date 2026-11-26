@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DeleteTemplateUseCase } from '../../src/application/use-cases/DeleteTemplateUseCase';
+import { ExportTemplateUseCase } from '../../src/application/use-cases/ExportTemplateUseCase';
+import { ImportTemplatesUseCase } from '../../src/application/use-cases/ImportTemplatesUseCase';
 import { ListMeetingsUseCase } from '../../src/application/use-cases/ListMeetingsUseCase';
 import { ListTemplatesUseCase } from '../../src/application/use-cases/ListTemplatesUseCase';
 import { SaveTemplateUseCase } from '../../src/application/use-cases/SaveTemplateUseCase';
@@ -41,6 +43,8 @@ describe('TemplatesPage label overrides', () => {
       listMeetings: new ListMeetingsUseCase(meetings),
       saveTemplate: new SaveTemplateUseCase(registry),
       deleteTemplate: new DeleteTemplateUseCase(registry, meetings),
+      exportTemplate: new ExportTemplateUseCase(registry),
+      importTemplates: new ImportTemplatesUseCase(registry),
       translator: new Translator('es'),
     });
     const root = document.createElement('div');
@@ -74,6 +78,8 @@ describe('TemplatesPage label overrides', () => {
         listMeetings: new ListMeetingsUseCase(meetings),
         saveTemplate: new SaveTemplateUseCase(registry),
         deleteTemplate: new DeleteTemplateUseCase(registry, meetings),
+        exportTemplate: new ExportTemplateUseCase(registry),
+        importTemplates: new ImportTemplatesUseCase(registry),
         translator: new Translator(language),
       });
       const root = document.createElement('div');

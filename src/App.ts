@@ -92,6 +92,8 @@ export class App {
       listTemplates: this.deps.listTemplates,
       listMeetings: this.deps.listMeetings,
       saveTemplate: this.deps.saveTemplate,
+      exportTemplate: this.deps.exportTemplate,
+      importTemplates: this.deps.importTemplates,
       deleteTemplate: this.deps.deleteTemplate,
       translator: this.deps.configStore.translator,
     });
