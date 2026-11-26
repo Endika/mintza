@@ -105,6 +105,7 @@ export class ImportMeetingUseCase {
     });
     if (!saved.ok) return saved;
     const [definition] = saved.value;
+    // Stryker disable next-line ConditionalExpression,BlockStatement: importTemplates returns exactly one definition for a one-template file
     if (!definition) return err(templateMissing(parsed.templateId));
     return ok(Template.fromDefinition(definition));
   }

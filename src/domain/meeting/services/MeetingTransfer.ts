@@ -166,8 +166,10 @@ const inferEnd = (
   durationMs: unknown,
   segments: readonly TranscriptSegment[],
 ): Date => {
-  const known = typeof durationMs === 'number' && Number.isFinite(durationMs) && durationMs >= 0;
-  const length = known ? durationMs : Math.max(0, ...segments.map((s) => s.endMs));
+  const length =
+    Number.isFinite(durationMs) && (durationMs as number) >= 0
+      ? (durationMs as number)
+      : Math.max(0, ...segments.map((s) => s.endMs));
   return new Date(startedAt.getTime() + length);
 };
 
@@ -257,8 +259,8 @@ const nonBlank = (v: unknown): string => {
 };
 
 const number = (v: unknown): number => {
-  if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error('Expected a number');
-  return v;
+  if (!Number.isFinite(v)) throw new Error('Expected a number');
+  return v as number;
 };
 
 const bool = (v: unknown): boolean => {

@@ -40,6 +40,13 @@ const memoryStorage = (): Storage => {
   };
 };
 
+const brokenStorage = (): Storage => ({
+  ...memoryStorage(),
+  getItem: () => {
+    throw new Error('storage unavailable');
+  },
+});
+
 const standup: TemplateDefinition = {
   id: 'standup',
   name: 'Standup',
@@ -157,7 +164,13 @@ describe('ImportMeetingUseCase', () => {
 
     expect(result).toMatchObject({
       ok: true,
-      value: { meetingId: original.id, regenerated: false, successCount: 0, failureCount: 0 },
+      value: {
+        meetingId: original.id,
+        regenerated: false,
+        successCount: 0,
+        failureCount: 0,
+        mindMapFailed: false,
+      },
     });
     const meeting = await stored(original.id);
     expect(meeting.importedAt).toEqual(NOW);
@@ -231,13 +244,118 @@ describe('ImportMeetingUseCase', () => {
     const original = originalMeeting(Template.fromDefinition(standup));
     const result = await run(original, { kind: 'as-is' });
 
-    expect(result.ok).toBe(false);
+    expect(result.ok ? 'ok' : result.error.reason).toBe('unknown');
     expect(repo.saves).toHaveLength(0);
   });
 
   it('refuses to recreate a template the file does not carry', async () => {
     const result = await run(originalMeeting(Template.work()), { kind: 'recreate' });
-    expect(result.ok).toBe(false);
+    expect(result.ok ? 'ok' : result.error.reason).toBe('unknown');
+  });
+
+  it('generates a valid different id for a colliding meeting when none is injected', async () => {
+    const plain = new ImportMeetingUseCase(
+      repo,
+      registry,
+      new ImportTemplatesUseCase(registry),
+      new RegenerateSummariesUseCase(summarizer, repo),
+      new GenerateMindMapUseCase(mindMap),
+      new SentimentScoreParser(),
+    );
+    const original = originalMeeting(Template.work());
+    await repo.save(original);
+    const preview = await plain.inspect(serializeMeeting(original));
+    if (!preview.ok) throw new Error('expected a valid file');
+    const result = await plain.execute({
+      parsed: preview.value.parsed,
+      choice: { kind: 'as-is' },
+      titleSuffix: 'imported',
+      copySuffix: 'copy',
+    });
+
+    expect(result.ok).toBe(true);
+    const id = result.ok ? result.value.meetingId.value : original.id.value;
+    expect(id).not.toBe(original.id.value);
+    expect(() => MeetingId.restore(id)).not.toThrow();
+    expect((await stored(MeetingId.restore(id))).title).toBe('Planning (imported)');
+  });
+
+  it('points the meeting at the saved copy when the recreated template id is taken', async () => {
+    await registry.save(standup);
+    const original = originalMeeting(Template.fromDefinition(standup));
+    const result = await run(original, { kind: 'recreate' });
+
+    expect(result.ok).toBe(true);
+    const meeting = await stored(original.id);
+    expect(meeting.template.id).not.toBe('standup');
+    expect(meeting.template.name).toBe('Standup (copy)');
+    const found = await registry.findById(meeting.template.id);
+    expect(found.ok && found.value?.name).toBe('Standup (copy)');
+  });
+
+  it('counts a failed final save as a failure', async () => {
+    repo.failSaveAt(3, new AppError('STORAGE_FAILED', 'disk full'));
+    const original = originalMeeting(Template.fromDefinition(standup));
+    const result = await run(original, { kind: 'use', templateId: 'generic' });
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        regenerated: true,
+        failureCount: 1,
+        successCount: Template.generic().summaryKinds.length,
+      },
+    });
+  });
+
+  describe('when a dependency fails', () => {
+    const boom = new AppError('STORAGE_FAILED', 'boom');
+
+    const choices: [string, TemplateChoice][] = [
+      ['as-is', { kind: 'as-is' }],
+      ['use', { kind: 'use', templateId: 'standup' }],
+      ['recreate', { kind: 'recreate' }],
+    ];
+    it.each(choices)('propagates a template storage error on %s', async (_name, choice) => {
+      const original = originalMeeting(Template.fromDefinition(standup));
+      const text = serializeMeeting(original);
+      const parsed = await useCase.inspect(text);
+      if (!parsed.ok) throw new Error('expected a valid file');
+      registry = new TemplateRegistry(new LocalStorageTemplateRepository(brokenStorage()));
+      build();
+      const result = await useCase.execute({
+        parsed: parsed.value.parsed,
+        choice,
+        titleSuffix: 'imported',
+        copySuffix: 'copy',
+      });
+
+      expect(result.ok ? 'ok' : result.error.reason).toBe('storage_unavailable');
+      expect(repo.saves).toHaveLength(0);
+    });
+
+    it('propagates a template storage error on inspect', async () => {
+      registry = new TemplateRegistry(new LocalStorageTemplateRepository(brokenStorage()));
+      build();
+      const result = await useCase.inspect(
+        serializeMeeting(originalMeeting(Template.fromDefinition(standup))),
+      );
+      expect(result.ok).toBe(false);
+    });
+
+    it('propagates a meeting lookup error', async () => {
+      const { parsed } = await inspect(originalMeeting(Template.work()));
+      repo.failNextFind(boom);
+      const result = await useCase.execute({
+        parsed,
+        choice: { kind: 'as-is' },
+        titleSuffix: 'imported',
+        copySuffix: 'copy',
+      });
+
+      expect(result).toEqual({ ok: false, error: boom });
+      expect(repo.saves).toHaveLength(0);
+    });
   });
 
   it('returns the storage error when saving fails', async () => {

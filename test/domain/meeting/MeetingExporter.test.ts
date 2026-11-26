@@ -55,6 +55,7 @@ describe('MeetingExporter', () => {
       format: string;
       summaries: Record<string, { content: string }>;
     };
+    expect(file.mimeType).toBe('application/json;charset=utf-8');
     expect(parsed.format).toBe('mintza-meeting');
     expect(parsed.summaries['one_liner']?.content).toBe('A short meeting.');
   });
