@@ -90,11 +90,23 @@ describe('TemplatesPage transfer', () => {
     expect(root.querySelector('#list')!.textContent).toContain('Retro');
   });
 
+  it('reports the plural count for several templates', async () => {
+    await open(
+      serializeTemplates([
+        { ...CUSTOM, id: 'retro-1', name: 'Retro' },
+        { ...CUSTOM, id: 'review-1', name: 'Review' },
+      ]),
+    );
+    await clickImport();
+
+    expect(status()).toBe('2 templates imported');
+  });
+
   it('shows the error and saves nothing for an invalid file', async () => {
     await open('not json');
     await clickImport();
 
-    expect(status()).not.toBe('');
+    expect(status()).toBe('That file is not valid JSON.');
     expect(await customCount()).toBe(1);
   });
 

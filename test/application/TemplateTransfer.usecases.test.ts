@@ -35,6 +35,13 @@ const def = (id: string, name = 'Standup'): TemplateDefinition => ({
 
 const COPY = 'imported';
 
+const throwingStorage = (method: 'getItem' | 'setItem'): Storage => ({
+  ...memoryStorage(),
+  [method]: () => {
+    throw new Error('storage down');
+  },
+});
+
 describe('template import and export', () => {
   let registry: TemplateRegistry;
   let importer: ImportTemplatesUseCase;
@@ -98,10 +105,71 @@ describe('template import and export', () => {
     expect(await ids()).toEqual([]);
   });
 
-  it('refuses to export a built-in template', async () => {
-    const result = await exporter.execute('work');
+  it.each([
+    ['work', 'builtin_readonly'],
+    ['missing', undefined],
+  ])('refuses to export %s', async (id, reason) => {
+    const result = await exporter.execute(id);
 
-    expect(!result.ok && result.error.reason).toBe('builtin_readonly');
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error.reason).toBe(reason);
+  });
+
+  it('never overwrites a template when the generated id is taken', async () => {
+    await registry.save(def('standup-1'));
+    await registry.save(def('standup-new', 'Existing'));
+    const generated = ['standup-new', 'standup-fresh'];
+    const retrying = new ImportTemplatesUseCase(registry, () => generated.shift()!);
+
+    const result = await retrying.execute({
+      text: serializeTemplates([def('standup-1')]),
+      copySuffix: COPY,
+    });
+
+    expect(result.ok && result.value[0]?.id).toBe('standup-fresh');
+    const kept = await registry.findById('standup-new');
+    expect(kept.ok && kept.value?.toDefinition().name).toBe('Existing');
+  });
+
+  it('keeps ids that only match Object prototype keys', async () => {
+    const result = await importer.execute({
+      text: serializeTemplates([def('a'), def('constructor')]),
+      copySuffix: COPY,
+    });
+
+    expect(result.ok && result.value.map((d) => d.id)).toEqual(['a', 'constructor']);
+    expect(await ids()).toEqual(['a', 'constructor']);
+  });
+
+  it.each([
+    ['export', (r: TemplateRegistry) => new ExportTemplateUseCase(r).execute('x')],
+    [
+      'import',
+      (r: TemplateRegistry) =>
+        new ImportTemplatesUseCase(r).execute({
+          text: serializeTemplates([def('a')]),
+          copySuffix: COPY,
+        }),
+    ],
+  ])('fails %s when storage cannot be read', async (_name, run) => {
+    const broken = new TemplateRegistry(
+      new LocalStorageTemplateRepository(throwingStorage('getItem')),
+    );
+
+    expect((await run(broken)).ok).toBe(false);
+  });
+
+  it('fails import when storage cannot be written', async () => {
+    const broken = new TemplateRegistry(
+      new LocalStorageTemplateRepository(throwingStorage('setItem')),
+    );
+
+    const result = await new ImportTemplatesUseCase(broken).execute({
+      text: serializeTemplates([def('a')]),
+      copySuffix: COPY,
+    });
+
+    expect(result.ok).toBe(false);
   });
 
   it('round-trips an exported template', async () => {

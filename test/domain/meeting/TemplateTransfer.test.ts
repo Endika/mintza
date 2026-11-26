@@ -46,11 +46,8 @@ describe('TemplateTransfer', () => {
     });
   });
 
-  it('drops invalid entries and unknown summary kinds', () => {
-    const text = JSON.stringify([
-      { ...def('a'), summaryKinds: ['decisions', 'bogus'] },
-      { id: 'broken' },
-    ]);
+  it('drops unknown summary kinds', () => {
+    const text = JSON.stringify([{ ...def('a'), summaryKinds: ['decisions', 'bogus'] }]);
     expect(parseTemplates(text)).toEqual({
       ok: true,
       value: [{ ...def('a'), summaryKinds: ['decisions'] }],
@@ -67,8 +64,15 @@ describe('TemplateTransfer', () => {
       JSON.stringify({ format: 'mintza-templates', version: 2, templates: [def('a')] }),
       'import_unsupported_version',
     ],
-    [JSON.stringify({ format: 'mintza-templates', version: 1, templates: [{}] }), 'import_empty'],
+    [
+      JSON.stringify({ format: 'mintza-templates', version: 1, templates: [{}] }),
+      'import_wrong_format',
+    ],
     ['[]', 'import_empty'],
+    [JSON.stringify([{ ...def('a'), id: ' ' }]), 'import_wrong_format'],
+    [JSON.stringify([{ ...def('a'), name: '' }]), 'import_wrong_format'],
+    [JSON.stringify([{ ...def('a'), systemRole: '  ' }]), 'import_wrong_format'],
+    [JSON.stringify([def('a'), { id: 'broken' }]), 'import_wrong_format'],
   ])('rejects %s with %s', (text, reason) => {
     expect(reasonOf(text)).toBe(reason);
   });
