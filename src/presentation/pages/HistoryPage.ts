@@ -362,7 +362,7 @@ export class HistoryPage implements Page {
         </span>
       </label>`;
     const select = `
-      <select id="import-template" class="field mt-2" aria-label="${escapeHtml(t.t('history.import_use'))}">
+      <select id="import-template" class="field mt-2" ${option === 'use' ? '' : 'disabled'} aria-label="${escapeHtml(t.t('history.import_use'))}">
         ${this.templates.map((tpl) => `<option value="${escapeHtml(tpl.id)}">${escapeHtml(templateDisplayName(tpl, this.t))}</option>`).join('')}
       </select>`;
     const slot = this.qs<HTMLElement>('#import-slot');
@@ -378,6 +378,12 @@ export class HistoryPage implements Page {
           <button type="button" id="import-cancel" class="btn-ghost">${t.t('history.import_cancel')}</button>
         </div>
       </section>`;
+    const templateSelect = this.qs<HTMLSelectElement>('#import-template');
+    for (const radio of slot.querySelectorAll<HTMLInputElement>('input[name="import-option"]')) {
+      radio.addEventListener('change', () => {
+        templateSelect.disabled = radio.value !== 'use';
+      });
+    }
     this.qs<HTMLButtonElement>('#import-cancel').addEventListener('click', () =>
       this.closeImportCard(),
     );

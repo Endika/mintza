@@ -81,7 +81,7 @@ export const parseMeeting = (text: string): Result<ImportedMeeting, AppError> =>
   try {
     return ok(readMeeting('format' in json ? json : upgradeLegacy(json)));
   } catch (cause) {
-    return failure('import_wrong_format', 'File is not a Mintza meeting file', cause);
+    return failure('import_not_meeting', 'File is not a Mintza meeting file', cause);
   }
 };
 
@@ -111,17 +111,20 @@ const nodeDto = (node: MindMapNode): unknown => ({
 /** The pre-versioned export carried no token counts, ids, mind map, stars or tags. */
 const upgradeLegacy = (raw: Json): Json => {
   const generatedAt = raw['endedAt'] ?? raw['startedAt'];
-  const segments = Array.isArray(raw['segments']) ? raw['segments'] : [];
-  const summaries = isObject(raw['summaries']) ? raw['summaries'] : {};
+  const { segments, summaries } = raw;
   return {
     ...raw,
-    segments: segments.map((s: unknown, i) => (isObject(s) ? { id: `segment-${i + 1}`, ...s } : s)),
-    summaries: Object.fromEntries(
-      Object.entries(summaries).map(([kind, s]) => [
-        kind,
-        isObject(s) ? { tokensIn: 0, tokensOut: 0, generatedAt, ...s } : s,
-      ]),
-    ),
+    segments: Array.isArray(segments)
+      ? segments.map((s: unknown, i) => (isObject(s) ? { id: `segment-${i + 1}`, ...s } : s))
+      : segments,
+    summaries: isObject(summaries)
+      ? Object.fromEntries(
+          Object.entries(summaries).map(([kind, s]) => [
+            kind,
+            isObject(s) ? { tokensIn: 0, tokensOut: 0, generatedAt, ...s } : s,
+          ]),
+        )
+      : summaries,
     starred: false,
     tags: [],
   };
@@ -130,9 +133,12 @@ const upgradeLegacy = (raw: Json): Json => {
 const readMeeting = (raw: Json): ImportedMeeting => {
   const templateId = nonBlank(raw['template']);
   const templateDefinition = readDefinition(raw['templateDefinition']);
-  const endedAt = optional(raw['endedAt'], date);
   const temperature = optional(raw['temperature'], (v) => TemperatureScore.of(number(v)));
   const mindMap = optional(raw['mindMap'], (v) => readMindMap(v, raw['mindMapUsage']));
+  const startedAt = date(raw['startedAt']);
+  const segments = list(raw['segments']).map(readSegment);
+  const endedAt =
+    optional(raw['endedAt'], date) ?? inferEnd(startedAt, raw['durationMs'], segments);
   return {
     templateId,
     ...(templateDefinition ? { templateDefinition } : {}),
@@ -140,9 +146,9 @@ const readMeeting = (raw: Json): ImportedMeeting => {
       id: MeetingId.restore(text(raw['id'])),
       title: nonBlank(raw['title']),
       language: Language.of(text(raw['language']) as LanguageCode),
-      startedAt: date(raw['startedAt']),
-      ...(endedAt ? { endedAt } : {}),
-      segments: list(raw['segments']).map(readSegment),
+      startedAt,
+      endedAt,
+      segments,
       summaries: readSummaries(raw['summaries']),
       ...(temperature ? { temperature } : {}),
       ...(mindMap ? { mindMap } : {}),
@@ -152,6 +158,17 @@ const readMeeting = (raw: Json): ImportedMeeting => {
       totalPausedMs: 0,
     },
   };
+};
+
+/** A file without `endedAt` must not import as a meeting that is still running. */
+const inferEnd = (
+  startedAt: Date,
+  durationMs: unknown,
+  segments: readonly TranscriptSegment[],
+): Date => {
+  const known = typeof durationMs === 'number' && Number.isFinite(durationMs) && durationMs >= 0;
+  const length = known ? durationMs : Math.max(0, ...segments.map((s) => s.endMs));
+  return new Date(startedAt.getTime() + length);
 };
 
 const readDefinition = (raw: unknown): TemplateDefinition | undefined =>
@@ -266,7 +283,7 @@ const optional = <T>(v: unknown, read: (value: unknown) => T): T | undefined =>
   v === undefined || v === null ? undefined : read(v);
 
 const wrongFormat = (): Result<never, AppError> =>
-  failure('import_wrong_format', 'File is not a Mintza meeting file');
+  failure('import_not_meeting', 'File is not a Mintza meeting file');
 
 const failure = (reason: ErrorReason, message: string, cause?: unknown): Result<never, AppError> =>
   err(new AppError('CONFIG_INVALID', message, cause, [], reason));
