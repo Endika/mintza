@@ -14,12 +14,19 @@ const valid = {
 };
 
 describe('sanitizeTemplate', () => {
-  it.each([null, 'text', 3, [], {}, { ...valid, id: 4 }, { ...valid, summaryKinds: 'x' }])(
-    'rejects %j',
-    (raw) => {
-      expect(sanitizeTemplate(raw)).toBeNull();
-    },
-  );
+  it.each([
+    null,
+    'text',
+    3,
+    [],
+    {},
+    { ...valid, id: 4 },
+    { ...valid, id: ' ' },
+    { ...valid, name: '' },
+    { ...valid, summaryKinds: 'x' },
+  ])('rejects %j', (raw) => {
+    expect(sanitizeTemplate(raw)).toBeNull();
+  });
 
   it('returns a custom definition without unknown kinds', () => {
     expect(sanitizeTemplate(valid)).toEqual({
