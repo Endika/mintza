@@ -30,6 +30,7 @@ export type ErrorReason =
   | 'id_collision'
   | 'import_not_json'
   | 'import_wrong_format'
+  | 'import_not_meeting'
   | 'import_unsupported_version'
   | 'import_empty'
   | 'unknown';

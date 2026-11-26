@@ -267,6 +267,7 @@ export type TranslationKey =
   | 'error.builtin_readonly'
   | 'error.import_not_json'
   | 'error.import_wrong_format'
+  | 'error.import_not_meeting'
   | 'error.import_unsupported_version'
   | 'error.import_empty'
   | 'error.id_collision'
@@ -572,6 +573,7 @@ const EN: Translations = {
   'error.builtin_readonly': "Built-in templates can't be changed or deleted.",
   'error.import_not_json': 'That file is not valid JSON.',
   'error.import_wrong_format': 'That file is not a Mintza template file.',
+  'error.import_not_meeting': 'That file is not a Mintza meeting file.',
   'error.import_unsupported_version': 'That file was made by a newer version of Mintza.',
   'error.import_empty': 'The file contains no valid template.',
   'error.id_collision': 'A built-in template already uses that name. Pick another one.',
@@ -880,6 +882,7 @@ const ES: Translations = {
   'error.builtin_readonly': 'Las plantillas integradas no se pueden cambiar ni borrar.',
   'error.import_not_json': 'Ese archivo no es un JSON válido.',
   'error.import_wrong_format': 'Ese archivo no es un archivo de plantillas de Mintza.',
+  'error.import_not_meeting': 'Ese archivo no es una reunión exportada de Mintza.',
   'error.import_unsupported_version': 'Ese archivo lo creó una versión más nueva de Mintza.',
   'error.import_empty': 'El archivo no contiene ninguna plantilla válida.',
   'error.id_collision': 'Ese nombre ya lo usa una plantilla integrada. Elige otro.',
@@ -1192,6 +1195,7 @@ const EU: Translations = {
   'error.builtin_readonly': 'Txantiloi integratuak ezin dira aldatu edo ezabatu.',
   'error.import_not_json': 'Fitxategi hori ez da JSON baliozkoa.',
   'error.import_wrong_format': 'Fitxategi hori ez da Mintzaren txantiloi-fitxategia.',
+  'error.import_not_meeting': 'Fitxategi hori ez da Mintzako bilera-fitxategi bat.',
   'error.import_unsupported_version': 'Fitxategi hori Mintzaren bertsio berriago batek sortu du.',
   'error.import_empty': 'Fitxategiak ez dauka txantiloi baliozkorik.',
   'error.id_collision': 'Izen hori txantiloi integratu batek darabil. Aukeratu beste bat.',

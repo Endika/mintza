@@ -22,6 +22,7 @@ const REASON_TEXT: Record<ErrorReason, TranslationKey> = {
   id_collision: 'error.id_collision',
   import_not_json: 'error.import_not_json',
   import_wrong_format: 'error.import_wrong_format',
+  import_not_meeting: 'error.import_not_meeting',
   import_unsupported_version: 'error.import_unsupported_version',
   import_empty: 'error.import_empty',
   unknown: 'error.unknown',
