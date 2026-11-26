@@ -5,6 +5,21 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.25.0](https://github.com/Endika/mintza/compare/v1.24.0...v1.25.0) (2026-11-26)
+
+
+### Features
+
+* **history:** import meetings from a JSON file ([9470bfc](https://github.com/Endika/mintza/commit/9470bfc8225250e337060b726e5573f40833923f))
+* **meetings:** add a lossless versioned meeting transfer format ([71c8899](https://github.com/Endika/mintza/commit/71c8899dcf41fce1887bd4ff3b390213ab809b84))
+* **meetings:** add the import meeting use case ([99425fd](https://github.com/Endika/mintza/commit/99425fde76b1cf8447f016f6f9743c940abe6e08))
+* **meetings:** remember when a meeting was imported ([c0ab96b](https://github.com/Endika/mintza/commit/c0ab96bd82677291638ca043976e81e30208daae))
+
+
+### Bug Fixes
+
+* **meetings:** explain an invalid meeting file ([4a49a35](https://github.com/Endika/mintza/commit/4a49a356a39d167ecb69e191deab8d41a9794717))
+
 ## [1.24.0](https://github.com/Endika/mintza/compare/v1.23.5...v1.24.0) (2026-11-26)
 
 
