@@ -5,6 +5,21 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.24.0](https://github.com/Endika/mintza/compare/v1.23.5...v1.24.0) (2026-11-26)
+
+
+### Features
+
+* **templates:** add template import and export use cases ([0f4e727](https://github.com/Endika/mintza/commit/0f4e727b9038d3c8d6b60dbea7e8427f72dfc4e7))
+* **templates:** add template transfer format ([13fb651](https://github.com/Endika/mintza/commit/13fb6511ea083664614613159d979b67790e3d06))
+* **templates:** export and import templates from the templates page ([204eff5](https://github.com/Endika/mintza/commit/204eff5b9b0cf7a89ff6f297b1aba282aa29d15e))
+
+
+### Bug Fixes
+
+* **templates:** never overwrite a template on import ([a6e02ff](https://github.com/Endika/mintza/commit/a6e02ff2ed77f9748836442a525e9410c6372b54))
+* **templates:** reject blank template ids and names when sanitizing ([1ef0d10](https://github.com/Endika/mintza/commit/1ef0d1091b4b54faee1ab39fa56edb0d28130db9))
+
 ## [1.23.5](https://github.com/Endika/mintza/compare/v1.23.4...v1.23.5) (2026-10-30)
 
 
