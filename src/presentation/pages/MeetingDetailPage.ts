@@ -21,6 +21,7 @@ import { templateDisplayName } from '../i18n/templateDisplayName';
 import { Router, type Page } from '../router/Router';
 import { escapeHtml } from '../util/escapeHtml';
 import { meetingTitle } from '../util/meetingTitle';
+import { BADGE } from '../util/badge';
 import { metaLine } from '../util/metaLine';
 import { orderSummaries } from '../util/orderSummaries';
 import { renderMarkdown } from '../util/renderMarkdown';
@@ -160,6 +161,7 @@ export class MeetingDetailPage implements Page {
       <header class="mb-6">
         <h1 class="break-words text-3xl font-semibold tracking-tight sm:text-4xl">${escapeHtml(meetingTitle(meeting, t))}</h1>
         <p class="mt-2 text-sm text-fg-muted">${metaLine([when, templateDisplayName(meeting.template, t), languageName(meeting.language.code)])}</p>
+        ${meeting.importedAt ? `<p class="mt-2"><span class="${BADGE}">${t.t('meeting.imported')}</span></p>` : ''}
         <div id="detail-meta" class="mt-0.5"></div>
       </header>
 

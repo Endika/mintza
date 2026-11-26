@@ -14,6 +14,7 @@ import { ok, type Result } from '../../src/shared/result/Result';
 import { Translator } from '../../src/presentation/i18n/Translator';
 import { HistoryPage } from '../../src/presentation/pages/HistoryPage';
 import { InMemoryMeetingRepository } from '../fakes/InMemoryMeetingRepository';
+import { buildImporters } from './importFixtures';
 import { finishedMeeting, settle } from './meetingFixtures';
 
 const STANDUP = Template.fromDefinition({
@@ -46,6 +47,7 @@ const renderHistory = async (
 ): Promise<{ root: HTMLElement; repo: InMemoryMeetingRepository }> => {
   const page = new HistoryPage({
     listTemplates: templates,
+    importMeeting: buildImporters(repo).importMeeting,
     listMeetings: new ListMeetingsUseCase(repo),
     getMeeting: new GetMeetingUseCase(repo),
     saveMeeting: new SaveMeetingUseCase(repo),

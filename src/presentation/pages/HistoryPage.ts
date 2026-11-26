@@ -1,6 +1,11 @@
 import type { ClearMeetingsUseCase } from '../../application/use-cases/ClearMeetingsUseCase';
 import type { DeleteMeetingUseCase } from '../../application/use-cases/DeleteMeetingUseCase';
 import type { GetMeetingUseCase } from '../../application/use-cases/GetMeetingUseCase';
+import type {
+  ImportMeetingUseCase,
+  ImportPreview,
+  TemplateChoice,
+} from '../../application/use-cases/ImportMeetingUseCase';
 import type { ListMeetingsUseCase } from '../../application/use-cases/ListMeetingsUseCase';
 import type { ListTemplatesUseCase } from '../../application/use-cases/ListTemplatesUseCase';
 import type { SaveMeetingUseCase } from '../../application/use-cases/SaveMeetingUseCase';
@@ -12,11 +17,14 @@ import { errorText } from '../i18n/errorText';
 import { templateDisplayName } from '../i18n/templateDisplayName';
 import type { Translator } from '../i18n/Translator';
 import type { TranslationKey } from '../i18n/translations';
-import type { Page } from '../router/Router';
+import { Router, type Page } from '../router/Router';
+import { BADGE } from '../util/badge';
 import { escapeHtml } from '../util/escapeHtml';
 import { formatDuration } from '../util/formatDuration';
 import { meetingTitle } from '../util/meetingTitle';
+import { defaultImportOption, toTemplateChoice, type ImportOption } from '../util/importChoice';
 import { metaLine } from '../util/metaLine';
+import { pickTextFile } from '../util/pickTextFile';
 
 export interface HistoryPageDeps {
   readonly listMeetings: ListMeetingsUseCase;
@@ -25,7 +33,9 @@ export interface HistoryPageDeps {
   readonly saveMeeting: SaveMeetingUseCase;
   readonly deleteMeeting: DeleteMeetingUseCase;
   readonly clearMeetings: ClearMeetingsUseCase;
+  readonly importMeeting: Pick<ImportMeetingUseCase, 'inspect' | 'execute'>;
   readonly translator: Translator;
+  readonly pickFile?: () => Promise<string | null>;
 }
 
 type SortMode = 'recent' | 'oldest' | 'longest' | 'title';
@@ -46,7 +56,11 @@ export class HistoryPage implements Page {
   private query = '';
   private sort: SortMode = 'recent';
 
-  constructor(private readonly deps: HistoryPageDeps) {}
+  private readonly pickFile: () => Promise<string | null>;
+
+  constructor(private readonly deps: HistoryPageDeps) {
+    this.pickFile = deps.pickFile ?? (() => pickTextFile());
+  }
 
   private get t(): Translator {
     return this.deps.translator;
@@ -57,7 +71,10 @@ export class HistoryPage implements Page {
     const t = this.t;
     root.innerHTML = `
       <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
-        <h1 tabindex="-1" class="mb-5 text-3xl font-semibold tracking-tight sm:mb-6 sm:text-4xl">${t.t('history.title')}</h1>
+        <header class="mb-5 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
+          <h1 tabindex="-1" class="min-w-0 break-words text-3xl font-semibold tracking-tight sm:text-4xl">${t.t('history.title')}</h1>
+          <button id="btn-import" type="button" class="btn-secondary">${t.t('history.import')}</button>
+        </header>
         <div id="filters" class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center hidden">
           <label for="search" class="sr-only">${t.t('history.search_label')}</label>
           <input
@@ -78,6 +95,7 @@ export class HistoryPage implements Page {
           </div>
         </div>
         <p id="history-status" class="mb-4 text-sm text-danger empty:sr-only" role="status"></p>
+        <div id="import-slot"></div>
         <div id="list">
           <p class="text-fg-muted">${t.t('history.loading')}</p>
         </div>
@@ -86,6 +104,10 @@ export class HistoryPage implements Page {
         </div>
       </div>
     `;
+    this.qs<HTMLButtonElement>('#btn-import').addEventListener(
+      'click',
+      () => void this.handleImport(),
+    );
     this.qs<HTMLButtonElement>('#btn-clear').addEventListener('click', () => {
       void this.handleClearAll();
     });
@@ -166,6 +188,7 @@ export class HistoryPage implements Page {
         <a href="#/meeting?id=${id}" class="min-w-0 flex-1 rounded-[calc(var(--radius-card)-0.5rem)] px-3 py-2.5 transition-colors duration-150 hover:bg-raised">
           <h2 class="line-clamp-2 break-words font-semibold">${title}</h2>
           <p class="mt-0.5 text-sm text-fg-muted tabular">${this.metaHtml(m)}</p>
+          ${m.imported ? `<p class="mt-1.5"><span class="${BADGE}">${t.t('meeting.imported')}</span></p>` : ''}
         </a>
         <button type="button" data-star="${id}" aria-pressed="${m.starred}" aria-label="${escapeHtml(t.t('history.star_named', { title: display }))}" class="${ICON_BUTTON} ${m.starred ? 'text-fg' : 'text-fg-muted'}">${m.starred ? ICON_STAR_FILLED : ICON_STAR}</button>
         <button type="button" data-delete="${id}" aria-label="${escapeHtml(t.t('history.delete_named', { title: display }))}" class="${ICON_BUTTON} text-fg-muted hover:text-danger">${ICON_TRASH}</button>
@@ -283,6 +306,107 @@ export class HistoryPage implements Page {
     } else {
       this.setStatus(`${this.t.t('history.clear_failed')} ${errorText(result.error, this.t)}`);
     }
+  }
+
+  private async handleImport(): Promise<void> {
+    const text = await this.pickFile();
+    if (text === null) return;
+    this.setStatus('');
+    this.closeImportCard();
+    const preview = await this.deps.importMeeting.inspect(text);
+    if (!preview.ok) {
+      this.setStatus(errorText(preview.error, this.t));
+      return;
+    }
+    if (preview.value.templateAvailable) {
+      await this.runImport(preview.value, { kind: 'as-is' });
+      return;
+    }
+    this.openImportCard(preview.value);
+  }
+
+  private async runImport(preview: ImportPreview, choice: TemplateChoice): Promise<void> {
+    const t = this.t;
+    const result = await this.deps.importMeeting.execute({
+      parsed: preview.parsed,
+      choice,
+      titleSuffix: t.t('meeting.imported_suffix'),
+      copySuffix: t.t('templates.copy_suffix'),
+    });
+    if (!result.ok) {
+      this.setStatus(errorText(result.error, t));
+      return;
+    }
+    const { regenerated, successCount, failureCount, mindMapFailed } = result.value;
+    const failed = failureCount + (mindMapFailed ? 1 : 0);
+    if (regenerated && failed > 0) {
+      // Staying here keeps the message visible; the saved meeting shows up in the list.
+      this.closeImportCard();
+      await this.load();
+      this.setStatus(t.t('home.summaries_result', { ok: successCount, failed }));
+      return;
+    }
+    Router.navigate(`/meeting?id=${encodeURIComponent(result.value.meetingId.value)}`);
+  }
+
+  private openImportCard(preview: ImportPreview): void {
+    const t = this.t;
+    const option = defaultImportOption(preview.canRecreate);
+    const choiceRow = (value: ImportOption, label: string, hint: string, extra = ''): string => `
+      <label class="flex min-h-11 cursor-pointer items-start gap-3 py-3">
+        <input type="radio" name="import-option" value="${value}" class="mt-1 size-4 shrink-0 accent-action" ${value === option ? 'checked' : ''} />
+        <span class="min-w-0 flex-1">
+          <span class="block font-semibold">${label}</span>
+          <span class="mt-0.5 block text-sm text-fg-muted">${hint}</span>
+          ${extra}
+        </span>
+      </label>`;
+    const select = `
+      <select id="import-template" class="field mt-2" aria-label="${escapeHtml(t.t('history.import_use'))}">
+        ${this.templates.map((tpl) => `<option value="${escapeHtml(tpl.id)}">${escapeHtml(templateDisplayName(tpl, this.t))}</option>`).join('')}
+      </select>`;
+    const slot = this.qs<HTMLElement>('#import-slot');
+    slot.innerHTML = `
+      <section id="import-card" class="card mb-4" aria-labelledby="import-title">
+        <h2 id="import-title" class="font-semibold">${t.t('history.import_missing_title')}</h2>
+        <fieldset class="mt-2 min-w-0 divide-y divide-line">
+          ${preview.canRecreate ? choiceRow('recreate', t.t('history.import_recreate'), t.t('history.import_recreate_hint')) : ''}
+          ${choiceRow('use', t.t('history.import_use'), t.t('history.import_use_hint'), select)}
+        </fieldset>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="button" id="import-confirm" class="btn-action">${t.t('history.import_confirm')}</button>
+          <button type="button" id="import-cancel" class="btn-ghost">${t.t('history.import_cancel')}</button>
+        </div>
+      </section>`;
+    this.qs<HTMLButtonElement>('#import-cancel').addEventListener('click', () =>
+      this.closeImportCard(),
+    );
+    this.qs<HTMLButtonElement>('#import-confirm').addEventListener(
+      'click',
+      () => void this.confirmImport(preview),
+    );
+  }
+
+  private async confirmImport(preview: ImportPreview): Promise<void> {
+    const picked = this.qs<HTMLElement>('#import-card').querySelector<HTMLInputElement>(
+      'input[name="import-option"]:checked',
+    );
+    const templateId = this.qs<HTMLSelectElement>('#import-template').value;
+    const option: ImportOption = picked?.value === 'recreate' ? 'recreate' : 'use';
+    const confirm = this.qs<HTMLButtonElement>('#import-confirm');
+    confirm.disabled = true;
+    confirm.textContent = this.t.t(option === 'use' ? 'meeting.regenerating' : 'history.importing');
+    this.setStatus('');
+    await this.runImport(preview, toTemplateChoice(option, templateId));
+    const stillThere = this.root?.querySelector<HTMLButtonElement>('#import-confirm');
+    if (stillThere) {
+      stillThere.disabled = false;
+      stillThere.textContent = this.t.t('history.import_confirm');
+    }
+  }
+
+  private closeImportCard(): void {
+    this.qs<HTMLElement>('#import-slot').innerHTML = '';
   }
 
   private setStatus(message: string): void {

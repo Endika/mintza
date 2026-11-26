@@ -89,6 +89,17 @@ export type TranslationKey =
   | 'settings.save_failed'
   | 'settings.clear_failed'
   | 'history.title'
+  | 'history.import'
+  | 'history.import_missing_title'
+  | 'history.import_recreate'
+  | 'history.import_recreate_hint'
+  | 'history.import_use'
+  | 'history.import_use_hint'
+  | 'history.import_confirm'
+  | 'history.import_cancel'
+  | 'history.importing'
+  | 'meeting.imported'
+  | 'meeting.imported_suffix'
   | 'history.loading'
   | 'history.empty'
   | 'history.search_placeholder'
@@ -375,6 +386,18 @@ const EN: Translations = {
   'settings.save_failed': "Couldn't save your settings.",
   'settings.clear_failed': "Couldn't clear your keys.",
   'history.title': 'History',
+  'history.import': 'Import',
+  'history.import_missing_title': "This meeting's template isn't here",
+  'history.import_recreate': 'Recreate the template from the file',
+  'history.import_recreate_hint': 'Keeps its summaries. No cost.',
+  'history.import_use': 'Use one of my templates',
+  'history.import_use_hint':
+    'Summaries, mind map and sentiment score are regenerated with your keys; this has a cost.',
+  'history.import_confirm': 'Import',
+  'history.import_cancel': 'Cancel',
+  'history.importing': 'Importing…',
+  'meeting.imported': 'Imported',
+  'meeting.imported_suffix': 'imported',
   'history.loading': 'Loading…',
   'history.empty': 'Your meetings will appear here.',
   'history.search_placeholder': 'Search meetings…',
@@ -669,6 +692,18 @@ const ES: Translations = {
   'settings.save_failed': 'No se pudieron guardar los ajustes.',
   'settings.clear_failed': 'No se pudieron borrar las claves.',
   'history.title': 'Historial',
+  'history.import': 'Importar',
+  'history.import_missing_title': 'La plantilla de esta reunión no está aquí',
+  'history.import_recreate': 'Recrear la plantilla desde el archivo',
+  'history.import_recreate_hint': 'Conserva sus resúmenes. Sin coste.',
+  'history.import_use': 'Usar una de mis plantillas',
+  'history.import_use_hint':
+    'Los resúmenes, el mapa mental y la puntuación de sentimiento se regeneran con tus claves; esto tiene un coste.',
+  'history.import_confirm': 'Importar',
+  'history.import_cancel': 'Cancelar',
+  'history.importing': 'Importando…',
+  'meeting.imported': 'Importada',
+  'meeting.imported_suffix': 'importada',
   'history.loading': 'Cargando…',
   'history.empty': 'Tus reuniones aparecerán aquí.',
   'history.search_placeholder': 'Buscar reuniones…',
@@ -966,6 +1001,18 @@ const EU: Translations = {
   'settings.save_failed': 'Ezin izan dira ezarpenak gorde.',
   'settings.clear_failed': 'Ezin izan dira gakoak garbitu.',
   'history.title': 'Historia',
+  'history.import': 'Inportatu',
+  'history.import_missing_title': 'Bilera honen txantiloia ez dago hemen',
+  'history.import_recreate': 'Birsortu txantiloia fitxategitik',
+  'history.import_recreate_hint': 'Bere laburpenak gordetzen ditu. Kosturik gabe.',
+  'history.import_use': 'Erabili nire txantiloietako bat',
+  'history.import_use_hint':
+    'Laburpenak, buru-mapa eta sentimendu-puntuazioa zure gakoekin birsortzen dira; honek kostua du.',
+  'history.import_confirm': 'Inportatu',
+  'history.import_cancel': 'Utzi',
+  'history.importing': 'Inportatzen…',
+  'meeting.imported': 'Inportatua',
+  'meeting.imported_suffix': 'inportatua',
   'history.loading': 'Kargatzen…',
   'history.empty': 'Zure bilerak hemen agertuko dira.',
   'history.search_placeholder': 'Bilatu bilerak…',
