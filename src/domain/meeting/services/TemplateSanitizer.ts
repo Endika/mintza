@@ -24,17 +24,14 @@ const isRawTemplate = (raw: unknown): raw is RawTemplate => {
   if (typeof raw !== 'object' || raw === null) return false;
   const obj = raw as Record<string, unknown>;
   return (
-    isFilled(obj['id']) &&
-    isFilled(obj['name']) &&
+    typeof obj['id'] === 'string' &&
+    typeof obj['name'] === 'string' &&
     typeof obj['systemRole'] === 'string' &&
     typeof obj['mindMapStructure'] === 'string' &&
     Array.isArray(obj['summaryKinds']) &&
     Array.isArray(obj['featuredOrder'])
   );
 };
-
-const isFilled = (value: unknown): value is string =>
-  typeof value === 'string' && value.trim().length > 0;
 
 const isKind = (value: unknown): value is SummaryKind =>
   typeof value === 'string' && isSummaryKind(value);

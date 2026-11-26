@@ -189,7 +189,7 @@ export class TemplatesPage implements Page {
   }
 
   private async handleDelete(id: string): Promise<void> {
-    if (id in BUILT_IN_TEMPLATES) return;
+    if (Object.hasOwn(BUILT_IN_TEMPLATES, id)) return;
     const t = this.deps.translator;
     if (!this.confirm(t.t('templates.confirm_delete'))) return;
     const result = await this.deps.deleteTemplate.execute({ id });
@@ -197,8 +197,7 @@ export class TemplatesPage implements Page {
       this.qs<HTMLElement>('#list-status').textContent = '';
       await this.refresh();
     } else {
-      this.qs<HTMLElement>('#list-status').textContent =
-        `${t.t('templates.delete_failed')} ${errorText(result.error, t)}`;
+      this.showStatus(`${t.t('templates.delete_failed')} ${errorText(result.error, t)}`);
     }
   }
 
@@ -220,6 +219,7 @@ export class TemplatesPage implements Page {
       text,
       copySuffix: t.t('templates.copy_suffix'),
     });
+    await this.refresh();
     if (!result.ok) {
       this.showStatus(errorText(result.error, t));
       return;
@@ -229,7 +229,6 @@ export class TemplatesPage implements Page {
       count === 1 ? t.t('templates.imported_one') : t.t('templates.imported', { count }),
       false,
     );
-    await this.refresh();
   }
 
   private showStatus(message: string, failed = true): void {

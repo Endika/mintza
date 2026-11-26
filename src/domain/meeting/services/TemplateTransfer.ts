@@ -22,9 +22,18 @@ export const parseTemplates = (text: string): Result<TemplateDefinition[], AppEr
   }
   const entries = entriesOf(json);
   if (!entries.ok) return entries;
-  const defs = entries.value.flatMap((entry) => sanitizeTemplate(entry) ?? []);
-  return defs.length > 0 ? ok(defs) : failure('import_empty', 'File holds no valid template');
+  if (entries.value.length === 0) return failure('import_empty', 'File holds no valid template');
+  const defs: TemplateDefinition[] = [];
+  for (const entry of entries.value) {
+    const def = sanitizeTemplate(entry);
+    if (def === null || hasBlankField(def)) return wrongFormat();
+    defs.push(def);
+  }
+  return ok(defs);
 };
+
+const hasBlankField = (def: TemplateDefinition): boolean =>
+  [def.id, def.name, def.systemRole].some((value) => value.trim().length === 0);
 
 const entriesOf = (json: unknown): Result<unknown[], AppError> => {
   if (Array.isArray(json)) return ok(json);
