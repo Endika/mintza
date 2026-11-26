@@ -11,12 +11,27 @@ export class InMemoryMeetingRepository implements MeetingRepository {
   readonly saves: Meeting[] = [];
   private readonly meetings = new Map<string, Meeting>();
   private failNextSaveWith: AppError | null = null;
+  private failNextFindWith: AppError | null = null;
+  private failSaveCall: { readonly at: number; readonly error: AppError } | null = null;
+  private saveCalls = 0;
 
   failNextSave(error: AppError): void {
     this.failNextSaveWith = error;
   }
 
+  failNextFind(error: AppError): void {
+    this.failNextFindWith = error;
+  }
+
+  /** Fails the nth call to `save` from now on (1 is the next one). */
+  failSaveAt(n: number, error: AppError): void {
+    this.failSaveCall = { at: this.saveCalls + n, error };
+  }
+
   save(meeting: Meeting): Promise<Result<void, AppError>> {
+    this.saveCalls += 1;
+    if (this.failSaveCall?.at === this.saveCalls)
+      return Promise.resolve(err(this.failSaveCall.error));
     if (this.failNextSaveWith) {
       const e = this.failNextSaveWith;
       this.failNextSaveWith = null;
@@ -28,6 +43,11 @@ export class InMemoryMeetingRepository implements MeetingRepository {
   }
 
   findById(id: MeetingId): Promise<Result<Meeting | null, AppError>> {
+    if (this.failNextFindWith) {
+      const e = this.failNextFindWith;
+      this.failNextFindWith = null;
+      return Promise.resolve(err(e));
+    }
     return Promise.resolve(ok(this.meetings.get(id.value) ?? null));
   }
 

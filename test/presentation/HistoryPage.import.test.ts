@@ -84,6 +84,12 @@ describe('HistoryPage import', () => {
     expect(card.querySelector<HTMLInputElement>('input[value="recreate"]')!.checked).toBe(true);
     expect(await storedCount(repo)).toBe(0);
 
+    const select = root.querySelector<HTMLSelectElement>('#import-template')!;
+    expect(select.disabled).toBe(true);
+    card.querySelector<HTMLInputElement>('input[value="use"]')!.click();
+    expect(select.disabled).toBe(false);
+    card.querySelector<HTMLInputElement>('input[value="recreate"]')!.click();
+    expect(select.disabled).toBe(true);
     card.querySelector<HTMLInputElement>('input[value="use"]')!.click();
     root.querySelector<HTMLSelectElement>('#import-template')!.value = Template.interview().id;
     root.querySelector<HTMLButtonElement>('#import-confirm')!.click();
@@ -104,11 +110,39 @@ describe('HistoryPage import', () => {
     expect(window.location.hash).toBe('');
   });
 
+  it('says so when the file is JSON but not a meeting', async () => {
+    const { root } = await render('{"hello": 1}');
+    await clickImport(root);
+
+    expect(root.querySelector('#history-status')!.textContent).toBe(
+      'That file is not a Mintza meeting file.',
+    );
+  });
+
+  it('offers only the local template when a legacy file carries no definition', async () => {
+    const legacy = JSON.stringify({
+      id: '3f2b8c1e-5d4a-4b7e-9c10-1a2b3c4d5e6f',
+      title: 'Old',
+      template: 'long-gone',
+      language: 'en',
+      startedAt: '2026-05-21T10:00:00.000Z',
+      endedAt: '2026-05-21T10:00:09.000Z',
+      segments: [],
+      summaries: {},
+    });
+    const { root } = await render(legacy);
+    await clickImport(root);
+
+    const radios = root.querySelectorAll<HTMLInputElement>('#import-card input[type="radio"]');
+    expect([...radios].map((r) => [r.value, r.checked])).toEqual([['use', true]]);
+    expect(root.querySelector<HTMLSelectElement>('#import-template')!.disabled).toBe(false);
+  });
+
   it('tells the user when the file is not a meeting', async () => {
     const { root, repo } = await render('not json');
     await clickImport(root);
 
-    expect(root.querySelector('#history-status')!.textContent).not.toBe('');
+    expect(root.querySelector('#history-status')!.textContent).toBe('That file is not valid JSON.');
     expect(root.querySelector('#import-card')).toBeNull();
     expect(await storedCount(repo)).toBe(0);
   });
@@ -119,6 +153,8 @@ describe('HistoryPage import', () => {
     root.querySelector<HTMLButtonElement>('#import-confirm')!.click();
     await settle();
 
+    const saved = await repo.list();
+    expect(saved.ok && saved.value[0]?.templateKind).toBe(STANDUP.id);
     const again = await render(null, repo);
     expect(again.root.querySelector('#list li')?.textContent).toContain('Imported');
   });
