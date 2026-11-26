@@ -15,7 +15,7 @@ export class TemplateRegistry {
   }
 
   async findById(id: string): Promise<Result<Template | null, AppError>> {
-    if (id in BUILT_IN_TEMPLATES) {
+    if (Object.hasOwn(BUILT_IN_TEMPLATES, id)) {
       return ok(Template.fromDefinition(BUILT_IN_TEMPLATES[id as keyof typeof BUILT_IN_TEMPLATES]));
     }
     const loaded = await this.repository.load();

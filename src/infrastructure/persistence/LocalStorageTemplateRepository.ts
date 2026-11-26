@@ -49,7 +49,7 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
         ),
       );
     }
-    if (definition.id in BUILT_IN_TEMPLATES) {
+    if (Object.hasOwn(BUILT_IN_TEMPLATES, definition.id)) {
       return err(
         new AppError(
           'CONFIG_INVALID',
@@ -73,7 +73,7 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
   }
 
   async delete(id: string): Promise<Result<void, AppError>> {
-    if (id in BUILT_IN_TEMPLATES) {
+    if (Object.hasOwn(BUILT_IN_TEMPLATES, id)) {
       return err(
         new AppError(
           'CONFIG_INVALID',

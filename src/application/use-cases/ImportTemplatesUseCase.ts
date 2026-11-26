@@ -24,7 +24,7 @@ export class ImportTemplatesUseCase {
     const taken = new Set(existing.value.map((t) => t.id));
     const saved: TemplateDefinition[] = [];
     for (const def of parsed.value) {
-      const definition = taken.has(def.id) ? this.asCopy(def, input.copySuffix) : def;
+      const definition = taken.has(def.id) ? this.asCopy(def, input.copySuffix, taken) : def;
       taken.add(definition.id);
       const result = await this.registry.save(definition);
       if (!result.ok) return err(result.error);
@@ -33,7 +33,17 @@ export class ImportTemplatesUseCase {
     return ok(saved);
   }
 
-  private asCopy(def: TemplateDefinition, copySuffix: string): TemplateDefinition {
-    return { ...def, id: this.generateId(def.name), name: `${def.name} (${copySuffix})` };
+  private asCopy(
+    def: TemplateDefinition,
+    copySuffix: string,
+    taken: ReadonlySet<string>,
+  ): TemplateDefinition {
+    return { ...def, id: this.freeId(def.name, taken), name: `${def.name} (${copySuffix})` };
+  }
+
+  private freeId(name: string, taken: ReadonlySet<string>): string {
+    let id = this.generateId(name);
+    while (taken.has(id)) id = this.generateId(name);
+    return id;
   }
 }

@@ -91,9 +91,10 @@ export class Template {
   }
 
   static of(kindOrId: string): Template {
-    const builtIn = BUILT_IN_TEMPLATES[kindOrId as keyof typeof BUILT_IN_TEMPLATES];
-    if (!builtIn) throw new Error(`Unknown built-in template: ${kindOrId}`);
-    return new Template(builtIn);
+    if (!Object.hasOwn(BUILT_IN_TEMPLATES, kindOrId)) {
+      throw new Error(`Unknown built-in template: ${kindOrId}`);
+    }
+    return new Template(BUILT_IN_TEMPLATES[kindOrId as keyof typeof BUILT_IN_TEMPLATES]);
   }
 
   static work(): Template {
