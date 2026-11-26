@@ -1,13 +1,9 @@
+import { sanitizeTemplate } from '../../domain/meeting/services/TemplateSanitizer';
 import type { TemplateRepository } from '../../domain/meeting/ports/TemplateRepository';
 import {
   BUILT_IN_TEMPLATES,
   type TemplateDefinition,
 } from '../../domain/meeting/value-objects/Template';
-import {
-  SUMMARY_KINDS,
-  isSummaryKind,
-  type SummaryKind,
-} from '../../domain/summary/value-objects/SummaryKind';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
 import { storageError } from './storageError';
@@ -34,9 +30,7 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
       if (!raw) return Promise.resolve(ok([]));
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return Promise.resolve(ok([]));
-      const defs = parsed
-        .filter((item): item is PersistedTemplate => isPersisted(item))
-        .map(fromPersisted);
+      const defs = parsed.flatMap((item) => sanitizeTemplate(item) ?? []);
       return Promise.resolve(ok(defs));
     } catch (cause) {
       return Promise.resolve(err(storageError('Failed to load templates', cause)));
@@ -101,45 +95,6 @@ export class LocalStorageTemplateRepository implements TemplateRepository {
     }
   }
 }
-
-const isPersisted = (raw: unknown): raw is PersistedTemplate => {
-  if (typeof raw !== 'object' || raw === null) return false;
-  const obj = raw as Record<string, unknown>;
-  return (
-    typeof obj['id'] === 'string' &&
-    typeof obj['name'] === 'string' &&
-    typeof obj['systemRole'] === 'string' &&
-    typeof obj['mindMapStructure'] === 'string' &&
-    Array.isArray(obj['summaryKinds']) &&
-    Array.isArray(obj['featuredOrder'])
-  );
-};
-
-const fromPersisted = (p: PersistedTemplate): TemplateDefinition => {
-  const summaryKinds = p.summaryKinds.filter(isSummaryKind);
-  const featuredOrder = p.featuredOrder.filter(isSummaryKind);
-  return {
-    id: p.id,
-    name: p.name,
-    builtIn: false,
-    systemRole: p.systemRole,
-    mindMapStructure: p.mindMapStructure,
-    summaryKinds: summaryKinds.length > 0 ? summaryKinds : SUMMARY_KINDS,
-    featuredOrder: featuredOrder.length > 0 ? featuredOrder : summaryKinds,
-    kindLabels: filterRecord(p.kindLabels),
-    promptOverrides: filterRecord(p.promptOverrides),
-  };
-};
-
-const filterRecord = (obj: Record<string, string>): Partial<Record<SummaryKind, string>> => {
-  const result: Partial<Record<SummaryKind, string>> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (isSummaryKind(key) && typeof value === 'string' && value.trim().length > 0) {
-      result[key] = value;
-    }
-  }
-  return result;
-};
 
 const toPersisted = (def: TemplateDefinition): PersistedTemplate => ({
   id: def.id,
