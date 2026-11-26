@@ -156,7 +156,9 @@ describe('template import and export', () => {
       new LocalStorageTemplateRepository(throwingStorage('getItem')),
     );
 
-    expect((await run(broken)).ok).toBe(false);
+    const result = await run(broken);
+
+    expect(!result.ok && result.error.code).toBe('STORAGE_FAILED');
   });
 
   it('fails import when storage cannot be written', async () => {
@@ -169,7 +171,7 @@ describe('template import and export', () => {
       copySuffix: COPY,
     });
 
-    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error.code).toBe('STORAGE_FAILED');
   });
 
   it('round-trips an exported template', async () => {

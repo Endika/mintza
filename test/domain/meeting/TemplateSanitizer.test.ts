@@ -21,6 +21,7 @@ describe('sanitizeTemplate', () => {
     [],
     {},
     { ...valid, id: 4 },
+    { ...valid, name: 4 },
     { ...valid, systemRole: 1 },
     { ...valid, mindMapStructure: null },
     { ...valid, summaryKinds: 'x' },
