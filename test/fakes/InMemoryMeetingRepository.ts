@@ -39,6 +39,7 @@ export class InMemoryMeetingRepository implements MeetingRepository {
       durationMs: m.durationMs,
       templateKind: m.template.kind,
       starred: m.starred,
+      imported: m.importedAt !== undefined,
     }));
     return Promise.resolve(ok(items));
   }

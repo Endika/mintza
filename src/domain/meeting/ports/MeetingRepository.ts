@@ -10,6 +10,7 @@ export interface MeetingListItem {
   readonly durationMs: number;
   readonly templateKind: string;
   readonly starred: boolean;
+  readonly imported: boolean;
 }
 
 export interface MeetingRepository {

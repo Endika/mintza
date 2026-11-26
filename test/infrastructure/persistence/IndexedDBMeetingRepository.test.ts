@@ -11,6 +11,7 @@ import { MindMapNode } from '../../../src/domain/mindmap/value-objects/MindMapNo
 import { Summary } from '../../../src/domain/summary/entities/Summary';
 import { TemperatureScore } from '../../../src/domain/temperature/value-objects/TemperatureScore';
 import { meetingCost } from '../../../src/domain/tokens/services/MeetingCost';
+import { Money } from '../../../src/domain/tokens/value-objects/Money';
 import { TokenCount } from '../../../src/domain/tokens/value-objects/TokenCount';
 import { TranscriptSegment } from '../../../src/domain/transcription/entities/TranscriptSegment';
 import { TranscriptText } from '../../../src/domain/transcription/value-objects/TranscriptText';
@@ -86,6 +87,34 @@ describe('IndexedDBMeetingRepository', () => {
     expect(restored.temperature?.value).toBeCloseTo(0.42);
     expect(restored.mindMap?.root.label).toBe('root');
     expect(restored.mindMap?.root.children.map((c) => c.label)).toEqual(['a', 'b']);
+  });
+
+  it('keeps when a meeting was imported and flags it in the list', async () => {
+    const importedAt = new Date('2026-06-01T08:00:00Z');
+    const base = {
+      template: Template.work(),
+      language: Language.of('en'),
+      startedAt: new Date('2026-05-21T10:00:00Z'),
+      segments: [],
+      summaries: new Map(),
+      cost: Money.zero(),
+      starred: false,
+      tags: [],
+      totalPausedMs: 0,
+    };
+    const imported = Meeting.restore({ ...base, id: MeetingId.generate(), title: 'a', importedAt });
+    const local = Meeting.restore({ ...base, id: MeetingId.generate(), title: 'b' });
+    await repo.save(imported);
+    await repo.save(local);
+
+    const loaded = await repo.findById(imported.id);
+    expect(loaded.ok && loaded.value?.importedAt).toEqual(importedAt);
+    const listed = await repo.list();
+    const flags = listed.ok ? listed.value.map((m) => [m.title, m.imported]) : [];
+    expect(flags.sort()).toEqual([
+      ['a', true],
+      ['b', false],
+    ]);
   });
 
   it('round-trips a meeting saved with a custom template', async () => {

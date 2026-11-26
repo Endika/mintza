@@ -70,6 +70,7 @@ interface PersistedMeeting {
   readonly costMicroUsd: number;
   readonly starred: boolean;
   readonly tags: string[];
+  readonly importedAt?: string;
 }
 
 export type TemplateResolver = (id: string) => Promise<Template>;
@@ -156,6 +157,7 @@ export class IndexedDBMeetingRepository implements MeetingRepository {
             : 0,
           templateKind: r.template,
           starred: r.starred,
+          imported: r.importedAt !== undefined,
         }))
         .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
       return ok(items);
@@ -233,6 +235,7 @@ const toPersisted = (meeting: Meeting): PersistedMeeting => ({
   costMicroUsd: meeting.cost.microUsd,
   starred: meeting.starred,
   tags: [...meeting.tags],
+  ...(meeting.importedAt ? { importedAt: meeting.importedAt.toISOString() } : {}),
 });
 
 const nodeToPersisted = (node: MindMapNode): PersistedMindMapNode => ({
@@ -299,6 +302,7 @@ const fromPersisted = (p: PersistedMeeting, template: Template): Meeting => {
     cost: Money.fromUsd(p.costMicroUsd / 1_000_000),
     starred: p.starred,
     tags: [...p.tags],
+    ...(p.importedAt ? { importedAt: new Date(p.importedAt) } : {}),
     totalPausedMs: 0,
   });
 };
