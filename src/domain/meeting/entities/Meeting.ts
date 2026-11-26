@@ -23,6 +23,7 @@ export interface MeetingState {
   cost: Money;
   starred: boolean;
   readonly tags: string[];
+  readonly importedAt?: Date;
   pausedAt?: Date;
   totalPausedMs: number;
 }
@@ -114,6 +115,10 @@ export class Meeting {
 
   get tags(): readonly string[] {
     return this.state.tags;
+  }
+
+  get importedAt(): Date | undefined {
+    return this.state.importedAt;
   }
 
   get isFinished(): boolean {
