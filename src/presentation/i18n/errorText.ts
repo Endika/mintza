@@ -20,6 +20,10 @@ const REASON_TEXT: Record<ErrorReason, TranslationKey> = {
   storage_unavailable: 'error.storage_unavailable',
   builtin_readonly: 'error.builtin_readonly',
   id_collision: 'error.id_collision',
+  import_not_json: 'error.import_not_json',
+  import_wrong_format: 'error.import_wrong_format',
+  import_unsupported_version: 'error.import_unsupported_version',
+  import_empty: 'error.import_empty',
   unknown: 'error.unknown',
 };
 

@@ -28,6 +28,10 @@ export type ErrorReason =
   | 'storage_unavailable'
   | 'builtin_readonly'
   | 'id_collision'
+  | 'import_not_json'
+  | 'import_wrong_format'
+  | 'import_unsupported_version'
+  | 'import_empty'
   | 'unknown';
 
 export interface ProviderAttempt {
