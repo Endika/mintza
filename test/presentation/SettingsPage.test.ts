@@ -164,4 +164,76 @@ describe('SettingsPage', () => {
     choose(root, 'input[name="summaryQuality"][value="premium"]', 'premium');
     expect(clear.disabled).toBe(true);
   });
+
+  describe('provider lines', () => {
+    const line = (root: HTMLElement, name: string, profile: string): string =>
+      root.querySelector(`[data-provider-for="${name}:${profile}"]`)!.textContent ?? '';
+
+    const typeKey = (root: HTMLElement, name: string, value: string): void => {
+      const input = root.querySelector<HTMLInputElement>(`input[name="${name}"]`)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const renderWith = async (apiKeys: AppConfig['apiKeys']): Promise<HTMLElement> => {
+      const page = await buildSettingsPage({ repo: seeded({ apiKeys }) });
+      const root = document.createElement('main');
+      await page.render(root);
+      return root;
+    };
+
+    it('names the OpenAI models when only an OpenAI key is set', async () => {
+      const root = await renderWith({ openai: 'sk-test' });
+      expect(line(root, 'summaryQuality', 'balanced')).toBe('Uses GPT-6 Luna (OpenAI)');
+      expect(line(root, 'summaryQuality', 'cheap')).toBe('Uses GPT-6 Luna (OpenAI)');
+      expect(line(root, 'summaryQuality', 'premium')).toBe(
+        'Uses GPT-6 Luna with reasoning (OpenAI)',
+      );
+      expect(line(root, 'transcriptionQuality', 'balanced')).toBe('Uses GPT Transcribe (OpenAI)');
+    });
+
+    it('falls to Claude and warns where OpenAI is the only option', async () => {
+      const root = await renderWith({ anthropic: 'sk-ant' });
+      expect(line(root, 'summaryQuality', 'balanced')).toBe('Uses Claude Sonnet 5.5 (Anthropic)');
+      expect(line(root, 'summaryQuality', 'premium')).toBe('Needs a key from OpenAI');
+      expect(line(root, 'transcriptionQuality', 'balanced')).toBe(
+        'Needs a key from OpenAI or Google Speech',
+      );
+      expect(
+        root
+          .querySelector('[data-provider-for="summaryQuality:premium"]')!
+          .classList.contains('text-warning'),
+      ).toBe(true);
+    });
+
+    it('lists every key a chain needs, in the interface language', async () => {
+      const page = await buildSettingsPage({
+        repo: seeded({ language: 'es', apiKeys: {} }),
+      });
+      const root = document.createElement('main');
+      await page.render(root);
+      expect(line(root, 'summaryQuality', 'cheap')).toBe(
+        'Necesita una clave de Google Gemini, Anthropic u OpenAI',
+      );
+    });
+
+    it('follows the keys typed in the form before saving', async () => {
+      const root = await renderWith({ openai: 'sk-test' });
+      typeKey(root, 'google', 'AIza-test');
+      expect(line(root, 'summaryQuality', 'cheap')).toBe('Uses Gemini 3.1 Flash Lite (Google)');
+      expect(line(root, 'transcriptionQuality', 'cheap')).toBe('Uses Google Speech');
+      typeKey(root, 'google', '');
+      expect(line(root, 'summaryQuality', 'cheap')).toBe('Uses GPT-6 Luna (OpenAI)');
+      expect(line(root, 'transcriptionQuality', 'cheap')).toBe('Uses GPT Transcribe (OpenAI)');
+    });
+
+    it('does not treat an AQ. Gemini key as a Google Speech key', async () => {
+      const root = await renderWith({});
+      typeKey(root, 'google', 'AQ.auth-key');
+      expect(line(root, 'summaryQuality', 'cheap')).toBe('Uses Gemini 3.1 Flash Lite (Google)');
+      expect(line(root, 'transcriptionQuality', 'cheap')).toBe(
+        'Needs a key from Google Speech or OpenAI',
+      );
+    });
+  });
 });

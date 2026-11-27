@@ -6,6 +6,7 @@ import type {
 import { SummaryPromptBuilder } from '../../domain/summary/services/SummaryPromptBuilder';
 import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
 import type { AppError } from '../../shared/errors/AppError';
+import { SUMMARY_MODEL } from '../../shared/constants/models';
 import { ok, type Result } from '../../shared/result/Result';
 import type { OpenAIClient, OpenAIReasoningEffort } from './OpenAIClient';
 
@@ -14,7 +15,7 @@ export interface OpenAISummarizationOptions {
   readonly reasoningEffort?: OpenAIReasoningEffort;
 }
 
-const DEFAULT_MODEL = 'gpt-6-luna';
+const DEFAULT_MODEL = SUMMARY_MODEL.openai;
 // Reasoning tokens count against the completion limit.
 const REASONING_MAX_TOKENS = 4096;
 
