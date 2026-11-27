@@ -4,6 +4,7 @@ import { Meeting } from '../../../src/domain/meeting/entities/Meeting';
 import { Template } from '../../../src/domain/meeting/value-objects/Template';
 import { MindMap } from '../../../src/domain/mindmap/entities/MindMap';
 import { MindMapNode } from '../../../src/domain/mindmap/value-objects/MindMapNode';
+import type { SummaryKind } from '../../../src/domain/summary/value-objects/SummaryKind';
 import { Summary } from '../../../src/domain/summary/entities/Summary';
 import { meetingCost } from '../../../src/domain/tokens/services/MeetingCost';
 import { TokenCount } from '../../../src/domain/tokens/value-objects/TokenCount';
@@ -47,7 +48,9 @@ const pricedMeeting = (): Meeting => {
 
 describe('meetingCost', () => {
   it('prices a premium summary at gpt-4o rates and an old one at the fallback', () => {
-    expect(meetingCost(pricedMeeting()).llm.get('openai')!.toUsd()).toBeCloseTo(2.5 + 0.15, 6);
+    const costs = meetingCost(pricedMeeting()).llm.map((group) => group.cost.toUsd());
+    expect(costs[0]).toBeCloseTo(0.15, 6);
+    expect(costs[1]).toBeCloseTo(2.5, 6);
   });
 
   it('counts the mind map call', () => {
@@ -119,7 +122,7 @@ describe('meetingCost', () => {
       }),
     );
     const cost = meetingCost(meeting);
-    expect(cost.llm.get('anthropic')!.toUsd()).toBeCloseTo(3, 6);
+    expect(cost.llm[0]!.cost.toUsd()).toBeCloseTo(3, 6);
     expect(cost.mindMap.toUsd()).toBeCloseTo(0.15, 6);
   });
 
@@ -138,11 +141,69 @@ describe('meetingCost', () => {
       );
       return meeting;
     };
-    expect(meetingCost(unrecorded('anthropic')).llm.get('anthropic')!.toUsd()).toBeCloseTo(
-      3 + 15,
-      6,
-    );
-    expect(meetingCost(unrecorded('gemini')).llm.get('gemini')!.toUsd()).toBeCloseTo(0.1 + 0.4, 6);
+    expect(meetingCost(unrecorded('anthropic')).llm[0]!.cost.toUsd()).toBeCloseTo(3 + 15, 6);
+    expect(meetingCost(unrecorded('gemini')).llm[0]!.cost.toUsd()).toBeCloseTo(0.1 + 0.4, 6);
+  });
+
+  describe('LLM groups', () => {
+    const summarised = (...parts: [SummaryKind, 'openai' | 'gemini', string?][]): Meeting => {
+      const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+      for (const [kind, provider, model] of parts) {
+        meeting.setSummary(
+          new Summary({
+            kind,
+            content: '- x',
+            tokensIn: MILLION,
+            tokensOut: TokenCount.zero(),
+            provider,
+            ...(model ? { model } : {}),
+            generatedAt: new Date(),
+          }),
+        );
+      }
+      return meeting;
+    };
+
+    it('joins summaries on the same model into one group with their summed cost', () => {
+      const { llm } = meetingCost(
+        summarised(
+          ['decisions', 'gemini', 'gemini-3.1-flash-lite'],
+          ['action_items', 'gemini', 'gemini-3.1-flash-lite'],
+        ),
+      );
+      expect(llm).toHaveLength(1);
+      expect(llm[0]).toMatchObject({
+        provider: 'gemini',
+        model: 'gemini-3.1-flash-lite',
+        kinds: ['action_items', 'decisions'],
+      });
+      expect(llm[0]!.cost.toUsd()).toBeCloseTo(0.5, 6);
+    });
+
+    it('splits two models of the same provider', () => {
+      const { llm } = meetingCost(
+        summarised(['decisions', 'openai', 'gpt-6-luna'], ['action_items', 'openai', 'gpt-4o']),
+      );
+      expect(llm.map((group) => group.model)).toEqual(['gpt-4o', 'gpt-6-luna']);
+    });
+
+    it('groups summaries without a recorded model under their provider at the fallback price', () => {
+      const { llm } = meetingCost(
+        summarised(
+          ['decisions', 'gemini'],
+          ['action_items', 'openai'],
+          ['bullet_points', 'openai'],
+        ),
+      );
+      expect(llm).toHaveLength(2);
+      expect(llm[0]).toMatchObject({
+        provider: 'openai',
+        kinds: ['bullet_points', 'action_items'],
+      });
+      expect('model' in llm[0]!).toBe(false);
+      expect(llm[0]!.cost.toUsd()).toBeCloseTo(0.3, 6);
+      expect(llm[1]!.cost.toUsd()).toBeCloseTo(0.1, 6);
+    });
   });
 
   describe('Gemini', () => {
@@ -163,13 +224,14 @@ describe('meetingCost', () => {
     };
 
     it('prices the current default model at its own rates', () => {
-      expect(
-        meetingCost(geminiMeeting('gemini-3.1-flash-lite')).llm.get('gemini')!.toUsd(),
-      ).toBeCloseTo(0.25 + 1.5, 6);
+      expect(meetingCost(geminiMeeting('gemini-3.1-flash-lite')).llm[0]!.cost.toUsd()).toBeCloseTo(
+        0.25 + 1.5,
+        6,
+      );
     });
 
     it('keeps pricing meetings summarised with the retired gemini-2.0-flash', () => {
-      expect(meetingCost(geminiMeeting('gemini-2.0-flash')).llm.get('gemini')!.toUsd()).toBeCloseTo(
+      expect(meetingCost(geminiMeeting('gemini-2.0-flash')).llm[0]!.cost.toUsd()).toBeCloseTo(
         0.1 + 0.4,
         6,
       );

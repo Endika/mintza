@@ -1,11 +1,13 @@
 import type { Meeting } from '../../domain/meeting/entities/Meeting';
+import type { SummaryKind } from '../../domain/summary/value-objects/SummaryKind';
 import { meetingCost } from '../../domain/tokens/services/MeetingCost';
 import { Money } from '../../domain/tokens/value-objects/Money';
 import { PRICING } from '../../shared/constants/pricing';
 import type { Translator } from '../i18n/Translator';
 import { formatDuration } from '../util/formatDuration';
+import { escapeHtml } from '../util/escapeHtml';
 import { metaLine } from '../util/metaLine';
-import { LLM_LABEL, TRANSCRIPTION_LABEL } from './providerLabels';
+import { LLM_LABEL, modelLabel, TRANSCRIPTION_LABEL } from './providerLabels';
 
 interface LiveNodes {
   readonly elapsed: Text;
@@ -56,14 +58,27 @@ export class CostCounter {
   }
 
   /** What each provider charged, so people paying with their own keys can see where it went. */
-  renderBreakdown(target: HTMLElement, meeting: Meeting, translator: Translator): void {
+  renderBreakdown(
+    target: HTMLElement,
+    meeting: Meeting,
+    translator: Translator,
+    summaryLabel: (kind: SummaryKind) => string,
+  ): void {
     this.stop();
     const { transcription, llm, mindMap, total } = meetingCost(meeting);
+    const usage = meeting.mindMap?.usage;
     const rows = [
       ...this.providerRows(transcription, TRANSCRIPTION_LABEL),
-      ...this.providerRows(llm, LLM_LABEL),
-      ...(mindMap.toUsd() > 0
-        ? [costRow(translator.t('detail.cost_mind_map'), mindMap.format(3))]
+      ...llm
+        .filter(({ cost }) => cost.toUsd() > 0)
+        .map(({ provider, model, kinds, cost }) =>
+          costRow(
+            `${model ? modelLabel(model) : LLM_LABEL[provider]} · ${kinds.map(summaryLabel).join(', ')}`,
+            cost.format(3),
+          ),
+        ),
+      ...(usage && mindMap.toUsd() > 0
+        ? [costRow(mindMapLabel(usage.model, translator), mindMap.format(3))]
         : []),
     ];
     target.innerHTML = `
@@ -141,10 +156,13 @@ const wordCount = (meeting: Meeting, translator: Translator): string => {
   return translator.t(count === 1 ? 'cost.words_one' : 'cost.words', { count });
 };
 
+const mindMapLabel = (model: string, translator: Translator): string =>
+  `${translator.t('detail.cost_mind_map')} · ${modelLabel(model)}`;
+
 const costRow = (label: string, amount: string, emphasis = ''): string => `
   <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0 last:pb-0 ${emphasis}">
-    <dt>${label}</dt>
-    <dd class="tabular">${amount}</dd>
+    <dt class="min-w-0 break-words">${escapeHtml(label)}</dt>
+    <dd class="tabular shrink-0">${amount}</dd>
   </div>
 `;
 

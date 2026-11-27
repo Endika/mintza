@@ -153,7 +153,7 @@ describe('MeetingDetailPage', () => {
     const root = await renderDetail(repo, meeting.id.value);
 
     const rows = [...root.querySelectorAll('#detail-cost dt')].map((dt) => dt.textContent);
-    expect(rows).toEqual(['Whisper', 'GPT', 'Total']);
+    expect(rows).toEqual(['Whisper', 'GPT · Decisions', 'Total']);
     expect(root.querySelector('#detail-cost')?.textContent).toContain('$0.060');
     expect(root.querySelector('header')?.textContent).toContain('English');
   });
@@ -187,8 +187,8 @@ describe('MeetingDetailPage', () => {
       row.querySelector('dd')?.textContent,
     ]);
     expect(rows).toEqual([
-      ['GPT', '$2.500'],
-      ['Mind map', '$0.150'],
+      ['GPT-4o · Decisions', '$2.500'],
+      ['Mind map · GPT-4o mini', '$0.150'],
       ['Total', '$2.650'],
     ]);
   });

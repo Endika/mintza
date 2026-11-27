@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { Language } from '../../src/domain/language/value-objects/Language';
 import { Meeting } from '../../src/domain/meeting/entities/Meeting';
 import { Template } from '../../src/domain/meeting/value-objects/Template';
+import { MindMap } from '../../src/domain/mindmap/entities/MindMap';
+import { MindMapNode } from '../../src/domain/mindmap/value-objects/MindMapNode';
+import { Summary } from '../../src/domain/summary/entities/Summary';
+import type { SummaryKind } from '../../src/domain/summary/value-objects/SummaryKind';
+import { TokenCount } from '../../src/domain/tokens/value-objects/TokenCount';
 import { TranscriptSegment } from '../../src/domain/transcription/entities/TranscriptSegment';
 import type { TranscriptionProviderName } from '../../src/domain/transcription/value-objects/TranscriptionProvider';
 import { TranscriptText } from '../../src/domain/transcription/value-objects/TranscriptText';
@@ -101,10 +106,12 @@ describe('CostCounter live line', () => {
   });
 });
 
+const kindLabel = (kind: SummaryKind): string => `<${kind}>`;
+
 describe('transcription labels name the model that ran', () => {
   const breakdownLabels = (meeting: Meeting): string[] => {
     const target = document.createElement('div');
-    new CostCounter().renderBreakdown(target, meeting, new Translator('en'));
+    new CostCounter().renderBreakdown(target, meeting, new Translator('en'), kindLabel);
     return [...target.querySelectorAll('dt')].map((dt) => dt.textContent ?? '');
   };
 
@@ -124,5 +131,98 @@ describe('transcription labels name the model that ran', () => {
     const meeting = recording('gpt-transcribe', 60);
     expect(breakdownLabels(meeting)).toEqual(['GPT Transcribe', 'Total']);
     expect(providersStat(meeting)).toBe('GPT Transcribe');
+  });
+});
+
+describe('LLM rows name the model and what it wrote', () => {
+  const summarised = (
+    ...parts: [SummaryKind, 'openai' | 'anthropic' | 'gemini', string?][]
+  ): Meeting => {
+    const meeting = Meeting.start({ template: Template.work(), language: Language.of('en') });
+    for (const [kind, provider, model] of parts) {
+      meeting.setSummary(
+        new Summary({
+          kind,
+          content: '- x',
+          tokensIn: TokenCount.of(1_000_000),
+          tokensOut: TokenCount.zero(),
+          provider,
+          ...(model ? { model } : {}),
+          generatedAt: new Date(),
+        }),
+      );
+    }
+    return meeting;
+  };
+
+  const rows = (meeting: Meeting): string[][] => {
+    const target = document.createElement('div');
+    new CostCounter().renderBreakdown(target, meeting, new Translator('en'), kindLabel);
+    return [...target.querySelectorAll('dl > div')].map((row) => [
+      row.querySelector('dt')!.textContent ?? '',
+      row.querySelector('dd')!.textContent ?? '',
+    ]);
+  };
+
+  it('lists the summaries a model wrote beside its name and cost', () => {
+    const meeting = summarised(
+      ['action_items', 'gemini', 'gemini-3.1-flash-lite'],
+      ['decisions', 'gemini', 'gemini-3.1-flash-lite'],
+      ['bullet_points', 'anthropic', 'claude-sonnet-5-5'],
+      ['one_liner', 'openai', 'gpt-6-luna'],
+    );
+    expect(rows(meeting)).toEqual([
+      ['Claude Sonnet 5.5 · <bullet_points>', '$2.000'],
+      ['Gemini 3.1 Flash Lite · <action_items>, <decisions>', '$0.500'],
+      ['GPT-6 Luna · <one_liner>', '$0.100'],
+      ['Total', '$2.600'],
+    ]);
+  });
+
+  it('shows the provider when the model was never recorded', () => {
+    expect(rows(summarised(['decisions', 'gemini']))[0]).toEqual([
+      'Gemini · <decisions>',
+      '$0.100',
+    ]);
+  });
+
+  it('leaves out a summary that cost nothing', () => {
+    const meeting = summarised(['decisions', 'openai', 'gpt-6-luna']);
+    meeting.setSummary(
+      new Summary({
+        kind: 'action_items',
+        content: '- x',
+        tokensIn: TokenCount.zero(),
+        tokensOut: TokenCount.zero(),
+        provider: 'gemini',
+        model: 'gemini-3.1-flash-lite',
+        generatedAt: new Date(),
+      }),
+    );
+    expect(rows(meeting).map(([label]) => label)).toEqual(['GPT-6 Luna · <decisions>', 'Total']);
+  });
+
+  it('names the model behind the mind map', () => {
+    const meeting = summarised();
+    meeting.setMindMap(
+      new MindMap(new MindMapNode('root', []), {
+        model: 'gpt-4o',
+        tokensIn: TokenCount.of(1_000_000),
+        tokensOut: TokenCount.zero(),
+      }),
+    );
+    expect(rows(meeting)[0]).toEqual(['Mind map · GPT-4o', '$2.500']);
+  });
+
+  it('leaves out a mind map that cost nothing', () => {
+    const meeting = summarised(['decisions', 'openai', 'gpt-6-luna']);
+    meeting.setMindMap(
+      new MindMap(new MindMapNode('root', []), {
+        model: 'gpt-6-luna',
+        tokensIn: TokenCount.zero(),
+        tokensOut: TokenCount.zero(),
+      }),
+    );
+    expect(rows(meeting).map(([label]) => label)).toEqual(['GPT-6 Luna · <decisions>', 'Total']);
   });
 });
