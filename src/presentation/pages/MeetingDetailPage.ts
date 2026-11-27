@@ -225,7 +225,12 @@ export class MeetingDetailPage implements Page {
       this.mindMapView.render(rest.querySelector<HTMLElement>('#detail-mindmap')!, meeting.mindMap);
     }
     this.statsPanel.render(rest.querySelector<HTMLElement>('#detail-stats')!, meeting, t);
-    this.costCounter.renderBreakdown(rest.querySelector<HTMLElement>('#detail-cost')!, meeting, t);
+    this.costCounter.renderBreakdown(
+      rest.querySelector<HTMLElement>('#detail-cost')!,
+      meeting,
+      t,
+      (kind) => this.summaryLabel(meeting.template, kind),
+    );
     this.exportMenu.render(
       rest.querySelector<HTMLElement>('#detail-export')!,
       () => this.meeting,
