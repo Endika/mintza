@@ -193,6 +193,9 @@ export type TranslationKey =
   | 'settings.hint_cheap'
   | 'settings.hint_balanced'
   | 'settings.hint_premium'
+  | 'settings.uses_provider'
+  | 'settings.needs_key'
+  | 'settings.with_reasoning'
   | 'settings.azure_region'
   | 'settings.azure_region_placeholder'
   | 'settings.key_placeholder'
@@ -495,6 +498,9 @@ const EN: Translations = {
   'settings.hint_cheap': 'Lowest cost; uses your cheapest connected service first.',
   'settings.hint_balanced': 'Good quality at low cost. Recommended.',
   'settings.hint_premium': 'Best quality, about 20× the cost.',
+  'settings.uses_provider': 'Uses {provider}',
+  'settings.needs_key': 'Needs a key from {providers}',
+  'settings.with_reasoning': 'with reasoning',
   'settings.azure_region': 'Azure region',
   'settings.azure_region_placeholder': 'e.g. westeurope',
   'settings.key_placeholder': 'Paste your key',
@@ -802,6 +808,9 @@ const ES: Translations = {
   'settings.hint_cheap': 'El coste más bajo; usa primero tu servicio conectado más barato.',
   'settings.hint_balanced': 'Buena calidad a bajo coste. Recomendado.',
   'settings.hint_premium': 'La mejor calidad; cuesta unas 20 veces más.',
+  'settings.uses_provider': 'Usará {provider}',
+  'settings.needs_key': 'Necesita una clave de {providers}',
+  'settings.with_reasoning': 'con razonamiento',
   'settings.azure_region': 'Región de Azure',
   'settings.azure_region_placeholder': 'p. ej., westeurope',
   'settings.key_placeholder': 'Pega tu clave',
@@ -1115,6 +1124,9 @@ const EU: Translations = {
     'Kosturik txikiena; konektatutako zerbitzurik merkeena erabiltzen du lehenik.',
   'settings.hint_balanced': 'Kalitate ona kostu txikian. Gomendatua.',
   'settings.hint_premium': 'Kalitaterik onena, gutxi gorabehera 20 aldiz garestiagoa.',
+  'settings.uses_provider': '{provider} erabiliko da',
+  'settings.needs_key': '{providers} gakoa behar du',
+  'settings.with_reasoning': 'arrazoiketarekin',
   'settings.azure_region': 'Azure eskualdea',
   'settings.azure_region_placeholder': 'adib. westeurope',
   'settings.key_placeholder': 'Itsatsi zure gakoa',

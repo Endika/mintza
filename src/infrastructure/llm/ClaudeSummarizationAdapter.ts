@@ -6,6 +6,7 @@ import type {
 import { SummaryPromptBuilder } from '../../domain/summary/services/SummaryPromptBuilder';
 import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
 import type { AppError } from '../../shared/errors/AppError';
+import { SUMMARY_MODEL } from '../../shared/constants/models';
 import { ok, type Result } from '../../shared/result/Result';
 import type { ClaudeClient } from './ClaudeClient';
 
@@ -13,7 +14,7 @@ export interface ClaudeSummarizationOptions {
   readonly model?: string;
 }
 
-const DEFAULT_MODEL = 'claude-sonnet-5-5';
+const DEFAULT_MODEL = SUMMARY_MODEL.anthropic;
 
 export class ClaudeSummarizationAdapter implements SummarizationPort {
   private readonly model: string;

@@ -1,3 +1,4 @@
+import { SUMMARY_MODEL } from '../../../shared/constants/models';
 import { PRICING } from '../../../shared/constants/pricing';
 import type { QualityProfile } from '../../meeting/ports/ConfigRepository';
 import { Money } from '../value-objects/Money';
@@ -6,7 +7,7 @@ const WORDS_PER_MINUTE = 150;
 const CHARS_PER_WORD = 6;
 const CHARS_PER_TOKEN = 4;
 const MINDMAP_MAX_OUT = 1500;
-const MODEL = 'gpt-6-luna';
+const MODEL = SUMMARY_MODEL.openai;
 // Premium summaries reason first, so they get a larger completion budget.
 const SUMMARY_MAX_OUT_BY_PROFILE: Record<QualityProfile, number> = {
   cheap: 1024,

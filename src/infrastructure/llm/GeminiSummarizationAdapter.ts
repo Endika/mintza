@@ -6,6 +6,7 @@ import type {
 import { SummaryPromptBuilder } from '../../domain/summary/services/SummaryPromptBuilder';
 import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
 import type { AppError } from '../../shared/errors/AppError';
+import { SUMMARY_MODEL } from '../../shared/constants/models';
 import { ok, type Result } from '../../shared/result/Result';
 import type { GeminiClient } from './GeminiClient';
 
@@ -13,7 +14,7 @@ export interface GeminiSummarizationOptions {
   readonly model?: string;
 }
 
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+const DEFAULT_MODEL = SUMMARY_MODEL.gemini;
 
 export class GeminiSummarizationAdapter implements SummarizationPort {
   private readonly model: string;

@@ -19,6 +19,7 @@ import {
   ICON_EXTERNAL,
   ICON_TRASH,
 } from '../components/icons';
+import { summaryUsage, transcriptionUsage } from '../components/providerUsage';
 import { errorText, reasonText } from '../i18n/errorText';
 import { LANGUAGE_NAMES } from '../i18n/languageName';
 import { templateDisplayName } from '../i18n/templateDisplayName';
@@ -227,8 +228,26 @@ export class SettingsPage implements Page {
     );
   }
 
+  private refreshProviderLines(): void {
+    const tr = this.deps.config.translator;
+    const t: T = (key, vars) => tr.t(key, vars);
+    const keys = buildApiKeys(new FormData(this.qs<HTMLFormElement>('#settings-form')));
+    this.root?.querySelectorAll<HTMLElement>('[data-provider-for]').forEach((line) => {
+      const [name, profile] = (line.dataset['providerFor'] ?? '').split(':') as [
+        'summaryQuality' | 'transcriptionQuality',
+        QualityProfile,
+      ];
+      const describe = name === 'summaryQuality' ? summaryUsage : transcriptionUsage;
+      const usage = describe(profile, keys, tr.language, t);
+      line.textContent = usage.text;
+      line.classList.toggle('text-warning', usage.kind === 'needs-key');
+      line.classList.toggle('text-fg-muted', usage.kind === 'uses');
+    });
+  }
+
   private refreshButtonStates(): void {
     if (!this.root || !this.baseline) return;
+    this.refreshProviderLines();
     const isDirty = !configsEqual(this.baseline, this.proposed());
     this.guard.setBusy(isDirty);
     this.qs<HTMLButtonElement>('#btn-save').disabled = !isDirty;
@@ -499,6 +518,7 @@ const qualityFieldset = (
           <span class="min-w-0">
             <span class="block font-semibold">${opt.label}</span>
             <span class="mt-0.5 block text-sm text-fg-muted">${opt.hint}</span>
+            <span data-provider-for="${name}:${opt.value}" class="mt-0.5 block text-sm text-fg-muted"></span>
           </span>
         </label>`,
         )

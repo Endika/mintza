@@ -3,11 +3,12 @@ import type { MindMapPort, MindMapRequest } from '../../domain/mindmap/ports/Min
 import { MindMapJsonParser } from '../../domain/mindmap/services/MindMapJsonParser';
 import { MindMapPromptBuilder } from '../../domain/mindmap/services/MindMapPromptBuilder';
 import { TokenCount } from '../../domain/tokens/value-objects/TokenCount';
+import { SUMMARY_MODEL } from '../../shared/constants/models';
 import { AppError } from '../../shared/errors/AppError';
 import { err, ok, type Result } from '../../shared/result/Result';
 import type { OpenAIClient } from './OpenAIClient';
 
-const DEFAULT_MODEL = 'gpt-6-luna';
+const DEFAULT_MODEL = SUMMARY_MODEL.openai;
 
 export class LLMMindMapAdapter implements MindMapPort {
   private readonly prompts = new MindMapPromptBuilder();

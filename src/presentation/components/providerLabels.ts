@@ -17,3 +17,15 @@ export const LLM_LABEL: Record<LLMProviderName, string> = {
 
 export const transcriptionLabel = (id: string): string =>
   (TRANSCRIPTION_LABEL as Readonly<Record<string, string | undefined>>)[id] ?? id;
+
+const MODEL_LABEL: Readonly<Record<string, string>> = {
+  'gpt-6-luna': 'GPT-6 Luna',
+  'gpt-4o-mini': 'GPT-4o mini',
+  'gpt-4o': 'GPT-4o',
+  'claude-sonnet-5-5': 'Claude Sonnet 5.5',
+  'claude-sonnet-4-5': 'Claude Sonnet 4.5',
+  'gemini-3.1-flash-lite': 'Gemini 3.1 Flash Lite',
+  'gemini-2.0-flash': 'Gemini 2.0 Flash',
+};
+
+export const modelLabel = (id: string): string => MODEL_LABEL[id] ?? id;
