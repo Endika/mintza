@@ -5,6 +5,14 @@
 
 * **recording:** preserve final chunk, render markdown summaries, show mic level ([de00ac2](https://github.com/Endika/mintza/commit/de00ac25cee3ed177625fd2da801697514272c50))
 
+## [1.26.0](https://github.com/Endika/mintza/compare/v1.25.0...v1.26.0) (2026-11-27)
+
+
+### Features
+
+* **meetings:** name the model and summaries behind each cost ([e1b0ddd](https://github.com/Endika/mintza/commit/e1b0ddd0075438184c409f4941bd986014cdb838))
+* **settings:** show which provider each quality profile will use ([1ca46b6](https://github.com/Endika/mintza/commit/1ca46b6c6776e7f77c7dd1e2dbf9f843bb3a473e))
+
 ## [1.25.0](https://github.com/Endika/mintza/compare/v1.24.0...v1.25.0) (2026-11-26)
 
 
