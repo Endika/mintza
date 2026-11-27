@@ -3,6 +3,7 @@ import {
   type AppConfig,
   type ConfigRepository,
 } from '../../domain/meeting/ports/ConfigRepository';
+import { googleSpeechKey } from '../../domain/meeting/services/ProviderChains';
 import type { LanguageCode } from '../../domain/language/value-objects/Language';
 import type { AppError } from '../../shared/errors/AppError';
 import { err, type Result } from '../../shared/result/Result';
@@ -52,14 +53,8 @@ export class ConfigStore {
     return this.current.apiKeys.google;
   }
 
-  /**
-   * Falls back to a legacy Gemini key that may cover both, but never to an `AQ.` auth key:
-   * those only work on Gemini, and every chunk would be uploaded to Speech for a certain 401.
-   */
   googleSpeechKey(): string | undefined {
-    const { googleSpeech, google } = this.current.apiKeys;
-    if (googleSpeech !== undefined) return googleSpeech;
-    return google?.startsWith('AQ.') ? undefined : google;
+    return googleSpeechKey(this.current.apiKeys);
   }
 
   azureKey(): string | undefined {
