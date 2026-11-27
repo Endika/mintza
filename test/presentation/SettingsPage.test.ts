@@ -199,11 +199,12 @@ describe('SettingsPage', () => {
       expect(line(root, 'transcriptionQuality', 'balanced')).toBe(
         'Needs a key from OpenAI or Google Speech',
       );
-      expect(
-        root
-          .querySelector('[data-provider-for="summaryQuality:premium"]')!
-          .classList.contains('text-warning'),
-      ).toBe(true);
+      const needsKey = root.querySelector('[data-provider-for="summaryQuality:premium"]')!;
+      expect(needsKey.classList.contains('text-warning')).toBe(true);
+      expect(needsKey.classList.contains('text-fg-muted')).toBe(false);
+      const uses = root.querySelector('[data-provider-for="summaryQuality:balanced"]')!;
+      expect(uses.classList.contains('text-fg-muted')).toBe(true);
+      expect(uses.classList.contains('text-warning')).toBe(false);
     });
 
     it('lists every key a chain needs, in the interface language', async () => {
