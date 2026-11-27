@@ -51,6 +51,12 @@ import { OpenAITranscriptionClient } from '../infrastructure/transcription/OpenA
 import { WakeLockAdapter } from '../infrastructure/system/WakeLockAdapter';
 import type { ScreenWakePort } from '../domain/system/ports/ScreenWakePort';
 import { ConfigStore } from '../presentation/state/ConfigStore';
+import {
+  SUMMARY_CHAINS,
+  TRANSCRIPTION_CHAINS,
+  type SummaryStep,
+  type TranscriptionStep,
+} from '../domain/meeting/services/ProviderChains';
 
 export interface AppDeps {
   readonly configStore: ConfigStore;
@@ -110,12 +116,15 @@ export const buildAppDeps = (): AppDeps => {
     port: new AzureSpeechTranscriptionAdapter(azureSpeech),
   };
 
+  const transcriptionAdapters: Record<TranscriptionStep, NamedTranscriptionPort> = {
+    'gpt-transcribe': openAITranscriptionAdapter,
+    google: googleSpeechAdapter,
+    azure: azureSpeechAdapter,
+  };
   const transcription = new TranscriptionChainAdapter(() =>
-    pickTranscriptionChain(configStore.get().transcriptionQuality, {
-      cheap: [googleSpeechAdapter, openAITranscriptionAdapter],
-      balanced: [openAITranscriptionAdapter, googleSpeechAdapter],
-      premium: [openAITranscriptionAdapter, azureSpeechAdapter],
-    }),
+    TRANSCRIPTION_CHAINS[configStore.get().transcriptionQuality].map(
+      (step) => transcriptionAdapters[step],
+    ),
   );
 
   const openai = new OpenAIClient(http, () => configStore.openAIKey());
@@ -140,12 +149,14 @@ export const buildAppDeps = (): AppDeps => {
     port: new GeminiSummarizationAdapter(gemini),
   };
 
+  const summaryAdapters: Record<SummaryStep, NamedSummarizationPort> = {
+    openai: openaiAdapter,
+    'openai-reasoning': openaiPremiumAdapter,
+    anthropic: claudeAdapter,
+    gemini: geminiAdapter,
+  };
   const summarization = new SummarizationChainAdapter(() =>
-    pickChain(configStore.get().summaryQuality, {
-      cheap: [geminiAdapter, claudeAdapter, openaiAdapter],
-      balanced: [openaiAdapter, claudeAdapter, geminiAdapter],
-      premium: [openaiPremiumAdapter],
-    }),
+    SUMMARY_CHAINS[configStore.get().summaryQuality].map((step) => summaryAdapters[step]),
   );
 
   const mindMapPort = new LLMMindMapAdapter(openai);
@@ -197,13 +208,3 @@ export const buildAppDeps = (): AppDeps => {
     templateRegistry,
   };
 };
-
-const pickChain = (
-  quality: 'cheap' | 'balanced' | 'premium',
-  chains: Record<'cheap' | 'balanced' | 'premium', readonly NamedSummarizationPort[]>,
-): readonly NamedSummarizationPort[] => chains[quality];
-
-const pickTranscriptionChain = (
-  quality: 'cheap' | 'balanced' | 'premium',
-  chains: Record<'cheap' | 'balanced' | 'premium', readonly NamedTranscriptionPort[]>,
-): readonly NamedTranscriptionPort[] => chains[quality];
